@@ -1,8 +1,8 @@
+#include <algorithm>
 #include <assert.h> /* assert */
 #include <iostream>
 #include <random>
 #include <vector>
-#include <algorithm>
 
 #include <fmt/ranges.h>
 
@@ -115,6 +115,25 @@ struct expression {
         return retval;
     }
 
+    std::vector<unsigned> mutation(std::vector<unsigned> genotype, unsigned N)
+    {
+        auto retval = genotype;
+        // We generate N randomly selected indexes of the genotype triplets
+        auto n_triplets = genotype.size() / 3;
+        std::vector<unsigned> choice(n_triplets);
+        std::iota(choice.begin(), choice.end(), 0u);
+        std::shuffle(choice.begin(), choice.end(), m_rng);
+        // We generate a new feasible random genotype
+        auto muts = random_genotype(genotype.size());
+        // For each selected triplet we use the randomly generated one
+        for (auto i = 0u; i < N; ++i) {
+            retval[3 * choice[i]] = muts[3 * choice[i]];
+            retval[3 * choice[i] + 1] = muts[3 * choice[i] + 1];
+            retval[3 * choice[i] + 2] = muts[3 * choice[i] + 2];
+        }
+        return retval;
+    }
+
     unsigned m_nvar;
     unsigned m_ncon;
     unsigned m_nker;
@@ -157,6 +176,10 @@ int main()
     fmt::print("{}\n", fmt::join(ys, ", "));
     auto err = ex.mse(genotype, xs, ys);
     fmt::print("{}\n", fmt::join(err, ", "));
+    // Mutate (1,2,3 and check)
+    fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 1), ", "));
+    fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 2), ", "));
+    fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 3), ", "));
 
     return 0;
 }
