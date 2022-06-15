@@ -41,16 +41,20 @@ struct expression {
         unsigned nus = 0u;
         std::uniform_int_distribution<int> uni_ker(0, m_nker - 1);
         for (auto i = 0u; i < length; ++i) {
-            // Lets pick a random kernel
-            unsigned funidx = uni_ker(m_rng);
+            // Lets pick a random kernel (but not subtraction as a first pick)
+            unsigned funidx = 1;
+            while (funidx == 1) {
+                funidx = uni_ker(m_rng);
+                if (i > 0) break;
+            }
             // Lets pick a random u0
             std::uniform_int_distribution<int> uni_us(0, m_nvar + nus - 1);
             unsigned u0idx = uni_us(m_rng);
             unsigned u1idx = u0idx;
-            // ... and a random u1 different from u0 if the kernel is subtraction (idx = 1)
+            // ... and a random u1 not equal to u2 if the kernel is sub
             while (u1idx == u0idx) {
                 u1idx = uni_us(m_rng);
-                if (funidx!=1 || (i == 0u && (m_nvar + m_ncon) == 1u)) break;
+                if (funidx != 1) break;
             }
             retval[3 * i] = funidx;
             retval[3 * i + 1] = u0idx;
