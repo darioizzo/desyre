@@ -48,13 +48,9 @@ struct expression {
             unsigned u0idx = uni_us(m_rng);
             unsigned u1idx = u0idx;
             // ... and a random u1 different from u0 if the kernel is subtraction (idx = 1)
-            if (funidx != 1) {
+            while (u1idx == u0idx) {
                 u1idx = uni_us(m_rng);
-            } else {
-                while (u1idx == u0idx) {
-                    u1idx = uni_us(m_rng);
-                    if (i == 0u && (m_nvar + m_ncon) == 1u) break;
-                }
+                if (funidx!=1 || (i == 0u && (m_nvar + m_ncon) == 1u)) break;
             }
             retval[3 * i] = funidx;
             retval[3 * i + 1] = u0idx;
@@ -115,6 +111,17 @@ struct expression {
         return retval;
     }
 
+    std::vector<double> fitness(const std::vector<unsigned> &genotype, const std::vector<std::vector<double>> &xs,
+                                const std::vector<double> &ys)
+    {
+        std::vector<double> retval(3);
+        auto errors = mse(genotype, xs, ys);
+        retval[2] = std::reduce(errors.begin(), errors.end(), 0.0) / errors.size();
+        retval[1] = *std::max_element(errors.begin(), errors.end());
+        retval[0] = *std::min_element(errors.begin(), errors.end());
+        return retval;
+    }
+
     std::vector<unsigned> mutation(std::vector<unsigned> genotype, unsigned N)
     {
         auto retval = genotype;
@@ -150,7 +157,8 @@ void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys
 {
     xs.resize(N);
     ys.resize(N);
-    for (auto i = 0.; i < N; ++i) {
+    // i must be double
+    for (double i = 0.; i < N; ++i) {
         xs[i] = {lb + i / (N - 1) * (ub - lb)};
         ys[i] = koza_quintic(xs[i]);
     }
@@ -174,12 +182,32 @@ int main()
     generate_data(xs, ys, 10, -3, 3);
     fmt::print("{}\n", fmt::join(xs, ", "));
     fmt::print("{}\n", fmt::join(ys, ", "));
+    // Print the error
     auto err = ex.mse(genotype, xs, ys);
     fmt::print("{}\n", fmt::join(err, ", "));
+    // Print the fitness
+    auto fit = ex.fitness(genotype, xs, ys);
+    fmt::print("{}\n", fmt::join(fit, ", "));
     // Mutate (1,2,3 and check)
     fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 1), ", "));
     fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 2), ", "));
     fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 3), ", "));
-
+    // Run the evolution
+    auto count = 0u;
+    auto best_x = ex.random_genotype(20);
+    auto best_f = ex.fitness(best_x, xs, ys);
+    while (true) {
+        for (auto i = 0u; i < 4u; ++i) {
+            auto new_x = ex.mutation(best_x, 3);
+            auto new_f = ex.fitness(new_x, xs, ys);
+            count++;
+            if (new_f[0] <= best_f[0]) {
+                best_x = new_x;
+                best_f = new_f;
+            }
+            fmt::print("New Best is {} at {} fevals)\n", best_f, count);
+        }
+        if (best_f[0] < 1e-10) break;
+    }
     return 0;
 }
