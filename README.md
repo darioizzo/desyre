@@ -1,5 +1,15 @@
 # sr
-Fooling around with SR encodings
+Fooling around with SR encodings. Create a conda environment as
+```
+conda create -n sr cmake fmt
+```
+then, after activation and in the repo main folder:
+```
+mkdir build
+cd build
+cmake ../
+make
+```
 
 Executables:
 ## koza
