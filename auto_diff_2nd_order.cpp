@@ -84,6 +84,7 @@ struct expression {
     std::vector<double> dphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                    unsigned idx)
     {
+        assert(idx < m_nvar + m_ncon);
         // Number of terminals (vars and cons)
         unsigned n_terminals = m_nvar + m_ncon;
         // Number of triplets (F idx0, idx1 in the chromosome)

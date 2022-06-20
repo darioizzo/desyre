@@ -89,6 +89,7 @@ struct expression {
     std::vector<double> dphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                    unsigned idx)
     {
+        assert(idx < m_nvar + m_ncon);
         // Number of terminals (vars and cons)
         unsigned n_terminals = m_nvar + m_ncon;
         // Number of triplets (F idx0, idx1 in the chromosome)
@@ -193,7 +194,7 @@ struct expression {
         assert(m_nvar + m_ncon == xs[0].size());
         std::vector<double> retval(m_nvar + m_ncon + genotype.size() / 3, 0u);
         for (decltype(xs.size()) i = 0u; i < xs.size(); ++i) {
-            // compute all values in the phenotype (u0, u1, u2, .... un) at xs[i]
+            // compute all values in the phenotype (u0, u1, u2, .... un) at xs[i], cons
             auto squared_err = phenotype(genotype, xs[i], cons);
             // subtract ys[i] and square
             for (auto &element : squared_err) {
