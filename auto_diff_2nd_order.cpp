@@ -129,7 +129,8 @@ struct expression {
     std::vector<double> ddphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                     const std::vector<double> &d0phenotype, const std::vector<double> &d1phenotype)
     {
-        assert(dphenotype.size() == phenotype.size());
+        assert(d0phenotype.size() == d1phenotype.size());
+        assert(phenotype.size() == d1phenotype.size());
         // Number of terminals (vars and cons)
         unsigned n_terminals = m_nvar + m_ncon;
         // Number of triplets (F idx0, idx1 in the chromosome)
