@@ -349,7 +349,7 @@ void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys
     // i must be double
     for (double i = 0.; i < N; ++i) {
         xs[i] = {lb + i / (N - 1) * (ub - lb)};
-        ys[i] = P4(xs[i]);
+        ys[i] = P1(xs[i]);
     }
 }
 
@@ -367,14 +367,14 @@ int main(int argc, char *argv[])
     // Generate P1 data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
-    generate_data(xs, ys, 10, -1., 1.);
+    generate_data(xs, ys, 10, 0.1, 3.);
 
     // Allocate some stuff
     auto length = 20u;
     std::vector<double> mse(length + 2, 0.), dmse(length + 2, 0.), ddmse(length + 2, 0.), predicted_mse(length + 2, 0.);
 
     // The expression system 1 var 1 constant , +,-,*,/, sin, cos
-    expression ex(1, 1, {0, 1, 2, 3, 4, 5});
+    expression ex(1, 1, {0, 1, 2, 3});
 
     // Run the evolution
     // We run n_trials experiments
