@@ -90,6 +90,9 @@ struct expression {
                 case 4:
                     phenotype[i + n_terminals] = std::sin(u0);
                     break;
+                case 5:
+                    phenotype[i + n_terminals] = std::cos(u0);
+                    break;
                 default:
                     throw;
             }
@@ -135,6 +138,9 @@ struct expression {
                     break;
                 case 4:
                     dphenotype[i + n_terminals] = std::cos(u0) * d_u0;
+                    break;
+                case 5:
+                    dphenotype[i + n_terminals] = -std::sin(u0) * d_u0;
                     break;
                 default:
                     throw;
@@ -193,6 +199,10 @@ struct expression {
                 case 4:
                     ddphenotype[i + n_terminals] = -std::sin(u0) * d0_u0 * d1_u0 + std::cos(u0) * dd_u0;
                     break;
+                // cos
+                case 5:
+                    ddphenotype[i + n_terminals] = -std::cos(u0) * d0_u0 * d1_u0 - std::sin(u0) * dd_u0;
+                    break;
                 default:
                     throw;
             }
@@ -204,7 +214,7 @@ struct expression {
                             const std::vector<std::vector<double>> &xs, const std::vector<double> &ys)
     {
         auto N = xs.size();
-        assert(m_nvar == N);
+        assert(m_nvar == xs[0].size());
         std::vector<double> retval(m_nvar + m_ncon + genotype.size() / 3, 0u);
         for (decltype(xs.size()) i = 0u; i < N; ++i) {
             // compute all values in the phenotype (u0, u1, u2, .... un) at xs[i], cons
@@ -317,6 +327,21 @@ inline double P1(const std::vector<double> &x)
     return std::pow(x[0], 5) - 3.14151617 * std::pow(x[0], 3) + x[0];
 }
 
+inline double P2(const std::vector<double> &x)
+{
+    return std::pow(x[0], 5) - 3.14151617 * std::pow(x[0], 3) + 2 * 3.14151617 / x[0];
+}
+
+inline double P3(const std::vector<double> &x)
+{
+    return (2.7182 * std::pow(x[0], 5) + std::pow(x[0], 3)) / (x[0] + 1);
+}
+
+inline double P4(const std::vector<double> &x)
+{
+    return std::sin(3.14151617 * x[0]) + 1. / x[0];
+}
+
 void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, double lb, double ub)
 {
     xs.resize(N);
@@ -324,16 +349,17 @@ void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys
     // i must be double
     for (double i = 0.; i < N; ++i) {
         xs[i] = {lb + i / (N - 1) * (ub - lb)};
-        ys[i] = P1(xs[i]);
+        ys[i] = P4(xs[i]);
     }
 }
 
 using namespace fmt;
-// Usage ./main n_trials verbosity
+// Usage ./main n_trials crop verbosity
 int main(int argc, char *argv[])
 {
     auto n_trials = std::atoi(argv[1]);
-    auto verbosity = std::atoi(argv[2]);
+    auto crop = std::atoi(argv[2]);
+    auto verbosity = std::atoi(argv[3]);
 
     std::random_device rd;  // only used once to initialise (seed) engine
     std::mt19937 rng(rd()); // random-number engine used (Mersenne-Twister in this case)
@@ -341,18 +367,19 @@ int main(int argc, char *argv[])
     // Generate P1 data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
-    generate_data(xs, ys, 10, -3, 3);
+    generate_data(xs, ys, 10, -1., 1.);
 
     // Allocate some stuff
     auto length = 20u;
     std::vector<double> mse(length + 2, 0.), dmse(length + 2, 0.), ddmse(length + 2, 0.), predicted_mse(length + 2, 0.);
 
-    // The expression system 1 var 1 constant , +,-,*,/
-    expression ex(1, 1, {0, 1, 2, 3});
+    // The expression system 1 var 1 constant , +,-,*,/, sin, cos
+    expression ex(1, 1, {0, 1, 2, 3, 4, 5});
 
     // Run the evolution
     // We run n_trials experiments
     auto ERT = 0u;
+    auto n_success = 0u;
     for (auto j = 0u; j < n_trials; ++j) {
         // We let each run to convergence
         auto best_x = ex.random_genotype(length);
@@ -360,7 +387,7 @@ int main(int argc, char *argv[])
         auto best_f = ex.fitness(best_x, best_c, xs, ys);
         auto count = 0u;
         count++;
-        while (true) {
+        while (count < crop) {
             for (auto i = 0u; i < 4u; ++i) {
                 auto new_x = ex.mutation(best_x, 5);
                 auto new_c = best_c;
@@ -384,6 +411,7 @@ int main(int argc, char *argv[])
                 // 4 - We compute the fitness of the new genotype with those constants
                 auto new_f = ex.fitness(new_x, new_c, xs, ys);
                 count++;
+                ERT++;
                 if (new_f[0] <= best_f[0]) {
                     best_x = new_x;
                     best_f = new_f;
@@ -395,11 +423,15 @@ int main(int argc, char *argv[])
                 }
             }
             if (best_f[0] < 1e-10) {
+                n_success++;
                 break;
             }
         }
-        ERT += count;
     }
-    fmt::print("ERT is {}\n", ERT / n_trials);
+    if (n_success > 0u) {
+        fmt::print("ERT is {}\n", ERT / n_success);
+    } else {
+        fmt::print("No success, increase crop?\n");
+    }
     return 0;
 }
