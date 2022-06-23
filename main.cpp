@@ -203,9 +203,10 @@ struct expression {
     std::vector<double> mse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
                             const std::vector<std::vector<double>> &xs, const std::vector<double> &ys)
     {
-        assert(m_nvar == xs[0].size());
+        auto N = xs.size();
+        assert(m_nvar == N);
         std::vector<double> retval(m_nvar + m_ncon + genotype.size() / 3, 0u);
-        for (decltype(xs.size()) i = 0u; i < xs.size(); ++i) {
+        for (decltype(xs.size()) i = 0u; i < N; ++i) {
             // compute all values in the phenotype (u0, u1, u2, .... un) at xs[i], cons
             auto squared_err = phenotype(genotype, xs[i], cons);
             // subtract ys[i] and square
@@ -216,6 +217,8 @@ struct expression {
             // Add to retval
             std::transform(retval.begin(), retval.end(), squared_err.begin(), retval.begin(), std::plus<double>());
         }
+        std::transform(retval.begin(), retval.end(), retval.begin(), [N](double &c) { return c / N; });
+
         return retval;
     }
 
@@ -235,10 +238,17 @@ struct expression {
                   const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, std::vector<double> &mse,
                   std::vector<double> &dmse, std::vector<double> &ddmse)
     {
+        auto N = xs.size();
+
         assert(mse.size() == genotype.size() / 3 + m_nvar + m_ncon);
+
         std::vector<double> ph;
         std::vector<double> dph;
         std::vector<double> ddph;
+
+        std::fill(mse.begin(), mse.end(), 0.);
+        std::fill(dmse.begin(), dmse.end(), 0.);
+        std::fill(ddmse.begin(), ddmse.end(), 0.);
 
         // For each point
         for (decltype(xs.size()) i = 0u; i < xs.size(); ++i) {
@@ -254,15 +264,15 @@ struct expression {
             for (auto j = 0u; j < ph.size(); ++j) {
                 ph[j] -= ys[i];
             }
-            // (yi-\hat y_i)d2ydc2+(dy/dc)^2
+            // 2 ((yi-\hat y_i)d2ydc2+(dy/dc)^2)
             for (auto j = 0u; j < ddph.size(); ++j) {
-                ddph[j] = ph[j] * ddph[j] + dph[j] * dph[j];
+                ddph[j] = 2 * (ph[j] / 2. * ddph[j] + dph[j] * dph[j]);
             }
-            // (yi-\hat y_i)dydc
+            // 2 (yi-\hat y_i)dydc
             for (auto j = 0u; j < dph.size(); ++j) {
-                dph[j] = ph[j] * dph[j];
+                dph[j] = 2 * ph[j] * dph[j];
             }
-            // finally (yi-\hat y_i)^2 (maybe useless?)
+            // finally (yi-\hat y_i)^2
             for (auto j = 0u; j < ph.size(); ++j) {
                 ph[j] *= ph[j];
             }
@@ -271,6 +281,9 @@ struct expression {
             std::transform(dmse.begin(), dmse.end(), dph.begin(), dmse.begin(), std::plus<double>());
             std::transform(ddmse.begin(), ddmse.end(), ddph.begin(), ddmse.begin(), std::plus<double>());
         }
+        std::transform(mse.begin(), mse.end(), mse.begin(), [N](double &c) { return c / N; });
+        std::transform(dmse.begin(), dmse.end(), dmse.begin(), [N](double &c) { return c / N; });
+        std::transform(ddmse.begin(), ddmse.end(), ddmse.begin(), [N](double &c) { return c / N; });
     }
 
     std::vector<unsigned> mutation(std::vector<unsigned> genotype, unsigned N)
@@ -319,41 +332,74 @@ using namespace fmt;
 // Usage ./main n_trials verbosity
 int main(int argc, char *argv[])
 {
-    // auto n_trials = std::atoi(argv[1]);
-    // auto verbosity = std::atoi(argv[2]);
+    auto n_trials = std::atoi(argv[1]);
+    auto verbosity = std::atoi(argv[2]);
 
     std::random_device rd;  // only used once to initialise (seed) engine
     std::mt19937 rng(rd()); // random-number engine used (Mersenne-Twister in this case)
-    fmt::print("Working with f=[x, c, x^2, x^3, x^5, cx^3, x^5+cx^3, x^5+cx^3+x \n");
-    // One variable, one constant: +,-,*,/
-    expression ex(1, 1, {0, 1, 2, 3});
-    const std::vector<unsigned int> genotype = {2, 0, 0, 2, 0, 2, 2, 3, 2, 2, 1, 3, 0, 4, 5, 0, 6, 0};
 
     // Generate P1 data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
     generate_data(xs, ys, 10, -3, 3);
-    // Allocate
-    auto length = 6u;
-    std::vector<double> mse(length + 2, 0.), dmse(length + 2, 0.), ddmse(length + 2, 0.);
 
-    // gradient descent
-    auto consts = ex.random_constants(-3.030405058888889, -3.030405058888889);
-    auto count = 0u;
-    while (count < 1) {
-        ex.dfitness(genotype, consts, xs, ys, mse, dmse, ddmse);
-        // Find the best one
-        auto min_el = std::min_element(mse.begin(), mse.end());
-        auto idx = std::distance(mse.begin(), min_el);
-        // consts[0] = consts[0] - dmse[idx] / ddmse[idx];
-        auto best_f = ex.fitness(genotype, consts, xs, ys);
+    // Allocate some stuff
+    auto length = 20u;
+    std::vector<double> mse(length + 2, 0.), dmse(length + 2, 0.), ddmse(length + 2, 0.), predicted_mse(length + 2, 0.);
+
+    // The expression system 1 var 1 constant , +,-,*,/
+    expression ex(1, 1, {0, 1, 2, 3});
+
+    // Run the evolution
+    // We run n_trials experiments
+    auto ERT = 0u;
+    for (auto j = 0u; j < n_trials; ++j) {
+        // We let each run to convergence
+        auto best_x = ex.random_genotype(length);
+        auto best_c = ex.random_constants(-10., 10.);
+        auto best_f = ex.fitness(best_x, best_c, xs, ys);
+        auto count = 0u;
         count++;
-        fmt::print("mse: {}\n", mse);
-        fmt::print("dmse: {}\n", dmse);
-        fmt::print("ddmse: {}\n", ddmse);
-
-        fmt::print("New Best is {} at {} fevals {} idx and c is {})\n", best_f, count, idx, consts);
+        while (true) {
+            for (auto i = 0u; i < 4u; ++i) {
+                auto new_x = ex.mutation(best_x, 5);
+                auto new_c = best_c;
+                // We now have a new candidate genotype new_x and see what a Newton step could produce.
+                // 1 - We compute the mse and its derivateives w.r.t. c
+                ex.dfitness(new_x, best_c, xs, ys, mse, dmse, ddmse);
+                // 2 - We assume a second order model mse = mse + dmse dc + 1/2 ddmse dc^2 and find the best genotype.
+                for (decltype(predicted_mse.size()) i = 0u; i < predicted_mse.size(); ++i) {
+                    double dc = 0.;
+                    if (std::isfinite(dmse[i]) && std::isfinite(ddmse[i]) && ddmse[i] != 0) {
+                        dc = -dmse[i] / ddmse[i];
+                    }
+                    predicted_mse[i] = mse[i] + dmse[i] * dc + 0.5 * ddmse[i] * dc * dc;
+                }
+                auto tmp = std::min_element(predicted_mse.begin(), predicted_mse.end());
+                auto idx = std::distance(predicted_mse.begin(), tmp);
+                // 3 - The new constants are those of the best genotype if not nans
+                if (std::isfinite(dmse[idx]) && std::isfinite(ddmse[idx]) && ddmse[idx] != 0) {
+                    new_c[0] -= dmse[idx] / ddmse[idx];
+                }
+                // 4 - We compute the fitness of the new genotype with those constants
+                auto new_f = ex.fitness(new_x, new_c, xs, ys);
+                count++;
+                if (new_f[0] <= best_f[0]) {
+                    best_x = new_x;
+                    best_f = new_f;
+                    best_c = new_c;
+                    // Only if verbosity is > 0
+                    if (verbosity > 0) {
+                        fmt::print("New Best is {} at {} fevals: c value {})\n", best_f, count, best_c[0]);
+                    }
+                }
+            }
+            if (best_f[0] < 1e-10) {
+                break;
+            }
+        }
+        ERT += count;
     }
-
+    fmt::print("ERT is {}\n", ERT / n_trials);
     return 0;
 }
