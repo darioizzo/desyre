@@ -354,11 +354,11 @@ void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys
 }
 
 using namespace fmt;
-// Usage ./main n_trials crop verbosity
+// Usage ./main n_trials restart verbosity
 int main(int argc, char *argv[])
 {
     auto n_trials = std::atoi(argv[1]);
-    auto crop = std::atoi(argv[2]);
+    auto restart = std::atoi(argv[2]);
     auto verbosity = std::atoi(argv[3]);
 
     std::random_device rd;  // only used once to initialise (seed) engine
@@ -387,7 +387,7 @@ int main(int argc, char *argv[])
         auto best_f = ex.fitness(best_x, best_c, xs, ys);
         auto count = 0u;
         count++;
-        while (count < crop) {
+        while (count < restart) {
             for (auto i = 0u; i < 4u; ++i) {
                 auto new_x = ex.mutation(best_x, 5);
                 auto new_c = best_c;
@@ -418,7 +418,7 @@ int main(int argc, char *argv[])
                     best_c = new_c;
                     // Only if verbosity is > 0
                     if (verbosity > 0) {
-                        fmt::print("New Best is {} at {} fevals: c value {})\n", best_f, count, best_c[0]);
+                        print("New Best is {} at {} fevals: c value {})\n", best_f, count, best_c[0]);
                     }
                 }
             }
@@ -429,9 +429,9 @@ int main(int argc, char *argv[])
         }
     }
     if (n_success > 0u) {
-        fmt::print("ERT is {}\n", ERT / n_success);
+        print("ERT is {}\n", ERT / n_success);
     } else {
-        fmt::print("No success, increase crop?\n");
+        print("No success, restart less frequently?\n");
     }
     return 0;
 }
