@@ -430,6 +430,7 @@ int main(int argc, char *argv[])
     }
     if (n_success > 0u) {
         print("ERT is {}\n", ERT / n_success);
+        print("Successful runs {}\n", n_success);
     } else {
         print("No success, restart less frequently?\n");
     }

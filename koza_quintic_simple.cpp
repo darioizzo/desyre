@@ -131,7 +131,7 @@ struct expression {
                     dphenotype[i + n_terminals] = add(mul(u0, d_u1), mul(d_u0, u1));
                     break;
                 case 3:
-                    dphenotype[i + n_terminals] = div(sub(mul(d_u0, u1), mul(u0, d_u1)), mul(u1,u1));
+                    dphenotype[i + n_terminals] = div(sub(mul(d_u0, u1), mul(u0, d_u1)), mul(u1, u1));
                     break;
                 default:
                     throw;
@@ -195,7 +195,6 @@ struct expression {
     std::vector<unsigned> m_kernels;
     std::mt19937 m_rng;
 };
-
 inline double koza_quintic(const std::vector<double> &x)
 {
     return std::pow(x[0], 5) - 2 * std::pow(x[0], 3) + x[0];
@@ -216,46 +215,33 @@ void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys
 int main(int argc, char *argv[])
 {
     auto n_trials = std::atoi(argv[1]);
-    auto verbosity = std::atoi(argv[2]);
+    auto restart = std::atoi(argv[2]);
+    auto verbosity = std::atoi(argv[3]);
 
     std::random_device rd;  // only used once to initialise (seed) engine
     std::mt19937 rng(rd()); // random-number engine used (Mersenne-Twister in this case)
     // One variable, no constants +,-,*,/
     expression ex(1, 0, {0, 1, 2, 3});
-    // A random genotype
-    auto genotype = ex.random_genotype(5);
-    fmt::print("[{}]\n", fmt::join(genotype, ", "));
-    // And the phenotype evaluated at x = 1.
-    auto phenotype = ex.phenotype(genotype, {1.});
-    fmt::print("{}\n", fmt::join(phenotype, ", "));
     // Generate Koza data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
     generate_data(xs, ys, 10, -3, 3);
-    fmt::print("{}\n", fmt::join(xs, ", "));
-    fmt::print("{}\n", fmt::join(ys, ", "));
-    // Print the error
-    auto err = ex.mse(genotype, xs, ys);
-    fmt::print("{}\n", fmt::join(err, ", "));
-    // Print the fitness
-    auto fit = ex.fitness(genotype, xs, ys);
-    fmt::print("{}\n", fmt::join(fit, ", "));
-    // Mutate (1,2,3 and check)
-    fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 1), ", "));
-    fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 2), ", "));
-    fmt::print("[{}]\n", fmt::join(ex.mutation(genotype, 3), ", "));
+
     // Run the evolution
     // We run n_trials experiments
     auto ERT = 0u;
+    auto n_success = 0u;
     for (auto j = 0u; j < n_trials; ++j) {
+        fmt::print(" {}", j);
+        fflush(stdout);
         // We let each run to convergence
-        auto best_x = ex.random_genotype(20);
+        auto best_x = ex.random_genotype(50);
         auto best_f = ex.fitness(best_x, xs, ys);
         auto count = 0u;
         count++;
-        while (true) {
+        while (count < restart) {
             for (auto i = 0u; i < 4u; ++i) {
-                auto new_x = ex.mutation(best_x, 5);
+                auto new_x = ex.mutation(best_x, 7);
                 auto new_f = ex.fitness(new_x, xs, ys);
                 count++;
                 if (new_f[0] <= best_f[0]) {
@@ -268,11 +254,16 @@ int main(int argc, char *argv[])
                 }
             }
             if (best_f[0] < 1e-10) {
+                fmt::print(".");
+                fflush(stdout);
+                n_success++;
                 break;
             }
         }
         ERT += count;
     }
-    fmt::print("ERT is {}\n", ERT / n_trials);
+    fmt::print("\n\nERT is {}\n", ERT / n_success);
+    fmt::print("Number of successful trials is {}\n", n_success);
+
     return 0;
 }
