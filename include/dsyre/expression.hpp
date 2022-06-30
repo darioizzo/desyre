@@ -1,6 +1,6 @@
 // Copyright 2020, 2021, 2022 Francesco Biscani (bluescarni@gmail.com), Dario Izzo (dario.izzo@gmail.com)
 //
-// This file is part of the heyoka library.
+// This file is part of the dsyre library.
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
@@ -35,7 +35,7 @@ public:
     std::vector<double> phenotype(const std::vector<unsigned> &genotype, const std::vector<double> &vars,
                                   const std::vector<double> &cons);
 
-    // Computes the symbolic phenotype (i.e. the symbolical expressions for the nodes)
+    // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes)
     std::vector<std::string> sphenotype(const std::vector<unsigned> &genotype, const std::vector<std::string> &vars,
                                   const std::vector<std::string> &cons);
 

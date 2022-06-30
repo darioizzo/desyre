@@ -38,7 +38,7 @@ extensions = [
 
 bibtex_bibfiles = ['biblio.bib']
 
-#intersphinx_mapping = {'hypy': ('https://bluescarni.github.io/heyoka.py', None)}
+#intersphinx_mapping = {'hypy': ('https://bluescarni.github.io/dsyre.py', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
