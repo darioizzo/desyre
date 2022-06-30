@@ -10,16 +10,18 @@
 #include <dsyre/expression.hpp>
 #include <dsyre/kernels.hpp>
 
-
 namespace dsyre
 {
 
-using kernel_f_ptr = double (*)(double, double);
+using ukernel_f_ptr = double (*)(double);
+using pkernel_f_ptr = std::string (*)(std::string);
 
-// Global array of function pointers
-kernel_f_ptr kernel_list[] = {cos, sin, exp};
-kernel_f_ptr dkernel_list[] = {dcos, dsin, dexp};
-kernel_f_ptr ddkernel_list[] = {ddcos, ddsin, ddexp};
+// Global array of function pointers for the unary kernels
+ukernel_f_ptr ukernel_list[] = {cos, sin, exp};
+ukernel_f_ptr dukernel_list[] = {dcos, dsin, dexp};
+ukernel_f_ptr ddukernel_list[] = {ddcos, ddsin, ddexp};
+
+pkernel_f_ptr pkernel_list[] = {pcos, psin, pexp};
 
 expression::expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels,
                        decltype(std::random_device{}()) seed)
@@ -67,6 +69,47 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
     return retval;
 }
 
+std::vector<std::string> expression::sphenotype(const std::vector<unsigned> &genotype,
+                                                const std::vector<std::string> &vars,
+                                                const std::vector<std::string> &cons)
+{
+    assert(m_nvar == vars.size());
+    assert(m_ncon == vars.size());
+    auto n_terminals = m_nvar + m_ncon;
+
+    // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
+    auto n_triplets = genotype.size() / 3;
+    std::vector<std::string> sphenotype(n_terminals + n_triplets);
+    // The u0, u1, ... are the values of variables and constants
+    std::copy(vars.begin(), vars.end(), sphenotype.begin());
+    std::copy(cons.begin(), cons.end(), sphenotype.begin() + m_nvar);
+
+    // We loop and for each triplet compute the corresponding function
+    for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
+        auto u0 = sphenotype[genotype[3 * i + 1]];
+        auto u1 = sphenotype[genotype[3 * i + 2]];
+        auto fidx = genotype[3 * i];
+        switch (m_kernels[fidx]) {
+            case 0:
+                sphenotype[i + n_terminals] = "(" + u0 + "+" + u1 + ")";
+                break;
+            case 1:
+                sphenotype[i + n_terminals] = "(" + u0 + "-" + u1 + ")";
+                break;
+            case 2:
+                sphenotype[i + n_terminals] = "(" + u0 + "*" + u1 + ")";
+                break;
+            case 3:
+                sphenotype[i + n_terminals] = "(" + u0 + "/" + u1 + ")";
+                break;
+            // non arithmetic kernels (unary only)
+            default:
+                sphenotype[i + n_terminals] = pkernel_list[m_kernels[fidx] - 4](u0);
+        }
+    }
+    return sphenotype;
+}
+
 std::vector<double> expression::phenotype(const std::vector<unsigned> &genotype, const std::vector<double> &vars,
                                           const std::vector<double> &cons)
 {
@@ -99,8 +142,9 @@ std::vector<double> expression::phenotype(const std::vector<unsigned> &genotype,
             case 3:
                 phenotype[i + n_terminals] = u0 / u1;
                 break;
+            // non arithmetic kernels (unary only)
             default:
-                phenotype[i + n_terminals] = kernel_list[m_kernels[fidx] - 4](u0, u1);
+                phenotype[i + n_terminals] = ukernel_list[m_kernels[fidx] - 4](u0);
         }
     }
     return phenotype;
@@ -142,8 +186,9 @@ std::vector<double> expression::dphenotype(const std::vector<unsigned> &genotype
             case 3:
                 dphenotype[i + n_terminals] = (d_u0 * u1 - d_u1 * u0) / (u1 * u1);
                 break;
+            // non arithmetic kernels (unary only)
             default:
-                dphenotype[i + n_terminals] = dkernel_list[m_kernels[fidx] - 4](u0, u1) * d_u0;
+                dphenotype[i + n_terminals] = dukernel_list[m_kernels[fidx] - 4](u0) * d_u0;
         }
     }
     return dphenotype;
@@ -196,10 +241,10 @@ std::vector<double> expression::ddphenotype(const std::vector<unsigned> &genotyp
                                                 - 2 * u1 * d1_u1 * (d0_u0 * u1 - d0_u1 * u0))
                                                / u1 / u1 / u1 / u1;
                 break;
-            // non arithmetic kernels
+            // non arithmetic kernels (unary only)
             default:
-                ddphenotype[i + n_terminals] = ddkernel_list[m_kernels[fidx] - 4](u0, u1) * d0_u0 * d1_u0
-                                               + dkernel_list[m_kernels[fidx] - 4](u0, u1) * dd_u0;
+                ddphenotype[i + n_terminals] = ddukernel_list[m_kernels[fidx] - 4](u0) * d0_u0 * d1_u0
+                                               + dukernel_list[m_kernels[fidx] - 4](u0) * dd_u0;
         }
     }
     return ddphenotype;

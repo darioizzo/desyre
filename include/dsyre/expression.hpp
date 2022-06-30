@@ -35,6 +35,10 @@ public:
     std::vector<double> phenotype(const std::vector<unsigned> &genotype, const std::vector<double> &vars,
                                   const std::vector<double> &cons);
 
+    // Computes the symbolic phenotype (i.e. the symbolical expressions for the nodes)
+    std::vector<std::string> sphenotype(const std::vector<unsigned> &genotype, const std::vector<std::string> &vars,
+                                  const std::vector<std::string> &cons);
+
     // First order derivatives
     std::vector<double> dphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                    unsigned idx);

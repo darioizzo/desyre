@@ -9,20 +9,26 @@
 #ifndef DSYRE_KERNELS_HPP
 #define DSYRE_KERNELS_HPP
 
+#include<string>
+
 namespace dsyre
 {
 // Functions and derivatives
-double sin(double a, double b);
-double dsin(double a, double b);
-double ddsin(double a, double b);
+double sin(double a);
+double dsin(double a);
+double ddsin(double a);
+std::string psin(std::string);
 
-double cos(double a, double b);
-double dcos(double a, double b);
-double ddcos(double a, double b);
+double cos(double a);
+double dcos(double a);
+double ddcos(double a);
+std::string pcos(std::string);
 
-double exp(double a, double b);
-double dexp(double a, double b);
-double ddexp(double a, double b);
+double exp(double a);
+double dexp(double a);
+double ddexp(double a);
+std::string pexp(std::string);
+
 
 } // namespace dsyre
 

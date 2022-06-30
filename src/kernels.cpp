@@ -6,47 +6,61 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include<cmath>
+#include <cmath>
 
-#include<dsyre/kernels.hpp>
+#include <dsyre/kernels.hpp>
 
 namespace dsyre
 {
 // Functions and derivatives
-double sin(double a, double b)
+double sin(double a)
 {
     return std::sin(a);
 }
-double dsin(double a, double b)
+double dsin(double a)
 {
     return std::cos(a);
 }
-double ddsin(double a, double b)
+double ddsin(double a)
 {
     return -std::sin(a);
 }
-double cos(double a, double b)
+std::string psin(std::string arg)
+{
+    return "sin(" + arg + ")";
+}
+
+double cos(double a)
 {
     return std::cos(a);
 }
-double dcos(double a, double b)
+double dcos(double a)
 {
     return -std::sin(a);
 }
-double ddcos(double a, double b)
+double ddcos(double a)
 {
     return -std::cos(a);
 }
-double exp(double a, double b)
+std::string pcos(std::string arg)
+{
+    return "cos(" + arg + ")";
+}
+
+double exp(double a)
 {
     return std::exp(a);
 }
-double dexp(double a, double b)
+double dexp(double a)
 {
     return std::exp(a);
 }
-double ddexp(double a, double b)
+double ddexp(double a)
 {
     return std::exp(a);
+}
+std::string pexp(std::string arg)
+{
+    return "exp(" + arg + ")";
 }
 } // namespace dsyre

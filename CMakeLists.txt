@@ -79,7 +79,11 @@ target_compile_definitions(dsyre PRIVATE BOOST_ALLOW_DEPRECATED_HEADERS)
 
 # main.cpp ###################################################################################################################3
 add_executable(main main.cpp)
-target_link_libraries(main fmt::fmt)
+target_link_libraries(main fmt::fmt dsyre)
+target_include_directories(main PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 
 set_property(TARGET main PROPERTY CXX_STANDARD 17)
 set_property(TARGET main PROPERTY CXX_STANDARD_REQUIRED YES)
