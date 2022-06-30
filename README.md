@@ -1,4 +1,4 @@
-# DSYRE (DifferentiablE SYmbolic REgression)
+# DSYRE (Differentiable SYmbolic REgression)
 A graph based system to perform symbolic regression tasks, tailored towards efficiency and speed.
 ```
 conda create -n dsyre cmake fmt boost boost-cpp
