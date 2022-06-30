@@ -9,7 +9,7 @@
 using namespace fmt;
 using kernel_f_ptr = double (*)(double, double);
 
-// Functions
+// Functions and derivatives
 double my_sin(double a, double b)
 {
     return std::sin(a);
@@ -34,12 +34,23 @@ double my_ddcos(double a, double b)
 {
     return -std::cos(a);
 }
+double my_exp(double a, double b)
+{
+    return std::exp(a);
+}
+double my_dexp(double a, double b)
+{
+    return std::exp(a);
+}
+double my_ddexp(double a, double b)
+{
+    return std::exp(a);
+}
 
 // Global array of function pointers
-kernel_f_ptr kernel_list[] = {my_cos, my_sin};
-kernel_f_ptr dkernel_list[] = {my_dcos, my_dsin};
-kernel_f_ptr ddkernel_list[] = {my_ddcos, my_ddsin};
-
+kernel_f_ptr kernel_list[] = {my_cos, my_sin, my_exp};
+kernel_f_ptr dkernel_list[] = {my_dcos, my_dsin, my_dexp};
+kernel_f_ptr ddkernel_list[] = {my_ddcos, my_ddsin, my_ddexp};
 
 struct expression {
     expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels,
@@ -121,7 +132,7 @@ struct expression {
                     phenotype[i + n_terminals] = u0 / u1;
                     break;
                 default:
-                    phenotype[i + n_terminals] = kernel_list[m_kernels[fidx]-4](u0, u1);
+                    phenotype[i + n_terminals] = kernel_list[m_kernels[fidx] - 4](u0, u1);
             }
         }
         return phenotype;
@@ -164,7 +175,7 @@ struct expression {
                     dphenotype[i + n_terminals] = (d_u0 * u1 - d_u1 * u0) / (u1 * u1);
                     break;
                 default:
-                    dphenotype[i + n_terminals] = dkernel_list[m_kernels[fidx]-4](u0, u1) * d_u0;
+                    dphenotype[i + n_terminals] = dkernel_list[m_kernels[fidx] - 4](u0, u1) * d_u0;
             }
         }
         return dphenotype;
@@ -218,7 +229,8 @@ struct expression {
                     break;
                 // non arithmetic kernels
                 default:
-                    ddphenotype[i + n_terminals] = ddkernel_list[m_kernels[fidx]-4](u0, u1) * d0_u0 * d1_u0 + dkernel_list[m_kernels[fidx]-4](u0, u1) * dd_u0;
+                    ddphenotype[i + n_terminals] = ddkernel_list[m_kernels[fidx] - 4](u0, u1) * d0_u0 * d1_u0
+                                                   + dkernel_list[m_kernels[fidx] - 4](u0, u1) * dd_u0;
             }
         }
         return ddphenotype;
@@ -387,7 +399,7 @@ int main(int argc, char *argv[])
     auto length = 20u;
     std::vector<double> mse(length + 2, 0.), dmse(length + 2, 0.), ddmse(length + 2, 0.), predicted_mse(length + 2, 0.);
 
-    // The expression system 1 var 1 constant , +,-,*,/, sin, cos
+    // The expression system 1 var 1 constant +,-,*,/, sin, cos
     expression ex(1, 1, {0, 1, 2, 3, 4, 5});
 
     // Run the evolution
@@ -403,10 +415,10 @@ int main(int argc, char *argv[])
         count++;
         while (count < restart) {
             for (auto i = 0u; i < 4u; ++i) {
-                auto new_x = ex.mutation(best_x, 5);
+                auto new_x = ex.mutation(best_x, 5u);
                 auto new_c = best_c;
                 // We now have a new candidate genotype new_x and see what a Newton step could produce.
-                // 1 - We compute the mse and its derivateives w.r.t. c
+                // 1 - We compute the mse and its derivatives w.r.t. c
                 ex.dfitness(new_x, best_c, xs, ys, mse, dmse, ddmse);
                 // 2 - We assume a second order model mse = mse + dmse dc + 1/2 ddmse dc^2 and find the best
                 // genotype.
