@@ -1,7 +1,7 @@
 # DESYRE (DifferentiablE SYmbolic REgression)
 A graph based system to perform symbolic regression tasks, tailored towards efficiency and speed.
 ```
-conda create -n sr cmake fmt
+conda create -n desyre cmake fmt boost boost-cpp
 ```
 then, after activation and in the repo main folder:
 ```
