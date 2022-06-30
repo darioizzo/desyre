@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'desyre'
+project = 'dsyre'
 copyright = '2020, 2021, 2022 Francesco Biscani, Dario Izzo'
 author = 'Francesco Biscani, Dario Izzo'
 
@@ -59,7 +59,7 @@ html_theme = "sphinx_book_theme"
 html_logo = "images/white_logo.png"
 
 html_theme_options = {
-    "repository_url": "https://github.com/darioizzo/desyre",
+    "repository_url": "https://github.com/darioizzo/dsyre",
     "use_repository_button": True,
     "use_issues_button": True,
 }

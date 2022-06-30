@@ -6,19 +6,19 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef DESYRE_EXPRESSION_HPP
-#define DESYRE_EXPRESSION_HPP
+#ifndef DSYRE_EXPRESSION_HPP
+#define DSYRE_EXPRESSION_HPP
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <random>
 #include <vector>
 
-#include <desyre/detail/visibility.hpp>
+#include <dsyre/detail/visibility.hpp>
 
-namespace desyre
+namespace dsyre
 {
-class DESYRE_DLL_PUBLIC expression
+class DSYRE_DLL_PUBLIC expression
 {
 public:
     // Constructor
@@ -79,6 +79,6 @@ private:
     std::mt19937 m_rng;
 };
 
-} // namespace desyre
+} // namespace dsyre
 
 #endif

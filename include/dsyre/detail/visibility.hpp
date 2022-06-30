@@ -1,23 +1,23 @@
 // Copyright 2020, 2021, 2022 Francesco Biscani (bluescarni@gmail.com), Dario Izzo (dario.izzo@gmail.com)
 //
-// This file is part of the desyre library.
+// This file is part of the dsyre library.
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef DESYRE_DETAIL_VISIBILITY_HPP
-#define DESYRE_DETAIL_VISIBILITY_HPP
+#ifndef DSYRE_DETAIL_VISIBILITY_HPP
+#define DSYRE_DETAIL_VISIBILITY_HPP
 
-#include <desyre/config.hpp>
+#include <dsyre/config.hpp>
 
 // The visibility setup makes sense only for shared
 // library builds.
-#if defined(DESYRE_BUILD_STATIC_LIBRARY)
+#if defined(DSYRE_BUILD_STATIC_LIBRARY)
 
-#define DESYRE_DLL_PUBLIC
-#define DESYRE_DLL_LOCAL
-#define DESYRE_DLL_PUBLIC_INLINE_CLASS
+#define DSYRE_DLL_PUBLIC
+#define DSYRE_DLL_LOCAL
+#define DSYRE_DLL_PUBLIC_INLINE_CLASS
 
 #else
 
@@ -30,27 +30,27 @@
 // empty.
 #if defined(_WIN32) || defined(__CYGWIN__)
 
-#if defined(desyre_EXPORTS)
+#if defined(dsyre_EXPORTS)
 
-#define DESYRE_DLL_PUBLIC __declspec(dllexport)
+#define DSYRE_DLL_PUBLIC __declspec(dllexport)
 
 #else
 
-#define DESYRE_DLL_PUBLIC __declspec(dllimport)
+#define DSYRE_DLL_PUBLIC __declspec(dllimport)
 
 #endif
 
-#define DESYRE_DLL_LOCAL
+#define DSYRE_DLL_LOCAL
 
 #elif defined(__clang__) || defined(__GNUC__) || defined(__INTEL_COMPILER)
 
-#define DESYRE_DLL_PUBLIC __attribute__((visibility("default")))
-#define DESYRE_DLL_LOCAL __attribute__((visibility("hidden")))
+#define DSYRE_DLL_PUBLIC __attribute__((visibility("default")))
+#define DSYRE_DLL_LOCAL __attribute__((visibility("hidden")))
 
 #else
 
-#define DESYRE_DLL_PUBLIC
-#define DESYRE_DLL_LOCAL
+#define DSYRE_DLL_PUBLIC
+#define DSYRE_DLL_LOCAL
 
 #endif
 
@@ -63,11 +63,11 @@
 // Thus, we use a specialised definition for marking "public"ly visible inline classes.
 #if defined(_WIN32) || defined(__CYGWIN__)
 
-#define DESYRE_DLL_PUBLIC_INLINE_CLASS
+#define DSYRE_DLL_PUBLIC_INLINE_CLASS
 
 #else
 
-#define DESYRE_DLL_PUBLIC_INLINE_CLASS DESYRE_DLL_PUBLIC
+#define DSYRE_DLL_PUBLIC_INLINE_CLASS DSYRE_DLL_PUBLIC
 
 #endif
 

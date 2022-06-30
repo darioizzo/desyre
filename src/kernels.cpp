@@ -8,9 +8,9 @@
 
 #include<cmath>
 
-#include<desyre/kernels.hpp>
+#include<dsyre/kernels.hpp>
 
-namespace desyre
+namespace dsyre
 {
 // Functions and derivatives
 double sin(double a, double b)
@@ -49,4 +49,4 @@ double ddexp(double a, double b)
 {
     return std::exp(a);
 }
-} // namespace desyre
+} // namespace dsyre

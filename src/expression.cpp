@@ -6,13 +6,21 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <desyre/detail/visibility.hpp>
-#include <desyre/expression.hpp>
-#include <desyre/kernels.hpp>
+#include <dsyre/detail/visibility.hpp>
+#include <dsyre/expression.hpp>
+#include <dsyre/kernels.hpp>
 
 
-namespace desyre
+namespace dsyre
 {
+
+using kernel_f_ptr = double (*)(double, double);
+
+// Global array of function pointers
+kernel_f_ptr kernel_list[] = {cos, sin, exp};
+kernel_f_ptr dkernel_list[] = {dcos, dsin, dexp};
+kernel_f_ptr ddkernel_list[] = {ddcos, ddsin, ddexp};
+
 expression::expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels,
                        decltype(std::random_device{}()) seed)
     : m_nvar(nvar), m_ncon(ncon), m_kernels(kernels), m_rng(seed)
@@ -301,4 +309,4 @@ std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsig
     }
     return retval;
 }
-} // namespace desyre
+} // namespace dsyre

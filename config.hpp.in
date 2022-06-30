@@ -1,21 +1,21 @@
 // Copyright 2020, 2021, 2022 Francesco Biscani (bluescarni@gmail.com), Dario Izzo (dario.izzo@gmail.com)
 //
-// This file is part of the desyre library.
+// This file is part of the dsyre library.
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef desyre_CONFIG_HPP
-#define desyre_CONFIG_HPP
+#ifndef dsyre_CONFIG_HPP
+#define dsyre_CONFIG_HPP
 
 // clang-format off
-#define desyre_VERSION_STRING "@desyre_VERSION@"
-#define desyre_VERSION_MAJOR @desyre_VERSION_MAJOR@
-#define desyre_VERSION_MINOR @desyre_VERSION_MINOR@
-#define desyre_VERSION_PATCH @desyre_VERSION_PATCH@
+#define dsyre_VERSION_STRING "@dsyre_VERSION@"
+#define dsyre_VERSION_MAJOR @dsyre_VERSION_MAJOR@
+#define dsyre_VERSION_MINOR @dsyre_VERSION_MINOR@
+#define dsyre_VERSION_PATCH @dsyre_VERSION_PATCH@
 
 // clang-format on
-#cmakedefine desyre_BUILD_STATIC_LIBRARY
+#cmakedefine dsyre_BUILD_STATIC_LIBRARY
 
 #endif
