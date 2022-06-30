@@ -105,6 +105,12 @@ set_property(TARGET autodiff PROPERTY CXX_STANDARD 17)
 set_property(TARGET autodiff PROPERTY CXX_STANDARD_REQUIRED YES)
 set_property(TARGET autodiff PROPERTY CXX_EXTENSIONS NO)
 
+# tests
+if(dsyre_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
 # Configuration files #############################################################################################################3
 # Configure config.hpp.
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/dsyre/config.hpp" @ONLY)
