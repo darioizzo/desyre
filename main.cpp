@@ -7,6 +7,39 @@
 #include <fmt/ranges.h>
 
 using namespace fmt;
+using kernel_f_ptr = double (*)(double, double);
+
+// Functions
+double my_sin(double a, double b)
+{
+    return std::sin(a);
+}
+double my_dsin(double a, double b)
+{
+    return std::cos(a);
+}
+double my_ddsin(double a, double b)
+{
+    return -std::sin(a);
+}
+double my_cos(double a, double b)
+{
+    return std::cos(a);
+}
+double my_dcos(double a, double b)
+{
+    return -std::sin(a);
+}
+double my_ddcos(double a, double b)
+{
+    return -std::cos(a);
+}
+
+// Global array of function pointers
+kernel_f_ptr kernel_list[] = {my_cos, my_sin};
+kernel_f_ptr dkernel_list[] = {my_dcos, my_dsin};
+kernel_f_ptr ddkernel_list[] = {my_ddcos, my_ddsin};
+
 
 struct expression {
     expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels,
@@ -87,14 +120,8 @@ struct expression {
                 case 3:
                     phenotype[i + n_terminals] = u0 / u1;
                     break;
-                case 4:
-                    phenotype[i + n_terminals] = std::sin(u0);
-                    break;
-                case 5:
-                    phenotype[i + n_terminals] = std::cos(u0);
-                    break;
                 default:
-                    throw;
+                    phenotype[i + n_terminals] = kernel_list[m_kernels[fidx]-4](u0, u1);
             }
         }
         return phenotype;
@@ -136,14 +163,8 @@ struct expression {
                 case 3:
                     dphenotype[i + n_terminals] = (d_u0 * u1 - d_u1 * u0) / (u1 * u1);
                     break;
-                case 4:
-                    dphenotype[i + n_terminals] = std::cos(u0) * d_u0;
-                    break;
-                case 5:
-                    dphenotype[i + n_terminals] = -std::sin(u0) * d_u0;
-                    break;
                 default:
-                    throw;
+                    dphenotype[i + n_terminals] = dkernel_list[m_kernels[fidx]-4](u0, u1) * d_u0;
             }
         }
         return dphenotype;
@@ -195,16 +216,9 @@ struct expression {
                                                     - 2 * u1 * d1_u1 * (d0_u0 * u1 - d0_u1 * u0))
                                                    / u1 / u1 / u1 / u1;
                     break;
-                // sin
-                case 4:
-                    ddphenotype[i + n_terminals] = -std::sin(u0) * d0_u0 * d1_u0 + std::cos(u0) * dd_u0;
-                    break;
-                // cos
-                case 5:
-                    ddphenotype[i + n_terminals] = -std::cos(u0) * d0_u0 * d1_u0 - std::sin(u0) * dd_u0;
-                    break;
+                // non arithmetic kernels
                 default:
-                    throw;
+                    ddphenotype[i + n_terminals] = ddkernel_list[m_kernels[fidx]-4](u0, u1) * d0_u0 * d1_u0 + dkernel_list[m_kernels[fidx]-4](u0, u1) * dd_u0;
             }
         }
         return ddphenotype;
@@ -349,7 +363,7 @@ void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys
     // i must be double
     for (double i = 0.; i < N; ++i) {
         xs[i] = {lb + i / (N - 1) * (ub - lb)};
-        ys[i] = P1(xs[i]);
+        ys[i] = P4(xs[i]);
     }
 }
 
@@ -367,14 +381,14 @@ int main(int argc, char *argv[])
     // Generate P1 data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
-    generate_data(xs, ys, 10, 0.1, 3.);
+    generate_data(xs, ys, 10, -1., 1.);
 
     // Allocate some stuff
     auto length = 20u;
     std::vector<double> mse(length + 2, 0.), dmse(length + 2, 0.), ddmse(length + 2, 0.), predicted_mse(length + 2, 0.);
 
     // The expression system 1 var 1 constant , +,-,*,/, sin, cos
-    expression ex(1, 1, {0, 1, 2, 3});
+    expression ex(1, 1, {0, 1, 2, 3, 4, 5});
 
     // Run the evolution
     // We run n_trials experiments
@@ -394,7 +408,8 @@ int main(int argc, char *argv[])
                 // We now have a new candidate genotype new_x and see what a Newton step could produce.
                 // 1 - We compute the mse and its derivateives w.r.t. c
                 ex.dfitness(new_x, best_c, xs, ys, mse, dmse, ddmse);
-                // 2 - We assume a second order model mse = mse + dmse dc + 1/2 ddmse dc^2 and find the best genotype.
+                // 2 - We assume a second order model mse = mse + dmse dc + 1/2 ddmse dc^2 and find the best
+                // genotype.
                 for (decltype(predicted_mse.size()) i = 0u; i < predicted_mse.size(); ++i) {
                     double dc = 0.;
                     if (std::isfinite(dmse[i]) && std::isfinite(ddmse[i]) && ddmse[i] != 0) {
