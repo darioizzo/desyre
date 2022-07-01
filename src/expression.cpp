@@ -6,9 +6,13 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <algorithm>
+#include <stdexcept>
+
 #include <dsyre/detail/visibility.hpp>
 #include <dsyre/expression.hpp>
 #include <dsyre/kernels.hpp>
+
 
 namespace dsyre
 {
@@ -20,16 +24,20 @@ using pkernel_f_ptr = std::string (*)(std::string);
 ukernel_f_ptr ukernel_list[] = {cos, sin, exp};
 ukernel_f_ptr dukernel_list[] = {dcos, dsin, dexp};
 ukernel_f_ptr ddukernel_list[] = {ddcos, ddsin, ddexp};
-
 pkernel_f_ptr pkernel_list[] = {pcos, psin, pexp};
 
+// Constructor
 expression::expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels,
                        decltype(std::random_device{}()) seed)
     : m_nvar(nvar), m_ncon(ncon), m_kernels(kernels), m_rng(seed)
 {
-    m_nker = kernels.size();
+    if (std::any_of(m_kernels.begin(), m_kernels.end(), [](unsigned i){ return i >= n_tot_kernels; })) {
+        throw std::invalid_argument("Invalid kernel requested, all ids must be < " + std::to_string(n_ukernel));
+    }
+    m_nker = m_kernels.size();
 };
 
+// Methods
 std::vector<double> expression::random_constants(double lb, double ub)
 {
     std::uniform_real_distribution<> dis(lb, ub);
@@ -50,7 +58,8 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
         unsigned funidx = 1;
         while (funidx == 1) {
             funidx = uni_ker(m_rng);
-            if (i > 0) break;
+            if (i > 0)
+                break;
         }
         // Lets pick a random u0
         std::uniform_int_distribution<int> uni_us(0, m_nvar + nus - 1);
@@ -59,7 +68,8 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
         // ... and a random u1 not equal to u2 if the kernel is sub
         while (u1idx == u0idx) {
             u1idx = uni_us(m_rng);
-            if (funidx != 1) break;
+            if (funidx != 1)
+                break;
         }
         retval[3 * i] = funidx;
         retval[3 * i + 1] = u0idx;

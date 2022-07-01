@@ -16,6 +16,34 @@ using namespace dsyre;
 
 TEST_CASE("construction")
 {
-    expression ex(1, 1, {0, 1, 2, 3, 4, 5});
-    REQUIRE_NOTHROW(ex.random_constants(2.,3.));
+    {
+        REQUIRE_NOTHROW(expression(1u, 1u, {0u, 1u, 2u, 3u, 4u, 5u}));
+    }
+    {
+        REQUIRE_THROWS_AS(expression(1u, 1u, {0u, 1u, 2u, 3u, 24u, 5u}), std::invalid_argument);
+    }
+}
+
+TEST_CASE("random_constants")
+{
+    {
+        auto n_con = 1u;
+        double lb = -0.1;
+        double ub = 3.;
+        expression ex(1u, n_con, {0u, 1u, 2u, 3u, 4u, 5u});
+        auto values = ex.random_constants(lb, ub);
+        REQUIRE(values.size() == n_con);
+        REQUIRE(std::all_of(values.begin(), values.end(), [lb](double x){return x > lb;}));
+        REQUIRE(std::all_of(values.begin(), values.end(), [ub](double x){return x < ub;}));
+    }
+    {
+        auto n_con = 7u;
+        double lb = -103.2;
+        double ub = 1e2;
+        expression ex(1u, n_con, {0u, 1u, 2u, 3u, 4u, 5u});
+        auto values = ex.random_constants(lb, ub);
+        REQUIRE(values.size() == n_con);
+        REQUIRE(std::all_of(values.begin(), values.end(), [lb](double x){return x > lb;}));
+        REQUIRE(std::all_of(values.begin(), values.end(), [ub](double x){return x < ub;}));
+    }
 }

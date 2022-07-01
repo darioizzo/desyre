@@ -22,7 +22,7 @@ class DSYRE_DLL_PUBLIC expression
 {
 public:
     // Constructor
-    expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels,
+    expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels = {0u, 1u, 2u, 3u},
                decltype(std::random_device{}()) seed = std::random_device{}());
 
     // Generates the constants at random within bounds.
@@ -37,7 +37,7 @@ public:
 
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes)
     std::vector<std::string> sphenotype(const std::vector<unsigned> &genotype, const std::vector<std::string> &vars,
-                                  const std::vector<std::string> &cons);
+                                        const std::vector<std::string> &cons);
 
     // First order derivatives
     std::vector<double> dphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
