@@ -5,6 +5,8 @@
 #include <vector>
 
 #include <fmt/ranges.h>
+#include <fmt/ostream.h>
+#include <symengine/expression.h>
 
 #include <dsyre/expression.hpp>
 
@@ -125,6 +127,12 @@ int main(int argc, char *argv[])
     } else {
         print("No success, restart less frequently?\n");
     }
-    print("Best phenotype: {}\n", ex.sphenotype(best_x, {"x"}, {"c"}));
+    auto final_best = ex.sphenotype(best_x, {"x"}, {"c"});
+    print("Best phenotype: {}\n", final_best);
+    std::vector<SymEngine::Expression> exs;
+    for (auto const &raw : final_best) {
+        exs.emplace_back(raw);
+    }
+   print("Best prettied phenotype: {}\n", exs);
     return 0;
 }

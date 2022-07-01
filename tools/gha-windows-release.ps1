@@ -2,7 +2,7 @@
 
 # Install conda environment
 conda config --set always_yes yes
-conda create --name desyre c-compiler cxx-compiler cmake fmt boost boost-cpp python=3.10
+conda create --name desyre c-compiler cxx-compiler cmake fmt boost boost-cpp symengine python=3.10
 conda activate desyre
 
 # Define environment variables for clang ...

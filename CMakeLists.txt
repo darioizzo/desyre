@@ -97,6 +97,13 @@ target_link_libraries(dsyre PUBLIC Boost::boost Boost::serialization)
 # NOTE: quench warnings from Boost when building the library.
 target_compile_definitions(dsyre PRIVATE BOOST_ALLOW_DEPRECATED_HEADERS)
 
+ # Mandatory dependency on symengine.
+ find_package(SymEngine REQUIRED) 
+ message(STATUS "Symengine library found.")
+ message(STATUS "Symengine include dir is: ${SYMENGINE_INCLUDE_DIRS}")
+ message(STATUS "Symengine library is: ${SYMENGINE_LIBRARIES}")
+ include_directories(${SYMENGINE_INCLUDE_DIRS})
+ target_link_libraries(dsyre PUBLIC ${SYMENGINE_LIBRARIES})
 
 # main.cpp ###################################################################################################################3
 add_executable(main main.cpp)
