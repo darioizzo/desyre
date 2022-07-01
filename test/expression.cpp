@@ -10,6 +10,9 @@
 
 #include <dsyre/expression.hpp>
 #include <dsyre/kernels.hpp>
+#include <fmt/ostream.h>
+#include <fmt/ranges.h>
+#include <symengine/expression.h>
 
 #include "catch.hpp"
 
@@ -72,8 +75,8 @@ TEST_CASE("random_genotype")
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
-                REQUIRE(
-                    std::any_of(kernels.begin(), kernels.end(), [i, &geno](unsigned kid) { return kid < geno.size(); }));
+                REQUIRE(std::any_of(kernels.begin(), kernels.end(),
+                                    [i, &geno](unsigned kid) { return kid < geno.size(); }));
             } else {
                 REQUIRE(geno[i] < i / 3 + n_con + n_var);
             }
@@ -89,11 +92,29 @@ TEST_CASE("random_genotype")
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
-                REQUIRE(
-                    std::any_of(kernels.begin(), kernels.end(), [i, &geno](unsigned kid) { return kid < geno.size(); }));
+                REQUIRE(std::any_of(kernels.begin(), kernels.end(),
+                                    [i, &geno](unsigned kid) { return kid < geno.size(); }));
             } else {
                 REQUIRE(geno[i] < i / 3 + n_con + n_var);
             }
+        }
+    }
+}
+
+TEST_CASE("phenotype")
+{
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<unsigned> kernels = {0u, 1u, 2u, 3u, 5u};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble (x + sin(cx)) / x
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
+        std::vector<std::string> objective = {"x", "c", "(x*c)", "sin((x*c))", "(x+sin((x*c)))", "((x+sin((x*c)))/x)"};
+        auto sphen = ex.sphenotype(geno, {"x"}, {"c"});
+
+        for (decltype(sphen.size()) i = 0u; i < sphen.size(); ++i) {
+            REQUIRE(sphen[i] == objective[i]);
         }
     }
 }
