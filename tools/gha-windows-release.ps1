@@ -24,7 +24,7 @@ cmake `
     -DCMAKE_PREFIX_PATH=C:\Miniconda\envs\desyre `
     -DBoost_NO_BOOST_CMAKE=ON `
     -DCMAKE_INSTALL_PREFIX=C:\Miniconda\envs\desyre `
-    -DDESYRE_BUILD_TESTS=yes ..
+    -DDSYRE_BUILD_TESTS=yes ..
 
 cmake --build . --target install --config Release
 ctest -j4 -V -C Release

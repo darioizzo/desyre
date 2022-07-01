@@ -29,7 +29,7 @@ cmake \
     -DCMAKE_INSTALL_PREFIX=$deps_dir \
     -DCMAKE_PREFIX_PATH=$deps_dir \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DDESYRE_BUILD_TESTS=yes \
+    -DDSYRE_BUILD_TESTS=yes \
     ..
 make VERBOSE=1 install
 ctest -j4 -V
