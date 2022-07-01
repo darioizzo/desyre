@@ -63,6 +63,10 @@ public:
     // Mutates the graph
     std::vector<unsigned> mutation(std::vector<unsigned> genotype, unsigned N);
 
+    const std::vector<unsigned>& get_kernels() const {
+        return m_kernels;
+    }
+
 private:
     // Serialization.
     friend class boost::serialization::access;

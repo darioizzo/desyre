@@ -13,7 +13,6 @@
 #include <dsyre/expression.hpp>
 #include <dsyre/kernels.hpp>
 
-
 namespace dsyre
 {
 
@@ -31,7 +30,7 @@ expression::expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kerne
                        decltype(std::random_device{}()) seed)
     : m_nvar(nvar), m_ncon(ncon), m_kernels(kernels), m_rng(seed)
 {
-    if (std::any_of(m_kernels.begin(), m_kernels.end(), [](unsigned i){ return i >= n_tot_kernels; })) {
+    if (std::any_of(m_kernels.begin(), m_kernels.end(), [](unsigned i) { return i >= n_tot_kernels; })) {
         throw std::invalid_argument("Invalid kernel requested, all ids must be < " + std::to_string(n_ukernel));
     }
     m_nker = m_kernels.size();
@@ -48,6 +47,7 @@ std::vector<double> expression::random_constants(double lb, double ub)
     return retval;
 }
 
+// Assuming 0:+, 1:-, 2:* 3:/
 std::vector<unsigned> expression::random_genotype(unsigned length)
 {
     std::vector<unsigned> retval(3 * length);
@@ -61,19 +61,19 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
             if (i > 0)
                 break;
         }
-        // Lets pick a random u0
-        std::uniform_int_distribution<int> uni_us(0, m_nvar + nus - 1);
-        unsigned u0idx = uni_us(m_rng);
-        unsigned u1idx = u0idx;
+        // Lets pick a random u1
+        std::uniform_int_distribution<int> uni_us(0, m_nvar + m_ncon + nus - 1);
+        unsigned u1idx = uni_us(m_rng);
+        unsigned u2idx = u1idx;
         // ... and a random u1 not equal to u2 if the kernel is sub
-        while (u1idx == u0idx) {
-            u1idx = uni_us(m_rng);
+        while (u2idx == u1idx) {
+            u2idx = uni_us(m_rng);
             if (funidx != 1)
                 break;
         }
         retval[3 * i] = funidx;
-        retval[3 * i + 1] = u0idx;
-        retval[3 * i + 2] = u1idx;
+        retval[3 * i + 1] = u1idx;
+        retval[3 * i + 2] = u2idx;
         nus++;
     }
     return retval;

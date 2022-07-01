@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include <dsyre/expression.hpp>
+#include <dsyre/kernels.hpp>
 
 #include "catch.hpp"
 
@@ -33,8 +34,8 @@ TEST_CASE("random_constants")
         expression ex(1u, n_con, {0u, 1u, 2u, 3u, 4u, 5u});
         auto values = ex.random_constants(lb, ub);
         REQUIRE(values.size() == n_con);
-        REQUIRE(std::all_of(values.begin(), values.end(), [lb](double x){return x > lb;}));
-        REQUIRE(std::all_of(values.begin(), values.end(), [ub](double x){return x < ub;}));
+        CHECK(std::all_of(values.begin(), values.end(), [lb](double x) { return x > lb; }));
+        CHECK(std::all_of(values.begin(), values.end(), [ub](double x) { return x < ub; }));
     }
     {
         auto n_con = 7u;
@@ -43,7 +44,56 @@ TEST_CASE("random_constants")
         expression ex(1u, n_con, {0u, 1u, 2u, 3u, 4u, 5u});
         auto values = ex.random_constants(lb, ub);
         REQUIRE(values.size() == n_con);
-        REQUIRE(std::all_of(values.begin(), values.end(), [lb](double x){return x > lb;}));
-        REQUIRE(std::all_of(values.begin(), values.end(), [ub](double x){return x < ub;}));
+        CHECK(std::all_of(values.begin(), values.end(), [lb](double x) { return x > lb; }));
+        CHECK(std::all_of(values.begin(), values.end(), [ub](double x) { return x < ub; }));
+    }
+    // We test for seed control
+    {
+        auto n_con = 7u;
+        double lb = -103.2;
+        double ub = 1e2;
+        expression ex1(1u, n_con, {0u, 1u, 2u, 3u, 4u, 5u}, 7824323u);
+        expression ex2(1u, n_con, {0u, 1u, 2u, 3u, 4u, 5u}, 7824323u);
+        auto values1 = ex1.random_constants(lb, ub);
+        auto values2 = ex2.random_constants(lb, ub);
+        REQUIRE(values1 == values2);
+    }
+}
+
+TEST_CASE("random_genotype")
+{
+    {
+        auto n_con = 0u;
+        auto n_var = 1u;
+        unsigned length = 20u;
+        std::vector<unsigned> kernels = {0u, 1u, 2u, 3u, 4u, 5u};
+        expression ex(n_var, n_con, kernels);
+        auto geno = ex.random_genotype(length);
+        REQUIRE(geno.size() == length * 3u);
+        for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
+            if (i % 3 == 0u) {
+                REQUIRE(
+                    std::any_of(kernels.begin(), kernels.end(), [i, &geno](unsigned kid) { return kid < geno.size(); }));
+            } else {
+                REQUIRE(geno[i] < i / 3 + n_con + n_var);
+            }
+        }
+    }
+    {
+        auto n_con = 3u;
+        auto n_var = 2u;
+        unsigned length = 20u;
+        std::vector<unsigned> kernels = {2u, 4u, 1u, 0u, 2u, 5u};
+        expression ex(n_var, n_con, kernels);
+        auto geno = ex.random_genotype(length);
+        REQUIRE(geno.size() == length * 3u);
+        for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
+            if (i % 3 == 0u) {
+                REQUIRE(
+                    std::any_of(kernels.begin(), kernels.end(), [i, &geno](unsigned kid) { return kid < geno.size(); }));
+            } else {
+                REQUIRE(geno[i] < i / 3 + n_con + n_var);
+            }
+        }
     }
 }
