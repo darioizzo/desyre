@@ -79,6 +79,46 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
     return retval;
 }
 
+std::vector<double> expression::phenotype(const std::vector<unsigned> &genotype, const std::vector<double> &vars,
+                                          const std::vector<double> &cons)
+{
+    assert(m_nvar == vars.size());
+    assert(m_ncon == vars.size());
+    auto n_terminals = m_nvar + m_ncon;
+
+    // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
+    auto n_triplets = genotype.size() / 3;
+    std::vector<double> phenotype(n_terminals + n_triplets);
+    // The u0, u1, ... are the values of variables and constants
+    std::copy(vars.begin(), vars.end(), phenotype.begin());
+    std::copy(cons.begin(), cons.end(), phenotype.begin() + m_nvar);
+
+    // We loop and for each triplet compute the corresponding function
+    for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
+        auto u0 = phenotype[genotype[3 * i + 1]];
+        auto u1 = phenotype[genotype[3 * i + 2]];
+        auto fidx = genotype[3 * i];
+        switch (m_kernels[fidx]) {
+            case 0:
+                phenotype[i + n_terminals] = u0 + u1;
+                break;
+            case 1:
+                phenotype[i + n_terminals] = u0 - u1;
+                break;
+            case 2:
+                phenotype[i + n_terminals] = u0 * u1;
+                break;
+            case 3:
+                phenotype[i + n_terminals] = u0 / u1;
+                break;
+            // non arithmetic kernels (unary only)
+            default:
+                phenotype[i + n_terminals] = ukernel_list[m_kernels[fidx] - 4](u0);
+        }
+    }
+    return phenotype;
+}
+
 std::vector<std::string> expression::sphenotype(const std::vector<unsigned> &genotype,
                                                 const std::vector<std::string> &vars,
                                                 const std::vector<std::string> &cons)
@@ -118,46 +158,6 @@ std::vector<std::string> expression::sphenotype(const std::vector<unsigned> &gen
         }
     }
     return sphenotype;
-}
-
-std::vector<double> expression::phenotype(const std::vector<unsigned> &genotype, const std::vector<double> &vars,
-                                          const std::vector<double> &cons)
-{
-    assert(m_nvar == vars.size());
-    assert(m_ncon == vars.size());
-    auto n_terminals = m_nvar + m_ncon;
-
-    // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
-    auto n_triplets = genotype.size() / 3;
-    std::vector<double> phenotype(n_terminals + n_triplets);
-    // The u0, u1, ... are the values of variables and constants
-    std::copy(vars.begin(), vars.end(), phenotype.begin());
-    std::copy(cons.begin(), cons.end(), phenotype.begin() + m_nvar);
-
-    // We loop and for each triplet compute the corresponding function
-    for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
-        auto u0 = phenotype[genotype[3 * i + 1]];
-        auto u1 = phenotype[genotype[3 * i + 2]];
-        auto fidx = genotype[3 * i];
-        switch (m_kernels[fidx]) {
-            case 0:
-                phenotype[i + n_terminals] = u0 + u1;
-                break;
-            case 1:
-                phenotype[i + n_terminals] = u0 - u1;
-                break;
-            case 2:
-                phenotype[i + n_terminals] = u0 * u1;
-                break;
-            case 3:
-                phenotype[i + n_terminals] = u0 / u1;
-                break;
-            // non arithmetic kernels (unary only)
-            default:
-                phenotype[i + n_terminals] = ukernel_list[m_kernels[fidx] - 4](u0);
-        }
-    }
-    return phenotype;
 }
 
 // First order derivatives
