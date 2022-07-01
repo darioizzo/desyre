@@ -25,23 +25,44 @@ include(YACMACompilerLinkerSettings)
 
 # Options
 option(DSYRE_BUILD_TESTS "Build unit tests." OFF)
-option(dsyre_BUILD_STATIC_LIBRARY "Build dsyre as a static library, instead of dynamic." OFF)
-option(dsyre_SETUP_DOCS "Setup the files for building the docs." ON)
+option(DSYRE_BUILD_STATIC_LIBRARY "Build dsyre as a static library, instead of dynamic." OFF)
+option(DSYRE_SETUP_DOCS "Setup the files for building the docs." ON)
 
+# NOTE: on Unix systems, the correct library installation path
+# could be something other than just "lib", such as "lib64",
+# "lib32", etc., depending on platform/configuration. Apparently,
+# CMake provides this information via the GNUInstallDirs module.
+# Let's enable this for now on all Unixes except OSX.
+# NOTE: potentially, this could be applicable to Cygwin as well.
+#
+# https://cmake.org/cmake/help/v3.15/module/GNUInstallDirs.html
+# https://cmake.org/pipermail/cmake/2013-July/055375.html
+if(UNIX AND NOT APPLE)
+    include(GNUInstallDirs)
+    set(_DSYRE_INSTALL_LIBDIR_DEFAULT "${CMAKE_INSTALL_LIBDIR}")
+else()
+    set(_DSYRE_INSTALL_LIBDIR_DEFAULT "lib")
+endif()
+if(NOT DSYRE_INSTALL_LIBDIR)
+    set(DSYRE_INSTALL_LIBDIR "${_DSYRE_INSTALL_LIBDIR_DEFAULT}" CACHE STRING
+        "Library installation directory." FORCE)
+endif()
+mark_as_advanced(DSYRE_INSTALL_LIBDIR)
+message(STATUS "Library installation directory: ${DSYRE_INSTALL_LIBDIR}")
 
 # List of source files.
-set(dsyre_SRC_FILES
+set(DSYRE_SRC_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/expression.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels.cpp"
 )
 # dsyre library ###################################################################################################################3
-if(dsyre_BUILD_STATIC_LIBRARY)
+if(DSYRE_BUILD_STATIC_LIBRARY)
     # Setup of the dsyre static library.
     message(STATUS "dsyre will be built as a static library.")
-    add_library(dsyre STATIC "${dsyre_SRC_FILES}")
+    add_library(dsyre STATIC "${DSYRE_SRC_FILES}")
 else()
     # Setup of the dsyre shared library.
-    add_library(dsyre SHARED "${dsyre_SRC_FILES}")
+    add_library(dsyre SHARED "${DSYRE_SRC_FILES}")
     set_property(TARGET dsyre PROPERTY VERSION "0.0")
     set_property(TARGET dsyre PROPERTY SOVERSION 0)
     set_target_properties(dsyre PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -115,7 +136,7 @@ endif()
 # Configure config.hpp.
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/dsyre/config.hpp" @ONLY)
 
-if(dsyre_SETUP_DOCS)
+if(DSYRE_SETUP_DOCS)
     # Configure the doc files.
     configure_file("${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py" @ONLY)
 endif()
@@ -127,16 +148,16 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/dsyre/config.hpp" DESTINATION
 # Installation of the library.
 install(TARGETS dsyre
     EXPORT dsyre_export
-    LIBRARY DESTINATION "${dsyre_INSTALL_LIBDIR}"
-    ARCHIVE DESTINATION "${dsyre}"
+    LIBRARY DESTINATION "${DSYRE_INSTALL_LIBDIR}"
+    ARCHIVE DESTINATION "${DSYRE_INSTALL_LIBDIR}"
     RUNTIME DESTINATION bin
 )
 
 # Setup of the CMake config file.
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/dsyre-config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/dsyre-config.cmake" @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dsyre-config.cmake"
-    DESTINATION "${dsyre_INSTALL_LIBDIR}/cmake/dsyre")
-install(EXPORT dsyre_export NAMESPACE dsyre:: DESTINATION "${dsyre_INSTALL_LIBDIR}/cmake/dsyre")
+    DESTINATION "${DSYRE_INSTALL_LIBDIR}/cmake/dsyre")
+install(EXPORT dsyre_export NAMESPACE dsyre:: DESTINATION "${DSYRE_INSTALL_LIBDIR}/cmake/dsyre")
 # Take care of versioning.
 include(CMakePackageConfigHelpers)
 # NOTE: SameMinorVersion available only
@@ -146,4 +167,4 @@ if(${CMAKE_VERSION} VERSION_LESS "3.11.0")
 else()
     write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/dsyre-config-version.cmake" COMPATIBILITY SameMinorVersion)
 endif()
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dsyre-config-version.cmake" DESTINATION "${dsyre_INSTALL_LIBDIR}/cmake/dsyre")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dsyre-config-version.cmake" DESTINATION "${DSYRE_INSTALL_LIBDIR}/cmake/dsyre")
