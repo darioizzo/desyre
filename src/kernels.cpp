@@ -13,23 +13,6 @@
 namespace dsyre
 {
 // Functions and derivatives
-double sin(double a)
-{
-    return std::sin(a);
-}
-double dsin(double a)
-{
-    return std::cos(a);
-}
-double ddsin(double a)
-{
-    return -std::sin(a);
-}
-std::string psin(std::string arg)
-{
-    return "sin(" + arg + ")";
-}
-
 double cos(double a)
 {
     return std::cos(a);
@@ -45,6 +28,23 @@ double ddcos(double a)
 std::string pcos(std::string arg)
 {
     return "cos(" + arg + ")";
+}
+
+double sin(double a)
+{
+    return std::sin(a);
+}
+double dsin(double a)
+{
+    return std::cos(a);
+}
+double ddsin(double a)
+{
+    return -std::sin(a);
+}
+std::string psin(std::string arg)
+{
+    return "sin(" + arg + ")";
 }
 
 double exp(double a)

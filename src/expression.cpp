@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <dsyre/detail/visibility.hpp>
 #include <dsyre/expression.hpp>
@@ -24,6 +25,13 @@ ukernel_f_ptr ukernel_list[] = {cos, sin, exp};
 ukernel_f_ptr dukernel_list[] = {dcos, dsin, dexp};
 ukernel_f_ptr ddukernel_list[] = {ddcos, ddsin, ddexp};
 pkernel_f_ptr pkernel_list[] = {pcos, psin, pexp};
+
+// Number of binary operations (+,-,*,/)
+unsigned n_binary = 4u;
+
+// Global map between operators and unsigned (must correspond to the order in the global arrays)
+std::unordered_map<std::string, unsigned> kernel_map{
+    {"sum", 0}, {"diff", 1}, {"mul", 2}, {"div", 3}, {"cos", n_binary}, {"sin", n_binary + 1}, {"exp", n_binary + 2}};
 
 // Constructor
 expression::expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels,
@@ -111,9 +119,9 @@ std::vector<double> expression::phenotype(const std::vector<unsigned> &genotype,
             case 3:
                 phenotype[i + n_terminals] = u0 / u1;
                 break;
-            // non arithmetic kernels (unary only)
+            // non arithmetic kernels (unary only all assumed before binary ones)
             default:
-                phenotype[i + n_terminals] = ukernel_list[m_kernels[fidx] - 4](u0);
+                phenotype[i + n_terminals] = ukernel_list[m_kernels[fidx] - n_binary](u0);
         }
     }
     return phenotype;
@@ -152,9 +160,9 @@ std::vector<std::string> expression::sphenotype(const std::vector<unsigned> &gen
             case 3:
                 sphenotype[i + n_terminals] = "(" + u0 + "/" + u1 + ")";
                 break;
-            // non arithmetic kernels (unary only)
+            // non arithmetic kernels (unary only all assumed before binary ones)
             default:
-                sphenotype[i + n_terminals] = pkernel_list[m_kernels[fidx] - 4](u0);
+                sphenotype[i + n_terminals] = pkernel_list[m_kernels[fidx] - n_binary](u0);
         }
     }
     return sphenotype;
@@ -196,9 +204,9 @@ std::vector<double> expression::dphenotype(const std::vector<unsigned> &genotype
             case 3:
                 dphenotype[i + n_terminals] = (d_u0 * u1 - d_u1 * u0) / (u1 * u1);
                 break;
-            // non arithmetic kernels (unary only)
+            // non arithmetic kernels (unary only all assumed before binary ones)
             default:
-                dphenotype[i + n_terminals] = dukernel_list[m_kernels[fidx] - 4](u0) * d_u0;
+                dphenotype[i + n_terminals] = dukernel_list[m_kernels[fidx] - n_binary](u0) * d_u0;
         }
     }
     return dphenotype;
@@ -251,10 +259,10 @@ std::vector<double> expression::ddphenotype(const std::vector<unsigned> &genotyp
                                                 - 2 * u1 * d1_u1 * (d0_u0 * u1 - d0_u1 * u0))
                                                / u1 / u1 / u1 / u1;
                 break;
-            // non arithmetic kernels (unary only)
+            // non arithmetic kernels (unary only all assumed before binary ones)
             default:
-                ddphenotype[i + n_terminals] = ddukernel_list[m_kernels[fidx] - 4](u0) * d0_u0 * d1_u0
-                                               + dukernel_list[m_kernels[fidx] - 4](u0) * dd_u0;
+                ddphenotype[i + n_terminals] = ddukernel_list[m_kernels[fidx] - n_binary](u0) * d0_u0 * d1_u0
+                                               + dukernel_list[m_kernels[fidx] - n_binary](u0) * dd_u0;
         }
     }
     return ddphenotype;
