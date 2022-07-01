@@ -2,8 +2,8 @@
 
 # Install conda environment
 conda config --set always_yes yes
-conda create --name audi cmake eigen obake-devel mppp boost boost-cpp pybind11 python=3.10
-conda activate audi
+conda create --name desyre c-compiler cxx-compiler cmake fmt boost boost-cpp python=3.10
+conda activate desyre
 
 # Define environment variables for clang ...
 # ... and make them persistent 
@@ -15,12 +15,11 @@ Get-Content "$env:temp\vcvars.txt" | Foreach-Object {
   }
 }
 
-#build and run the dcgp tests
+#build and run the desyre tests
 mkdir build
 cd build
 cmake `
     -G "Ninja" `
-    -DCMAKE_C_COMPILER=clang-cl `
     -DCMAKE_CXX_COMPILER=clang-cl `
     -DCMAKE_PREFIX_PATH=C:\Miniconda\envs\desyre `
     -DBoost_NO_BOOST_CMAKE=ON `

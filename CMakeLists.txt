@@ -24,7 +24,7 @@ message(STATUS "dsyre version: ${dsyre_VERSION}")
 include(YACMACompilerLinkerSettings)
 
 # Options
-option(dsyre_BUILD_TESTS "Build unit tests." OFF)
+option(DSYRE_BUILD_TESTS "Build unit tests." OFF)
 option(dsyre_BUILD_STATIC_LIBRARY "Build dsyre as a static library, instead of dynamic." OFF)
 option(dsyre_SETUP_DOCS "Setup the files for building the docs." ON)
 
@@ -106,7 +106,7 @@ set_property(TARGET autodiff PROPERTY CXX_STANDARD_REQUIRED YES)
 set_property(TARGET autodiff PROPERTY CXX_EXTENSIONS NO)
 
 # tests
-if(dsyre_BUILD_TESTS)
+if(DSYRE_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()
