@@ -7,6 +7,7 @@
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
+#include <numeric>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -29,17 +30,24 @@ pkernel_f_ptr pkernel_list[] = {pcos, psin, pexp};
 // Number of binary operations (+,-,*,/)
 unsigned n_binary = 4u;
 
-// Global map between operators and unsigned (must correspond to the order in the global arrays)
+// Global map between kernel names and an unsigned (must correspond to the order in the global arrays as its used
+// in the switch cases.
 std::unordered_map<std::string, unsigned> kernel_map{
     {"sum", 0}, {"diff", 1}, {"mul", 2}, {"div", 3}, {"cos", n_binary}, {"sin", n_binary + 1}, {"exp", n_binary + 2}};
 
 // Constructor
-expression::expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels,
+expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels,
                        decltype(std::random_device{}()) seed)
-    : m_nvar(nvar), m_ncon(ncon), m_kernels(kernels), m_rng(seed)
+    : m_nvar(nvar), m_ncon(ncon), m_rng(seed)
 {
-    if (std::any_of(m_kernels.begin(), m_kernels.end(), [](unsigned i) { return i >= n_tot_kernels; })) {
-        throw std::invalid_argument("Invalid kernel requested, all ids must be < " + std::to_string(n_ukernel));
+    m_kernels.resize(kernels.size());
+    // We initialize the internal kernel id (unsigned) with the user requests (strings)
+    for (decltype(kernels.size()) i = 0u; i < kernels.size(); ++i) {
+        if (kernel_map.find(kernels[i]) != kernel_map.end()) {
+            m_kernels[i] = kernel_map[kernels[i]];
+        } else {
+            throw std::invalid_argument("The requested kernel (" + kernels[i] + ") has not been implemeted");
+        }
     }
     m_nker = m_kernels.size();
 };

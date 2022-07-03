@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     std::vector<double> mse(length + 2, 0.), dmse(length + 2, 0.), ddmse(length + 2, 0.), predicted_mse(length + 2, 0.);
 
     // The expression system 1 var 1 constant +,-,*,/, sin, cos
-    dsyre::expression ex(1, 1, {0, 1, 2, 3, 4, 5});
+    dsyre::expression ex(1, 1, {"sum", "diff", "mul", "div", "sin", "cos"});
 
     // Run the evolution
     // We run n_trials experiments

@@ -22,7 +22,7 @@ class DSYRE_DLL_PUBLIC expression
 {
 public:
     // Constructor
-    expression(unsigned nvar, unsigned ncon, std::vector<unsigned> kernels = {0u, 1u, 2u, 3u},
+    expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"},
                decltype(std::random_device{}()) seed = std::random_device{}());
 
     // Generates the constants at random within bounds.
@@ -63,7 +63,7 @@ public:
     // Mutates the graph
     std::vector<unsigned> mutation(std::vector<unsigned> genotype, unsigned N);
 
-    const std::vector<unsigned>& get_kernels() const {
+    const std::vector<unsigned>& get_kernels_idx() const {
         return m_kernels;
     }
 
