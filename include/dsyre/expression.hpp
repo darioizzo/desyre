@@ -32,7 +32,7 @@ public:
     std::vector<unsigned> random_genotype(unsigned length);
 
     // Computes the phenotype (i.e. the numerical values of all the graph odes)
-    std::vector<double> phenotype(const std::vector<unsigned> &genotype, const std::vector<double> &vars,
+    void phenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &vars,
                                   const std::vector<double> &cons);
 
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes)
@@ -40,11 +40,11 @@ public:
                                         const std::vector<std::string> &cons);
 
     // First order derivatives
-    std::vector<double> dphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
+    void dphenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                    unsigned idx);
 
     // Second order derivatives
-    std::vector<double> ddphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
+    void ddphenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                     const std::vector<double> &d0phenotype, const std::vector<double> &d1phenotype);
 
     // Mean Squared Error

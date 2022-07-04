@@ -25,6 +25,7 @@ include(YACMACompilerLinkerSettings)
 
 # Options
 option(DSYRE_BUILD_TESTS "Build unit tests." OFF)
+option(DSYRE_BUILD_BENCHMARKS "Build benchmarks." OFF)
 option(DSYRE_BUILD_STATIC_LIBRARY "Build dsyre as a static library, instead of dynamic." OFF)
 option(DSYRE_SETUP_DOCS "Setup the files for building the docs." ON)
 
@@ -129,6 +130,11 @@ set_property(TARGET koza PROPERTY CXX_EXTENSIONS NO)
 if(DSYRE_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
+endif()
+
+# benchmarks
+if(DSYRE_BUILD_BENCHMARKS)
+    add_subdirectory(benchmark)
 endif()
 
 # Configuration files #############################################################################################################3

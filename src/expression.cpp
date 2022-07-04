@@ -95,7 +95,7 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
     return retval;
 }
 
-std::vector<double> expression::phenotype(const std::vector<unsigned> &genotype, const std::vector<double> &vars,
+void expression::phenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &vars,
                                           const std::vector<double> &cons)
 {
     assert(m_nvar == vars.size());
@@ -104,35 +104,34 @@ std::vector<double> expression::phenotype(const std::vector<unsigned> &genotype,
 
     // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
     auto n_triplets = genotype.size() / 3;
-    std::vector<double> phenotype(n_terminals + n_triplets);
+    retval.resize(n_terminals + n_triplets);
     // The u0, u1, ... are the values of variables and constants
-    std::copy(vars.begin(), vars.end(), phenotype.begin());
-    std::copy(cons.begin(), cons.end(), phenotype.begin() + m_nvar);
+    std::copy(vars.begin(), vars.end(), retval.begin());
+    std::copy(cons.begin(), cons.end(), retval.begin() + m_nvar);
 
     // We loop and for each triplet compute the corresponding function
     for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
-        auto u0 = phenotype[genotype[3 * i + 1]];
-        auto u1 = phenotype[genotype[3 * i + 2]];
+        auto u0 = retval[genotype[3 * i + 1]];
+        auto u1 = retval[genotype[3 * i + 2]];
         auto fidx = genotype[3 * i];
         switch (m_kernels[fidx]) {
             case 0:
-                phenotype[i + n_terminals] = u0 + u1;
+                retval[i + n_terminals] = u0 + u1;
                 break;
             case 1:
-                phenotype[i + n_terminals] = u0 - u1;
+                retval[i + n_terminals] = u0 - u1;
                 break;
             case 2:
-                phenotype[i + n_terminals] = u0 * u1;
+                retval[i + n_terminals] = u0 * u1;
                 break;
             case 3:
-                phenotype[i + n_terminals] = u0 / u1;
+                retval[i + n_terminals] = u0 / u1;
                 break;
             // non arithmetic kernels (unary only all assumed before binary ones)
             default:
-                phenotype[i + n_terminals] = ukernel_list[m_kernels[fidx] - n_binary](u0);
+                retval[i + n_terminals] = ukernel_list[m_kernels[fidx] - n_binary](u0);
         }
     }
-    return phenotype;
 }
 
 std::vector<std::string> expression::sphenotype(const std::vector<unsigned> &genotype,
@@ -177,7 +176,7 @@ std::vector<std::string> expression::sphenotype(const std::vector<unsigned> &gen
 }
 
 // First order derivatives
-std::vector<double> expression::dphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
+void expression::dphenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                            unsigned idx)
 {
     assert(idx < m_nvar + m_ncon);
@@ -186,42 +185,42 @@ std::vector<double> expression::dphenotype(const std::vector<unsigned> &genotype
     // Number of triplets (F idx0, idx1 in the chromosome)
     auto n_triplets = genotype.size() / 3;
     // Size of the return value will be the same as phenotype
-    std::vector<double> dphenotype(phenotype.size(), 0.);
+    retval.resize(phenotype.size());
+    std::fill(retval.begin(), retval.end(), 0.);
     // The du0, du1, ... for terminals are all zeros except the idx
-    dphenotype[idx] = 1.;
+    retval[idx] = 1.;
     // We loop and for each triplet compute the corresponding function
     for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
         // Retrieve the values
         auto u0 = phenotype[genotype[3 * i + 1]];
         auto u1 = phenotype[genotype[3 * i + 2]];
         // Retrieve the derivatives
-        auto d_u0 = dphenotype[genotype[3 * i + 1]];
-        auto d_u1 = dphenotype[genotype[3 * i + 2]];
+        auto d_u0 = retval[genotype[3 * i + 1]];
+        auto d_u1 = retval[genotype[3 * i + 2]];
         // Retrieve the function
         auto fidx = genotype[3 * i];
         switch (m_kernels[fidx]) {
             case 0:
-                dphenotype[i + n_terminals] = d_u0 + d_u1;
+                retval[i + n_terminals] = d_u0 + d_u1;
                 break;
             case 1:
-                dphenotype[i + n_terminals] = d_u0 - d_u1;
+                retval[i + n_terminals] = d_u0 - d_u1;
                 break;
             case 2:
-                dphenotype[i + n_terminals] = u0 * d_u1 + d_u0 * u1;
+                retval[i + n_terminals] = u0 * d_u1 + d_u0 * u1;
                 break;
             case 3:
-                dphenotype[i + n_terminals] = (d_u0 * u1 - d_u1 * u0) / (u1 * u1);
+                retval[i + n_terminals] = (d_u0 * u1 - d_u1 * u0) / (u1 * u1);
                 break;
             // non arithmetic kernels (unary only all assumed before binary ones)
             default:
-                dphenotype[i + n_terminals] = dukernel_list[m_kernels[fidx] - n_binary](u0) * d_u0;
+                retval[i + n_terminals] = dukernel_list[m_kernels[fidx] - n_binary](u0) * d_u0;
         }
     }
-    return dphenotype;
 }
 
 // Second order derivative
-std::vector<double> expression::ddphenotype(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
+void expression::ddphenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                             const std::vector<double> &d0phenotype,
                                             const std::vector<double> &d1phenotype)
 {
@@ -232,7 +231,8 @@ std::vector<double> expression::ddphenotype(const std::vector<unsigned> &genotyp
     // Number of triplets (F idx0, idx1 in the chromosome)
     auto n_triplets = genotype.size() / 3;
     // Size of the return value will be the same as phenotype
-    std::vector<double> ddphenotype(phenotype.size(), 0.);
+    retval.resize(phenotype.size(), 0.);
+    std::fill(retval.begin(), retval.end(), 0.);
     // We loop and for each triplet compute the corresponding function
     for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
         // Retrieve the values
@@ -244,36 +244,35 @@ std::vector<double> expression::ddphenotype(const std::vector<unsigned> &genotyp
         auto d1_u0 = d1phenotype[genotype[3 * i + 1]];
         auto d1_u1 = d1phenotype[genotype[3 * i + 2]];
         // Retrieve the second derivatives
-        auto dd_u0 = ddphenotype[genotype[3 * i + 1]];
-        auto dd_u1 = ddphenotype[genotype[3 * i + 2]];
+        auto dd_u0 = retval[genotype[3 * i + 1]];
+        auto dd_u1 = retval[genotype[3 * i + 2]];
         // Retrieve the function
         auto fidx = genotype[3 * i];
         switch (m_kernels[fidx]) {
             // +
             case 0:
-                ddphenotype[i + n_terminals] = dd_u0 + dd_u1;
+                retval[i + n_terminals] = dd_u0 + dd_u1;
                 break;
             // -
             case 1:
-                ddphenotype[i + n_terminals] = dd_u0 - dd_u1;
+                retval[i + n_terminals] = dd_u0 - dd_u1;
                 break;
             // *
             case 2:
-                ddphenotype[i + n_terminals] = dd_u0 * u1 + dd_u1 * u0 + d0_u0 * d1_u1 + d1_u0 * d0_u1;
+                retval[i + n_terminals] = dd_u0 * u1 + dd_u1 * u0 + d0_u0 * d1_u1 + d1_u0 * d0_u1;
                 break;
             // /
             case 3:
-                ddphenotype[i + n_terminals] = ((dd_u0 * u1 + d0_u0 * d1_u1 - d0_u1 * d1_u0 - dd_u1 * u0) * u1 * u1
+                retval[i + n_terminals] = ((dd_u0 * u1 + d0_u0 * d1_u1 - d0_u1 * d1_u0 - dd_u1 * u0) * u1 * u1
                                                 - 2 * u1 * d1_u1 * (d0_u0 * u1 - d0_u1 * u0))
                                                / u1 / u1 / u1 / u1;
                 break;
             // non arithmetic kernels (unary only all assumed before binary ones)
             default:
-                ddphenotype[i + n_terminals] = ddukernel_list[m_kernels[fidx] - n_binary](u0) * d0_u0 * d1_u0
+                retval[i + n_terminals] = ddukernel_list[m_kernels[fidx] - n_binary](u0) * d0_u0 * d1_u0
                                                + dukernel_list[m_kernels[fidx] - n_binary](u0) * dd_u0;
         }
     }
-    return ddphenotype;
 }
 
 std::vector<double> expression::mse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
@@ -282,9 +281,10 @@ std::vector<double> expression::mse(const std::vector<unsigned> &genotype, const
     auto N = xs.size();
     assert(m_nvar == xs[0].size());
     std::vector<double> retval(m_nvar + m_ncon + genotype.size() / 3, 0u);
+    std::vector<double> squared_err;
     for (decltype(xs.size()) i = 0u; i < N; ++i) {
         // compute all values in the phenotype (u0, u1, u2, .... un) at xs[i], cons
-        auto squared_err = phenotype(genotype, xs[i], cons);
+        phenotype(squared_err, genotype, xs[i], cons);
         // subtract ys[i] and square
         for (auto &element : squared_err) {
             element -= ys[i];
@@ -329,11 +329,11 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     // For each point
     for (decltype(xs.size()) i = 0u; i < xs.size(); ++i) {
         // The value of each expression in the single point
-        ph = phenotype(genotype, xs[i], cons);
+        phenotype(ph, genotype, xs[i], cons);
         // The derivative value w.r.t. c (idx 1)
-        dph = dphenotype(genotype, ph, 1);
+        dphenotype(dph, genotype, ph, 1);
         // The second derivative value w.r.t. c c
-        ddph = ddphenotype(genotype, ph, dph, dph);
+        ddphenotype(ddph, genotype, ph, dph, dph);
         // We will now store in ph. dph, ddph respectively, the mse, dmse and ddmse
         // NOTE: The order of the next loops counts and should not be touched.
         // yi-\hat y_i
