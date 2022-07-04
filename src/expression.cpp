@@ -7,6 +7,8 @@
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
+#include <fmt/ostream.h>
+#include <fmt/ranges.h>
 #include <numeric>
 #include <stdexcept>
 #include <unordered_map>
@@ -95,12 +97,13 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
     return retval;
 }
 
-void expression::phenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &vars,
-                                          const std::vector<double> &cons)
+void expression::phenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
+                           const std::vector<double> &vars, const std::vector<double> &cons)
 {
     assert(m_nvar == vars.size());
     assert(m_ncon == vars.size());
     auto n_terminals = m_nvar + m_ncon;
+    // check_genotype(genotype);
 
     // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
     auto n_triplets = genotype.size() / 3;
@@ -176,8 +179,8 @@ std::vector<std::string> expression::sphenotype(const std::vector<unsigned> &gen
 }
 
 // First order derivatives
-void expression::dphenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
-                                           unsigned idx)
+void expression::dphenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
+                            const std::vector<double> &phenotype, unsigned idx)
 {
     assert(idx < m_nvar + m_ncon);
     // Number of terminals (vars and cons)
@@ -186,7 +189,7 @@ void expression::dphenotype(std::vector<double>& retval, const std::vector<unsig
     auto n_triplets = genotype.size() / 3;
     // Size of the return value will be the same as phenotype
     retval.resize(phenotype.size());
-    std::fill(retval.begin(), retval.end(), 0.);
+    std::fill(retval.data(), retval.data() + m_nvar + m_ncon, 0.);
     // The du0, du1, ... for terminals are all zeros except the idx
     retval[idx] = 1.;
     // We loop and for each triplet compute the corresponding function
@@ -220,9 +223,9 @@ void expression::dphenotype(std::vector<double>& retval, const std::vector<unsig
 }
 
 // Second order derivative
-void expression::ddphenotype(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
-                                            const std::vector<double> &d0phenotype,
-                                            const std::vector<double> &d1phenotype)
+void expression::ddphenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
+                             const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
+                             const std::vector<double> &d1phenotype)
 {
     assert(d0phenotype.size() == d1phenotype.size());
     assert(phenotype.size() == d1phenotype.size());
@@ -231,8 +234,8 @@ void expression::ddphenotype(std::vector<double>& retval, const std::vector<unsi
     // Number of triplets (F idx0, idx1 in the chromosome)
     auto n_triplets = genotype.size() / 3;
     // Size of the return value will be the same as phenotype
-    retval.resize(phenotype.size(), 0.);
-    std::fill(retval.begin(), retval.end(), 0.);
+    retval.resize(phenotype.size());
+    std::fill(retval.data(), retval.data() + m_nvar + m_ncon, 0.);
     // We loop and for each triplet compute the corresponding function
     for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
         // Retrieve the values
@@ -264,13 +267,13 @@ void expression::ddphenotype(std::vector<double>& retval, const std::vector<unsi
             // /
             case 3:
                 retval[i + n_terminals] = ((dd_u0 * u1 + d0_u0 * d1_u1 - d0_u1 * d1_u0 - dd_u1 * u0) * u1 * u1
-                                                - 2 * u1 * d1_u1 * (d0_u0 * u1 - d0_u1 * u0))
-                                               / u1 / u1 / u1 / u1;
+                                           - 2 * u1 * d1_u1 * (d0_u0 * u1 - d0_u1 * u0))
+                                          / u1 / u1 / u1 / u1;
                 break;
             // non arithmetic kernels (unary only all assumed before binary ones)
             default:
                 retval[i + n_terminals] = ddukernel_list[m_kernels[fidx] - n_binary](u0) * d0_u0 * d1_u0
-                                               + dukernel_list[m_kernels[fidx] - n_binary](u0) * dd_u0;
+                                          + dukernel_list[m_kernels[fidx] - n_binary](u0) * dd_u0;
         }
     }
 }
@@ -331,7 +334,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
         // The value of each expression in the single point
         phenotype(ph, genotype, xs[i], cons);
         // The derivative value w.r.t. c (idx 1)
-        dphenotype(dph, genotype, ph, 1);
+        dphenotype(dph, genotype, ph, 1u);
         // The second derivative value w.r.t. c c
         ddphenotype(ddph, genotype, ph, dph, dph);
         // We will now store in ph. dph, ddph respectively, the mse, dmse and ddmse
@@ -379,5 +382,29 @@ std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsig
         retval[3 * choice[i] + 2] = muts[3 * choice[i] + 2];
     }
     return retval;
+}
+
+const std::vector<unsigned> &expression::get_kernels_idx() const
+{
+    return m_kernels;
+}
+
+void expression::check_genotype(const std::vector<unsigned> &g) const
+{
+    for (decltype(g.size()) i = 0u; i < g.size(); ++i) {
+        if (i % 3 == 0u) {
+            if (std::any_of(get_kernels_idx().begin(), get_kernels_idx().end(),
+                            [&g](unsigned id) { return std::find(g.begin(), g.end(), id) == g.end(); })) {
+                throw std::invalid_argument("The genotype contains a function gene id not present in the kernels "
+                                            "available for the expression.");
+            }
+        } else {
+            if (g[i] >= i / 3 + m_ncon + m_nvar) {
+                fmt::print("genotype: {}\n", g);
+                fmt::print("position: {}\n", i);
+                throw std::invalid_argument("The genotype contains an incompatibe connection gene");
+            }
+        }
+    }
 }
 } // namespace dsyre

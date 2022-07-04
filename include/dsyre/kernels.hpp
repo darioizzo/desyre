@@ -29,11 +29,6 @@ double dexp(double a);
 double ddexp(double a);
 std::string pexp(std::string);
 
-// Global variables indicating the number of kernels available (unary and binary assuming +,-,*,/ as binary)
-const unsigned n_ukernel = 3;
-const unsigned n_bkernel = 4;
-const unsigned n_tot_kernels = n_ukernel + n_bkernel;
-
 } // namespace dsyre
 
 #endif

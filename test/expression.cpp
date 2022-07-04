@@ -76,7 +76,7 @@ TEST_CASE("random_genotype")
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
-                REQUIRE(std::any_of(ex.get_kernels().begin(), ex.get_kernels().end(),
+                REQUIRE(std::any_of(ex.get_kernels_idx().begin(), ex.get_kernels_idx().end(),
                                     [i, &geno](unsigned kid) { return kid < geno.size(); }));
             } else {
                 REQUIRE(geno[i] < i / 3 + n_con + n_var);
@@ -93,7 +93,7 @@ TEST_CASE("random_genotype")
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
-                REQUIRE(std::any_of(ex.get_kernels().begin(), ex.get_kernels().end(),
+                REQUIRE(std::any_of(ex.get_kernels_idx().begin(), ex.get_kernels_idx().end(),
                                     [i, &geno](unsigned kid) { return kid < geno.size(); }));
             } else {
                 REQUIRE(geno[i] < i / 3 + n_con + n_var);
