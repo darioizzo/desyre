@@ -101,7 +101,7 @@ void expression::phenotype(std::vector<double> &retval, const std::vector<unsign
                            const std::vector<double> &vars, const std::vector<double> &cons)
 {
     assert(m_nvar == vars.size());
-    assert(m_ncon == vars.size());
+    assert(m_ncon == cons.size());
     auto n_terminals = m_nvar + m_ncon;
     // check_genotype(genotype);
 
