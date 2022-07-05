@@ -451,16 +451,18 @@ std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsig
     return retval;
 }
 
-void expression::remove_nesting(std::vector<unsigned> &g) const {
+void expression::remove_nesting(std::vector<unsigned> &g) const
+{
     auto n_triplets = g.size() / 3;
-    for (auto i=1u; i < n_triplets; ++i) { //skip first triplet as connection genes are surely var or con
-        if (m_kernels[g[3*i]] >= n_binary) { // unary operator
-            auto u1 = g[3*i+1];
-            if (u1>m_ncon+m_nvar) { // not taking in a var or con
-                std::uniform_int_distribution<int> random_binary(0u, m_kernels.size()-1);
-                while (m_kernels[g[3*(u1-m_ncon-m_nvar)]] >= n_binary) { // and nesting one more unary
-                    // we change the operator randomly to a binary one
-                    g[3*(u1-m_ncon-m_nvar)] = random_binary(m_rng);
+    for (auto i = 1u; i < n_triplets; ++i) {   // skip first triplet as connection genes are surely var or con
+        if (m_kernels[g[3 * i]] >= n_binary) { // unary operator
+            auto u1 = g[3 * i + 1];
+            if (u1 > m_ncon + m_nvar) { // not taking in a var or con
+                std::uniform_int_distribution<int> random_kernel(0u, m_kernels.size() - 1);
+                // this loop is infinite if no binary operators are in the kernels.
+                while (m_kernels[g[3 * (u1 - m_ncon - m_nvar)]] >= n_binary) { // and nesting one more unary
+                    // we change the operator randomly
+                    g[3 * (u1 - m_ncon - m_nvar)] = random_kernel(m_rng);
                 }
             }
         }

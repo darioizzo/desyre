@@ -44,7 +44,7 @@ void generate_1d_data(std::vector<std::vector<double>> &xs, std::vector<double> 
     // i must be double
     for (double i = 0.; i < N; ++i) {
         xs[i] = {lb + i / (N - 1) * (ub - lb)};
-        ys[i] = P4(xs[i]);
+        ys[i] = P1(xs[i]);
     }
 }
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
         ddmse(length + n_var + n_con, 0.), predicted_mse(length + n_var + n_con, 0.);
 
     // The expression system 1 var 1 constant +,-,*,/, sin, cos
-    dsyre::expression ex(n_var, n_con, {"sum", "diff", "mul", "div", "sin"});
+    dsyre::expression ex(n_var, n_con, {"sum", "diff", "mul", "div"});
 
     // Run the evolution
     // We run n_trials experiments
