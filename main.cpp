@@ -4,8 +4,8 @@
 #include <random>
 #include <vector>
 
-#include <fmt/ranges.h>
 #include <fmt/ostream.h>
+#include <fmt/ranges.h>
 #include <symengine/expression.h>
 
 #include <dsyre/expression.hpp>
@@ -32,7 +32,12 @@ inline double P4(const std::vector<double> &x)
     return std::sin(3.14151617 * x[0]) + 1. / x[0];
 }
 
-void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, double lb, double ub)
+inline double P5(const std::vector<double> &x)
+{
+    return 2.5382 * std::cos(x[3]) + x[0] * x[0];
+}
+
+void generate_1d_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, double lb, double ub)
 {
     xs.resize(N);
     ys.resize(N);
@@ -40,6 +45,25 @@ void generate_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys
     for (double i = 0.; i < N; ++i) {
         xs[i] = {lb + i / (N - 1) * (ub - lb)};
         ys[i] = P4(xs[i]);
+    }
+}
+
+void generate_md_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, unsigned m, double lb,
+                      double ub)
+{
+    std::random_device rd;  // only used once to initialise (seed) engine
+    std::mt19937 rng(rd()); // random-number engine used (Mersenne-Twister in this case)
+    std::uniform_real_distribution<> dis(lb, ub);
+    xs.resize(N);
+    ys.resize(N);
+    for (auto &x : xs) {
+        x.resize(m);
+        for (auto &item : x) {
+            item = dis(rng);
+        }
+    }
+    for (auto i = 0u; i < N; ++i) {
+        ys[i] = P5(xs[i]);
     }
 }
 
@@ -54,34 +78,39 @@ int main(int argc, char *argv[])
     std::random_device rd;  // only used once to initialise (seed) engine
     std::mt19937 rng(rd()); // random-number engine used (Mersenne-Twister in this case)
 
-    // Generate P1 data
+    // Generate data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
-    generate_data(xs, ys, 10, -1., 1.);
-
+    // generate_md_data(xs, ys, 100u, 5u, -4, 4.);
+    generate_1d_data(xs, ys, 10u, -1, 1.);
     // Allocate some stuff
     auto length = 20u;
-    std::vector<double> mse(length + 2, 0.), dmse(length + 2, 0.), ddmse(length + 2, 0.), predicted_mse(length + 2, 0.);
+    auto n_var = 1.;
+    auto n_con = 1.;
+    std::vector<double> mse(length + n_var + n_con, 0.), dmse(length + n_var + n_con, 0.),
+        ddmse(length + n_var + n_con, 0.), predicted_mse(length + n_var + n_con, 0.);
 
     // The expression system 1 var 1 constant +,-,*,/, sin, cos
-    dsyre::expression ex(1, 1, {"sum", "diff", "mul", "div", "sin", "cos"});
+    dsyre::expression ex(n_var, n_con, {"sum", "diff", "mul", "div", "sin"});
 
     // Run the evolution
     // We run n_trials experiments
     auto ERT = 0u;
     auto n_success = 0u;
     auto best_x = ex.random_genotype(length);
+    auto best_c = ex.random_constants(-10., 10.);
 
     for (auto j = 0u; j < n_trials; ++j) {
         // We let each run to convergence
         best_x = ex.random_genotype(length);
-        auto best_c = ex.random_constants(-10., 10.);
+        best_c = ex.random_constants(-10., 10.);
         auto best_f = ex.fitness(best_x, best_c, xs, ys);
         auto count = 0u;
         count++;
         while (count < restart) {
             for (auto i = 0u; i < 4u; ++i) {
                 auto new_x = ex.mutation(best_x, 5u);
+                ex.remove_nesting(new_x);
                 auto new_c = best_c;
                 // We now have a new candidate genotype new_x and see what a Newton step could produce.
                 // 1 - We compute the mse and its derivatives w.r.t. c
@@ -127,12 +156,20 @@ int main(int argc, char *argv[])
     } else {
         print("No success, restart less frequently?\n");
     }
-    auto final_best = ex.sphenotype(best_x, {"x"}, {"c"});
+    std::vector<std::string> final_best;
+    ex.sphenotype(final_best, best_x, {"x0"}, {"c"});
     print("Best phenotype: {}\n", final_best);
     std::vector<SymEngine::Expression> exs;
     for (auto const &raw : final_best) {
         exs.emplace_back(raw);
     }
-   print("Best prettied phenotype: {}\n", exs);
+    print("Best prettied phenotype: {}\n", exs);
+
+    std::vector<double> phen;
+    mse = ex.mse(best_x, best_c, xs, ys);
+    auto tmp = std::min_element(mse.begin(), mse.end());
+    auto idx = std::distance(mse.begin(), tmp);
+    print("Best prettied phenotype: {}\n", exs[idx]);
+
     return 0;
 }

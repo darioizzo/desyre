@@ -112,7 +112,8 @@ TEST_CASE("phenotype")
         // Manually assemble (x + sin(cx)) / x
         std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
         std::vector<std::string> objective = {"x", "c", "(x*c)", "sin((x*c))", "(x+sin((x*c)))", "((x+sin((x*c)))/x)"};
-        auto sphen = ex.sphenotype(geno, {"x"}, {"c"});
+        std::vector<std::string> sphen;
+        ex.sphenotype(sphen, geno, {"x"}, {"c"});
 
         for (decltype(sphen.size()) i = 0u; i < sphen.size(); ++i) {
             REQUIRE(sphen[i] == objective[i]);
