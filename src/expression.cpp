@@ -391,6 +391,11 @@ const std::vector<unsigned> &expression::get_kernels_idx() const
 
 void expression::check_genotype(const std::vector<unsigned> &g) const
 {
+    // Check that the genotype is made out of triplets.
+    if (genotype.size()%3 != 0) {
+        throw std::invalid_argument("The genotype length must be a multiple of 3.");
+    }
+    // Check function genes contain idxs in the kernels and connections that are acyclic.
     for (decltype(g.size()) i = 0u; i < g.size(); ++i) {
         if (i % 3 == 0u) {
             if (std::any_of(get_kernels_idx().begin(), get_kernels_idx().end(),
