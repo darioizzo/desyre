@@ -34,7 +34,7 @@ inline double P4(const std::vector<double> &x)
 
 inline double P5(const std::vector<double> &x)
 {
-    return 2.5382 * std::cos(x[3]) + x[0] * x[0];
+    return 2.5382 * std::cos(x[3]) + x[0] * x[0] - 0.5;
 }
 
 void generate_1d_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, double lb, double ub)
@@ -48,18 +48,17 @@ void generate_1d_data(std::vector<std::vector<double>> &xs, std::vector<double> 
     }
 }
 
-void generate_md_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, unsigned m, double lb,
-                      double ub)
+void generate_md_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, unsigned m)
 {
     std::random_device rd;  // only used once to initialise (seed) engine
     std::mt19937 rng(rd()); // random-number engine used (Mersenne-Twister in this case)
-    std::uniform_real_distribution<> dis(lb, ub);
+    std::normal_distribution<double> normal(0., 1.);
     xs.resize(N);
     ys.resize(N);
     for (auto &x : xs) {
         x.resize(m);
         for (auto &item : x) {
-            item = dis(rng);
+            item = 2 * normal(rng);
         }
     }
     for (auto i = 0u; i < N; ++i) {
@@ -81,24 +80,24 @@ int main(int argc, char *argv[])
     // Generate data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
-    // generate_md_data(xs, ys, 100u, 5u, -4, 4.);
-    generate_1d_data(xs, ys, 10u, -1, 1.);
-    // Allocate some stuff
+    generate_md_data(xs, ys, 100u, 5u);
+    // generate_1d_data(xs, ys, 10u, 1., 3.);
+    //  Allocate some stuff
     auto length = 20u;
-    auto n_var = 1.;
-    auto n_con = 1.;
+    auto n_var = 5u;
+    auto n_con = 1u;
     std::vector<double> mse(length + n_var + n_con, 0.), dmse(length + n_var + n_con, 0.),
         ddmse(length + n_var + n_con, 0.), predicted_mse(length + n_var + n_con, 0.);
 
     // The expression system 1 var 1 constant +,-,*,/, sin, cos
-    dsyre::expression ex(n_var, n_con, {"sum", "diff", "mul", "div"});
+    dsyre::expression ex(n_var, n_con, {"sum", "mul", "cos", "diff"});
 
     // Run the evolution
     // We run n_trials experiments
     auto ERT = 0u;
     auto n_success = 0u;
-    auto best_x = ex.random_genotype(length);
-    auto best_c = ex.random_constants(-10., 10.);
+    std::vector<unsigned> best_x;
+    std::vector<double> best_c;
 
     for (auto j = 0u; j < n_trials; ++j) {
         // We let each run to convergence
@@ -106,7 +105,7 @@ int main(int argc, char *argv[])
         best_c = ex.random_constants(-10., 10.);
         auto best_f = ex.fitness(best_x, best_c, xs, ys);
         auto count = 0u;
-        count++;
+        ERT++;
         while (count < restart) {
             for (auto i = 0u; i < 4u; ++i) {
                 auto new_x = ex.mutation(best_x, 5u);
@@ -157,7 +156,7 @@ int main(int argc, char *argv[])
         print("No success, restart less frequently?\n");
     }
     std::vector<std::string> final_best;
-    ex.sphenotype(final_best, best_x, {"x0"}, {"c"});
+    ex.sphenotype(final_best, best_x, {"x0", "x1", "x2", "x3", "x4"}, {"c"});
     print("Best phenotype: {}\n", final_best);
     std::vector<SymEngine::Expression> exs;
     for (auto const &raw : final_best) {
@@ -170,6 +169,7 @@ int main(int argc, char *argv[])
     auto tmp = std::min_element(mse.begin(), mse.end());
     auto idx = std::distance(mse.begin(), tmp);
     print("Best prettied phenotype: {}\n", exs[idx]);
+
 
     return 0;
 }

@@ -24,10 +24,10 @@ using ukernel_f_ptr = double (*)(double);
 using pkernel_f_ptr = std::string (*)(std::string);
 
 // Global array of function pointers for the unary kernels
-ukernel_f_ptr ukernel_list[] = {cos, sin, exp};
-ukernel_f_ptr dukernel_list[] = {dcos, dsin, dexp};
-ukernel_f_ptr ddukernel_list[] = {ddcos, ddsin, ddexp};
-pkernel_f_ptr pkernel_list[] = {pcos, psin, pexp};
+ukernel_f_ptr ukernel_list[] = {inv, cos, sin, exp};
+ukernel_f_ptr dukernel_list[] = {dinv, dcos, dsin, dexp};
+ukernel_f_ptr ddukernel_list[] = {ddinv, ddcos, ddsin, ddexp};
+pkernel_f_ptr pkernel_list[] = {pinv, pcos, psin, pexp};
 
 // Number of binary operations (+,-,*,/)
 unsigned n_binary = 4u;
@@ -35,8 +35,14 @@ unsigned n_unary = std::size(ukernel_list);
 
 // Global map between kernel names and an unsigned (must correspond to the order in the global arrays as its used
 // in the switch cases.
-std::unordered_map<std::string, unsigned> kernel_map{
-    {"sum", 0}, {"diff", 1}, {"mul", 2}, {"div", 3}, {"cos", n_binary}, {"sin", n_binary + 1}, {"exp", n_binary + 2}};
+std::unordered_map<std::string, unsigned> kernel_map{{"sum", 0},
+                                                     {"diff", 1},
+                                                     {"mul", 2},
+                                                     {"div", 3},
+                                                     {"inv", n_binary},
+                                                     {"cos", n_binary + 1},
+                                                     {"sin", n_binary + 2},
+                                                     {"exp", n_binary + 3}};
 
 // Constructor
 expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels,
@@ -397,11 +403,11 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     std::fill(ddmse.begin(), ddmse.end(), 0.);
 
     // For each point
-    for (decltype(xs.size()) i = 0u; i < xs.size(); ++i) {
+    for (decltype(N) i = 0u; i < N; ++i) {
         // The value of each expression in the single point
         phenotype_impl(ph, genotype, xs[i], cons, false);
         // The derivative value w.r.t. c (idx 1)
-        dphenotype_impl(dph, genotype, ph, 1u, false);
+        dphenotype_impl(dph, genotype, ph, 5u, false); // TODO!!!!!!! IMPORTANTTTTTTT
         // The second derivative value w.r.t. c c
         ddphenotype_impl(ddph, genotype, ph, dph, dph, false);
         // We will now store in ph. dph, ddph respectively, the mse, dmse and ddmse

@@ -13,6 +13,23 @@
 namespace dsyre
 {
 // Functions and derivatives
+double inv(double a)
+{
+    return 1./a;
+}
+double dinv(double a)
+{
+    return -1./a/a;
+}
+double ddinv(double a)
+{
+    return 2/a/a/a;
+}
+std::string pinv(std::string arg)
+{
+    return "1/" + arg;
+}
+
 double cos(double a)
 {
     return std::cos(a);

@@ -14,15 +14,21 @@
 namespace dsyre
 {
 // Functions and derivatives
-double sin(double a);
-double dsin(double a);
-double ddsin(double a);
-std::string psin(std::string);
+
+double inv(double a);
+double dinv(double a);
+double ddinv(double a);
+std::string pinv(std::string);
 
 double cos(double a);
 double dcos(double a);
 double ddcos(double a);
 std::string pcos(std::string);
+
+double sin(double a);
+double dsin(double a);
+double ddsin(double a);
+std::string psin(std::string);
 
 double exp(double a);
 double dexp(double a);
