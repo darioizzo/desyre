@@ -34,14 +34,13 @@ public:
     // Removes nested unary functions
     void remove_nesting(std::vector<unsigned> &g) const;
 
-
     // Computes the phenotype (i.e. the numerical values of all the graph odes)
     void phenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype, const std::vector<double> &vars,
                    const std::vector<double> &cons);
 
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes)
     void sphenotype(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
-                    const std::vector<std::string> &vars, const std::vector<std::string> &cons);
+                    const std::vector<std::string> &vars = {}, const std::vector<std::string> &cons = {});
 
     // First order derivatives
     void dphenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
@@ -57,7 +56,7 @@ public:
                             const std::vector<std::vector<double>> &xs, const std::vector<double> &ys);
 
     // Computes mse, dmse and ddmse in one go
-    void ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
+    void ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons, unsigned c_idx,
                const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, std::vector<double> &mse,
                std::vector<double> &dmse, std::vector<double> &ddmse);
 
@@ -67,6 +66,7 @@ public:
 
     // Mutates the graph
     std::vector<unsigned> mutation(std::vector<unsigned> genotype, unsigned N);
+    std::vector<unsigned> mutation2(std::vector<unsigned> genotype, unsigned N);
 
     void check_genotype(const std::vector<unsigned> &genotype) const;
 
@@ -86,7 +86,6 @@ private:
     void ddphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                           const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
                           const std::vector<double> &d1phenotype, bool check);
-
 
     // Serialization.
     friend class boost::serialization::access;

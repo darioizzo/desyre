@@ -11,6 +11,7 @@
 #include <fmt/ranges.h>
 #include <numeric>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 
 #include <dsyre/detail/visibility.hpp>
@@ -171,13 +172,27 @@ void expression::sphenotype_impl(std::vector<std::string> &retval, const std::ve
                                  const std::vector<std::string> &vars, const std::vector<std::string> &cons, bool check)
 {
     auto n_terminals = m_nvar + m_ncon;
+    auto vnames = vars;
+    auto cnames = cons;
+    // If not passed we create boring variable names
+    if (vnames.size() == 0) {
+        for (auto i = 0u; i < m_nvar; ++i) {
+            vnames.push_back("x" + std::to_string(i));
+        }
+    }
+    if (cnames.size() == 0) {
+        for (auto i = 0u; i < m_ncon; ++i) {
+            cnames.push_back("c" + std::to_string(i));
+        }
+    }
+
     if (check) {
         check_genotype(genotype);
-        if (vars.size() != m_nvar) {
+        if (vnames.size() != m_nvar) {
             throw std::invalid_argument(
                 "When calling sphenotype_impl the number of variables to compute this phenotype is wrong.");
         }
-        if (cons.size() != m_ncon) {
+        if (cnames.size() != m_ncon) {
             throw std::invalid_argument(
                 "When calling sphenotype_impl the number of constants to compute this phenotype is wrong.");
         }
@@ -187,8 +202,8 @@ void expression::sphenotype_impl(std::vector<std::string> &retval, const std::ve
     auto n_triplets = genotype.size() / 3;
     retval.resize(n_terminals + n_triplets);
     // The u0, u1, ... are the values of variables and constants
-    std::copy(vars.begin(), vars.end(), retval.begin());
-    std::copy(cons.begin(), cons.end(), retval.begin() + m_nvar);
+    std::copy(vnames.begin(), vnames.end(), retval.begin());
+    std::copy(cnames.begin(), cnames.end(), retval.begin() + m_nvar);
 
     // We loop and for each triplet compute the corresponding function
     for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
@@ -386,7 +401,7 @@ std::vector<double> expression::fitness(const std::vector<unsigned> &genotype, c
 }
 
 // computes mse, dmse and ddmse in one go
-void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
+void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons, unsigned c_idx,
                        const std::vector<std::vector<double>> &xs, const std::vector<double> &ys,
                        std::vector<double> &mse, std::vector<double> &dmse, std::vector<double> &ddmse)
 {
@@ -406,8 +421,8 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     for (decltype(N) i = 0u; i < N; ++i) {
         // The value of each expression in the single point
         phenotype_impl(ph, genotype, xs[i], cons, false);
-        // The derivative value w.r.t. c (idx 1)
-        dphenotype_impl(dph, genotype, ph, 5u, false); // TODO!!!!!!! IMPORTANTTTTTTT
+        // The derivative value w.r.t. a c_idx constant
+        dphenotype_impl(dph, genotype, ph, c_idx, false); // TODO!!!!!!! IMPORTANTTTTTTT
         // The second derivative value w.r.t. c c
         ddphenotype_impl(ddph, genotype, ph, dph, dph, false);
         // We will now store in ph. dph, ddph respectively, the mse, dmse and ddmse
@@ -453,6 +468,26 @@ std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsig
         retval[3 * choice[i]] = muts[3 * choice[i]];
         retval[3 * choice[i] + 1] = muts[3 * choice[i] + 1];
         retval[3 * choice[i] + 2] = muts[3 * choice[i] + 2];
+    }
+    return retval;
+}
+
+std::vector<unsigned> expression::mutation2(std::vector<unsigned> genotype, unsigned N)
+{
+    auto retval = genotype;
+    // We generate N randomly selected indexes of the genotype triplets
+    std::vector<unsigned> choice(retval.size());
+    std::iota(choice.begin(), choice.end(), 0u);
+    std::shuffle(choice.begin(), choice.end(), m_rng);
+    // For each selected gene, we randomly regenerate a feasible one.
+    for (auto i = 0u; i < N; ++i) {
+        if (choice[i] % 3 == 0u) {
+            std::uniform_int_distribution<unsigned> dis(0, m_kernels.size() - 1);
+            retval[choice[i]] = dis(m_rng);
+        } else {
+            std::uniform_int_distribution<unsigned> dis(0, m_ncon + m_nvar + choice[i] / 3 - 1);
+            retval[choice[i]] = dis(m_rng);
+        }
     }
     return retval;
 }

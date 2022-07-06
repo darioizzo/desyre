@@ -34,7 +34,7 @@ inline double P4(const std::vector<double> &x)
 
 inline double P5(const std::vector<double> &x)
 {
-    return 2.5382 * std::cos(x[3]) + x[0] * x[0] - 0.5;
+    return 2 * std::cos(x[3]) + x[0] * x[0] - 3.123;
 }
 
 void generate_1d_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, double lb, double ub)
@@ -81,16 +81,17 @@ int main(int argc, char *argv[])
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
     generate_md_data(xs, ys, 100u, 5u);
-    // generate_1d_data(xs, ys, 10u, 1., 3.);
-    //  Allocate some stuff
+    //generate_1d_data(xs, ys, 10u, 1., 3.);
+    //   Allocate some stuff
     auto length = 20u;
-    auto n_var = 5u;
-    auto n_con = 1u;
+    auto n_var = xs[0].size();
+    auto n_con = 2u;
     std::vector<double> mse(length + n_var + n_con, 0.), dmse(length + n_var + n_con, 0.),
         ddmse(length + n_var + n_con, 0.), predicted_mse(length + n_var + n_con, 0.);
 
     // The expression system 1 var 1 constant +,-,*,/, sin, cos
-    dsyre::expression ex(n_var, n_con, {"sum", "mul", "cos", "diff"});
+    dsyre::expression ex(n_var, n_con, {"sum", "mul", "sin", "cos", "exp", "inv"});
+    //dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div"});
 
     // Run the evolution
     // We run n_trials experiments
@@ -102,18 +103,23 @@ int main(int argc, char *argv[])
     for (auto j = 0u; j < n_trials; ++j) {
         // We let each run to convergence
         best_x = ex.random_genotype(length);
-        best_c = ex.random_constants(-10., 10.);
+        // best_x =
+        // {2,3,0,1,0,0,1,5,7,0,8,9,0,10,6,2,3,0,1,0,0,1,5,7,0,8,9,0,10,6,2,3,0,1,0,0,1,5,7,0,8,9,0,10,6,2,3,0,1,0,0,1,5,7,0,8,9,0,10,6};
+        best_c = ex.random_constants(-1., 1.);
         auto best_f = ex.fitness(best_x, best_c, xs, ys);
         auto count = 0u;
         ERT++;
         while (count < restart) {
             for (auto i = 0u; i < 4u; ++i) {
-                auto new_x = ex.mutation(best_x, 5u);
+                auto new_x = ex.mutation2(best_x, 3 * i + 3);
+                // auto new_x = best_x;
                 ex.remove_nesting(new_x);
                 auto new_c = best_c;
                 // We now have a new candidate genotype new_x and see what a Newton step could produce.
-                // 1 - We compute the mse and its derivatives w.r.t. c
-                ex.ddmse(new_x, best_c, xs, ys, mse, dmse, ddmse);
+                // 1 - We compute the mse and its derivatives w.r.t. ca random constant
+                std::uniform_int_distribution<unsigned> dis(n_var, n_con + n_var - 1);
+                auto c_idx = dis(rng);
+                ex.ddmse(new_x, best_c, c_idx, xs, ys, mse, dmse, ddmse);
                 // 2 - We assume a second order model mse = mse + dmse dc + 1/2 ddmse dc^2 and find the best
                 // genotype.
                 for (decltype(predicted_mse.size()) i = 0u; i < predicted_mse.size(); ++i) {
@@ -127,7 +133,7 @@ int main(int argc, char *argv[])
                 auto idx = std::distance(predicted_mse.begin(), tmp);
                 // 3 - The new constants are those of the best genotype if not nans
                 if (std::isfinite(dmse[idx]) && std::isfinite(ddmse[idx]) && ddmse[idx] != 0) {
-                    new_c[0] -= dmse[idx] / ddmse[idx];
+                    new_c[c_idx - n_var] -= dmse[idx] / ddmse[idx];
                 }
                 // 4 - We compute the fitness of the new genotype with those constants
                 auto new_f = ex.fitness(new_x, new_c, xs, ys);
@@ -139,7 +145,7 @@ int main(int argc, char *argv[])
                     best_c = new_c;
                     // Only if verbosity is > 0
                     if (verbosity > 0) {
-                        print("New Best is {} at {} fevals: c value {})\n", best_f, count, best_c[0]);
+                        print("New Best is {} at {} fevals: c value {})\n", best_f, count, best_c);
                     }
                 }
             }
@@ -156,7 +162,7 @@ int main(int argc, char *argv[])
         print("No success, restart less frequently?\n");
     }
     std::vector<std::string> final_best;
-    ex.sphenotype(final_best, best_x, {"x0", "x1", "x2", "x3", "x4"}, {"c"});
+    ex.sphenotype(final_best, best_x);
     print("Best phenotype: {}\n", final_best);
     std::vector<SymEngine::Expression> exs;
     for (auto const &raw : final_best) {
@@ -169,7 +175,6 @@ int main(int argc, char *argv[])
     auto tmp = std::min_element(mse.begin(), mse.end());
     auto idx = std::distance(mse.begin(), tmp);
     print("Best prettied phenotype: {}\n", exs[idx]);
-
 
     return 0;
 }
