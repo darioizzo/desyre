@@ -80,18 +80,19 @@ int main(int argc, char *argv[])
     // Generate data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
-    generate_md_data(xs, ys, 100u, 5u);
-    //generate_1d_data(xs, ys, 10u, 1., 3.);
-    //   Allocate some stuff
+    // generate_md_data(xs, ys, 100u, 5u);
+    generate_1d_data(xs, ys, 10u, 1., 3.);
+    //    Allocate some stuff
     auto length = 20u;
     auto n_var = xs[0].size();
-    auto n_con = 2u;
-    std::vector<double> mse(length + n_var + n_con, 0.), dmse(length + n_var + n_con, 0.),
-        ddmse(length + n_var + n_con, 0.), predicted_mse(length + n_var + n_con, 0.);
+    auto n_con = 1u;
+    std::vector<double> mse;
+    std::vector<double> predicted_mse(n_con + n_var + length, 0.);
+    std::vector<std::vector<double>> dmse, ddmse;
 
     // The expression system 1 var 1 constant +,-,*,/, sin, cos
     dsyre::expression ex(n_var, n_con, {"sum", "mul", "sin", "cos", "exp", "inv"});
-    //dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div"});
+    // dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div"});
 
     // Run the evolution
     // We run n_trials experiments
@@ -116,24 +117,22 @@ int main(int argc, char *argv[])
                 ex.remove_nesting(new_x);
                 auto new_c = best_c;
                 // We now have a new candidate genotype new_x and see what a Newton step could produce.
-                // 1 - We compute the mse and its derivatives w.r.t. ca random constant
-                std::uniform_int_distribution<unsigned> dis(n_var, n_con + n_var - 1);
-                auto c_idx = dis(rng);
-                ex.ddmse(new_x, best_c, c_idx, xs, ys, mse, dmse, ddmse);
+                // 1 - We compute the mse its gradient and hessian
+                ex.ddmse(new_x, best_c, xs, ys, mse, dmse, ddmse);
                 // 2 - We assume a second order model mse = mse + dmse dc + 1/2 ddmse dc^2 and find the best
                 // genotype.
                 for (decltype(predicted_mse.size()) i = 0u; i < predicted_mse.size(); ++i) {
                     double dc = 0.;
-                    if (std::isfinite(dmse[i]) && std::isfinite(ddmse[i]) && ddmse[i] != 0) {
-                        dc = -dmse[i] / ddmse[i];
+                    if (std::isfinite(dmse[i][0]) && std::isfinite(ddmse[i][0]) && ddmse[i][0] != 0) {
+                        dc = -dmse[i][0] / ddmse[i][0];
                     }
-                    predicted_mse[i] = mse[i] + dmse[i] * dc + 0.5 * ddmse[i] * dc * dc;
+                    predicted_mse[i] = mse[i] + dmse[i][0] * dc + 0.5 * ddmse[i][0] * dc * dc;
                 }
                 auto tmp = std::min_element(predicted_mse.begin(), predicted_mse.end());
                 auto idx = std::distance(predicted_mse.begin(), tmp);
                 // 3 - The new constants are those of the best genotype if not nans
-                if (std::isfinite(dmse[idx]) && std::isfinite(ddmse[idx]) && ddmse[idx] != 0) {
-                    new_c[c_idx - n_var] -= dmse[idx] / ddmse[idx];
+                if (std::isfinite(dmse[idx][0]) && std::isfinite(ddmse[idx][0]) && ddmse[idx][0] != 0) {
+                    new_c[0] -= dmse[idx][0] / ddmse[idx][0];
                 }
                 // 4 - We compute the fitness of the new genotype with those constants
                 auto new_f = ex.fitness(new_x, new_c, xs, ys);

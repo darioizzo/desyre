@@ -56,9 +56,9 @@ public:
                             const std::vector<std::vector<double>> &xs, const std::vector<double> &ys);
 
     // Computes mse, dmse and ddmse in one go
-    void ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons, unsigned c_idx,
+    void ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
                const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, std::vector<double> &mse,
-               std::vector<double> &dmse, std::vector<double> &ddmse);
+               std::vector<std::vector<double>> &dmse, std::vector<std::vector<double>> &ddmse);
 
     // Computes the fitness as the best,avg, worst mse over all the nodes
     std::vector<double> fitness(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
