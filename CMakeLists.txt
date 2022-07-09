@@ -98,13 +98,19 @@ target_link_libraries(dsyre PUBLIC Boost::boost Boost::serialization)
 # NOTE: quench warnings from Boost when building the library.
 target_compile_definitions(dsyre PRIVATE BOOST_ALLOW_DEPRECATED_HEADERS)
 
- # Mandatory dependency on symengine.
- find_package(SymEngine REQUIRED) 
- message(STATUS "Symengine library found.")
- message(STATUS "Symengine include dir is: ${SYMENGINE_INCLUDE_DIRS}")
- message(STATUS "Symengine library is: ${SYMENGINE_LIBRARIES}")
- include_directories(${SYMENGINE_INCLUDE_DIRS})
- target_link_libraries(dsyre PUBLIC ${SYMENGINE_LIBRARIES})
+# Mandatory dependency on symengine.
+find_package(SymEngine REQUIRED) 
+message(STATUS "Symengine library found.")
+message(STATUS "Symengine include dir is: ${SYMENGINE_INCLUDE_DIRS}")
+message(STATUS "Symengine library is: ${SYMENGINE_LIBRARIES}")
+include_directories(${SYMENGINE_INCLUDE_DIRS})
+target_link_libraries(dsyre PUBLIC ${SYMENGINE_LIBRARIES})
+
+# Eigen setup
+find_package(Eigen3 REQUIRED)
+message(STATUS "Eigen include directory: ${EIGEN3_INCLUDE_DIR}")
+message(STATUS "Eigen version detected: ${EIGEN3_VERSION}")
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 # main.cpp ###################################################################################################################3
 add_executable(main main.cpp)

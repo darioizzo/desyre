@@ -422,12 +422,71 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
         // The value of each expression in the single point
         phenotype_impl(ph, genotype, xs[i], cons, false);
         // The derivative value w.r.t. a c_idx constant
-        dphenotype_impl(dph, genotype, ph, c_idx, false); // TODO!!!!!!! IMPORTANTTTTTTT
+        dphenotype_impl(dph, genotype, ph, c_idx, false);
         // The second derivative value w.r.t. c c
         ddphenotype_impl(ddph, genotype, ph, dph, dph, false);
         // We will now store in ph. dph, ddph respectively, the mse, dmse and ddmse
         // NOTE: The order of the next loops counts and should not be touched.
         // yi-\hat y_i
+        for (auto j = 0u; j < ph.size(); ++j) {
+            ph[j] -= ys[i];
+        }
+        // 2 ((yi-\hat y_i)d2ydc2+(dy/dc)^2)
+        for (auto j = 0u; j < ddph.size(); ++j) {
+            ddph[j] = 2 * (ph[j] / 2. * ddph[j] + dph[j] * dph[j]);
+        }
+        // 2 (yi-\hat y_i)dydc
+        for (auto j = 0u; j < dph.size(); ++j) {
+            dph[j] = 2 * ph[j] * dph[j];
+        }
+        // finally (yi-\hat y_i)^2
+        for (auto j = 0u; j < ph.size(); ++j) {
+            ph[j] *= ph[j];
+        }
+        // And we accumulate
+        std::transform(mse.begin(), mse.end(), ph.begin(), mse.begin(), std::plus<double>());
+        std::transform(dmse.begin(), dmse.end(), dph.begin(), dmse.begin(), std::plus<double>());
+        std::transform(ddmse.begin(), ddmse.end(), ddph.begin(), ddmse.begin(), std::plus<double>());
+    }
+    std::transform(mse.begin(), mse.end(), mse.begin(), [N](double &c) { return c / N; });
+    std::transform(dmse.begin(), dmse.end(), dmse.begin(), [N](double &c) { return c / N; });
+    std::transform(ddmse.begin(), ddmse.end(), ddmse.begin(), [N](double &c) { return c / N; });
+}
+
+void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
+                       const std::vector<std::vector<double>> &xs, const std::vector<double> &ys,
+                       std::vector<double> &mse, std::vector<double> &dmse, std::vector<double> &ddmse)
+{
+    auto N = xs.size();
+
+    assert(mse.size() == genotype.size() / 3 + m_nvar + m_ncon);
+
+    std::vector<double> ph;
+    std::vector<double><std::vector<double>> dph(n_con);
+    std::vector<double><std::vector<double>> ddph(n_con * (1 + n_ncon) / 2.);
+
+    std::fill(mse.begin(), mse.end(), 0.);
+    std::fill(dmse.begin(), dmse.end(), 0.);
+    std::fill(ddmse.begin(), ddmse.end(), 0.);
+
+    // For each point
+    for (decltype(N) i = 0u; i < N; ++i) {
+        // The value of each expression
+        phenotype_impl(ph, genotype, xs[i], cons, false);
+        // The gradient of each expression
+        for (auto j = 0u; j < n_con; ++j) {
+            // The derivative value w.r.t. a c_idx constant
+            dphenotype_impl(dph[j], genotype, ph, j, false);
+        }
+        // The hessian of each expression 00,01,02,10,11,20 
+        auto aux = 0u;
+        for (auto j = 0u; j < n_con; ++j) {
+            for (auto k = 0u; k <= j; ++k) {
+                ddphenotype_impl(ddph[aux], genotype, ph, dph[j], dph[k], false);
+                aux++;
+            }
+        }
+        // We now must construct the value, gradient and hessian for the mse ....
         for (auto j = 0u; j < ph.size(); ++j) {
             ph[j] -= ys[i];
         }
