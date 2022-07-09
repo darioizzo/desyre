@@ -131,7 +131,7 @@ TEST_CASE("ddmse")
         // Manually assemble [x, c, xc]
         std::vector<unsigned> geno = {2, 0, 1};
         // Manually create a dataset
-        std::vector<std::vector<double> > xs = {{1.}};
+        std::vector<std::vector<double>> xs = {{1.}};
         std::vector<double> ys = {1.};
         std::vector<double> cons = {2.};
         // Return values
@@ -139,6 +139,7 @@ TEST_CASE("ddmse")
         std::vector<std::vector<double>> dmse, ddmse;
         // Call
         ex.ddmse(geno, cons, xs, ys, mse, dmse, ddmse);
+        // Test
         REQUIRE(mse == std::vector<double>{0, 1, 1});
         REQUIRE(dmse[0] == std::vector<double>{0, 2, 2});
         REQUIRE(ddmse[0] == std::vector<double>{0, 2, 2});
@@ -159,6 +160,7 @@ TEST_CASE("ddmse")
         std::vector<std::vector<double>> dmse, ddmse;
         // Call
         ex.ddmse(geno, cons, xs, ys, mse, dmse, ddmse);
+        // Test
         REQUIRE(mse == std::vector<double>{2, 2.5, 8.5});
         REQUIRE(dmse[0] == std::vector<double>{0, 3, 9});
         REQUIRE(ddmse[0] == std::vector<double>{0, 2, 5});
