@@ -101,7 +101,7 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
             if (m_kernels[funidx] != 1u) { // if diff force u1 and u2 to be different
                 break;
             } else {
-                if (u1idx != u2idx || (nus==1)) {
+                if (u1idx != u2idx || (nus == 1)) {
                     break;
                 }
             }
@@ -481,14 +481,14 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
         std::fill(it.begin(), it.end(), 0.);
     }
 
-    // Loop ove  points
+    // Loop over data points
     for (decltype(N_points) i = 0u; i < N_points; ++i) {
         // The value of expression i will be stored in ph[i]
         phenotype_impl(ph, genotype, xs[i], cons, false);
         // The gradient of expression i with respect to constant j will be stored in dph[j][i]
         for (decltype(m_ncon) j = 0u; j < m_ncon; ++j) {
             // The derivative value w.r.t. the jth constant
-            dphenotype_impl(dph[j], genotype, ph, j, false);
+            dphenotype_impl(dph[j], genotype, ph, j + m_nvar, false);
         }
         // The hessian of expression idx_u with respect to constants jk will be stored in dph[jk][idx_u] - jk =
         // [00,01,02,10,11,20]
@@ -499,6 +499,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
                 jk++;
             }
         }
+
         // We now must construct the value, gradient and hessian for the loss (mse) ....
         // 1 - we compute (yi-\hat y_i)
         for (decltype(ph.size()) idx_u = 0u; idx_u < ph.size(); ++idx_u) {
@@ -537,7 +538,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     for (auto &it : gradient) {
         std::transform(it.begin(), it.end(), it.begin(), [N_points](double &c) { return c / N_points; });
     }
-    for (auto &it : gradient) {
+    for (auto &it : hess) {
         std::transform(it.begin(), it.end(), it.begin(), [N_points](double &c) { return c / N_points; });
     }
 }
