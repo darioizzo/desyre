@@ -123,16 +123,16 @@ int main(int argc, char *argv[])
                 // genotype.
                 for (decltype(predicted_mse.size()) i = 0u; i < predicted_mse.size(); ++i) {
                     double dc = 0.;
-                    if (std::isfinite(dmse[i][0]) && std::isfinite(ddmse[i][0]) && ddmse[i][0] != 0) {
-                        dc = -dmse[i][0] / ddmse[i][0];
+                    if (std::isfinite(dmse[0][i]) && std::isfinite(ddmse[0][i]) && ddmse[0][i] != 0) {
+                        dc = -dmse[0][i] / ddmse[0][i];
                     }
-                    predicted_mse[i] = mse[i] + dmse[i][0] * dc + 0.5 * ddmse[i][0] * dc * dc;
+                    predicted_mse[i] = mse[i] + dmse[0][i] * dc + 0.5 * ddmse[0][i] * dc * dc;
                 }
                 auto tmp = std::min_element(predicted_mse.begin(), predicted_mse.end());
                 auto idx = std::distance(predicted_mse.begin(), tmp);
                 // 3 - The new constants are those of the best genotype if not nans
-                if (std::isfinite(dmse[idx][0]) && std::isfinite(ddmse[idx][0]) && ddmse[idx][0] != 0) {
-                    new_c[0] -= dmse[idx][0] / ddmse[idx][0];
+                if (std::isfinite(dmse[0][idx]) && std::isfinite(ddmse[0][idx]) && ddmse[0][idx] != 0) {
+                    new_c[0] -= dmse[0][idx] / ddmse[0][idx];
                 }
                 // 4 - We compute the fitness of the new genotype with those constants
                 auto new_f = ex.fitness(new_x, new_c, xs, ys);

@@ -459,7 +459,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
                        std::vector<std::vector<double>> &ddmse)
 {
     auto N_points = xs.size();
-    auto length = genotype.size() / 3 + m_nvar + m_ncon;
+    auto N_subexpr = genotype.size() / 3 + m_nvar + m_ncon;
 
     // These will store values and derivatives of the expressions (not the loss)
     std::vector<double> ph;
@@ -467,16 +467,17 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     std::vector<std::vector<double>> ddph(m_ncon * (1 + m_ncon) / 2.);
 
     // We init all to 0. and resize if needed.
-    mse.resize(length);
+    mse.resize(N_subexpr);
     std::fill(mse.begin(), mse.end(), 0.);
-    dmse.resize(length);
+
+    dmse.resize(m_ncon);
     for (auto &it : dmse) {
-        it.resize(m_ncon);
+        it.resize(N_subexpr);
         std::fill(it.begin(), it.end(), 0.);
     }
-    ddmse.resize(length);
+    ddmse.resize(m_ncon * (1 + m_ncon) / 2.);
     for (auto &it : ddmse) {
-        it.resize(m_ncon * (1 + m_ncon) / 2.);
+        it.resize(N_subexpr);
         std::fill(it.begin(), it.end(), 0.);
     }
 
@@ -484,17 +485,17 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     for (decltype(N_points) i = 0u; i < N_points; ++i) {
         // The value of expression i will be stored in ph[i]
         phenotype_impl(ph, genotype, xs[i], cons, false);
-        // The gradient of expression i will be stored in dph[i] with the order [0, 1, 2, ...]
+        // The gradient of expression i with respect to constant j will be stored in dph[j][i]
         for (auto j = 0u; j < m_ncon; ++j) {
-            // The derivative value w.r.t. a c_idx constant
+            // The derivative value w.r.t. the jth constant
             dphenotype_impl(dph[j], genotype, ph, j, false);
         }
-        // The hessian of expression i will be stored in ddph[i] with the order [00,01,02,10,11,20]
-        auto aux = 0u;
+        // The hessian of expression i with respect to constants jk will be stored in dph[jk][i]  [00,01,02,10,11,20]
+        auto jk = 0u;
         for (auto j = 0u; j < m_ncon; ++j) {
             for (auto k = 0u; k <= j; ++k) {
-                ddphenotype_impl(ddph[aux], genotype, ph, dph[j], dph[k], false);
-                aux++;
+                ddphenotype_impl(ddph[jk], genotype, ph, dph[j], dph[k], false);
+                jk++;
             }
         }
         // We now must construct the value, gradient and hessian for the mse ....
@@ -503,31 +504,33 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
             ph[j] -= ys[i];
         }
 
-        // 2 - we compute the hessian jk component ((yi-\hat y_i)d2ydcjdck+(dy/dcj)(dy/dck))
-        for (auto ll = 0u; ll < ddph.size(); ++ll) {
-            aux = 0u;
-            for (auto j = 0u; j < m_ncon; ++j) {
-                for (auto k = 0u; k <= j; ++k) {
-                    ddph[ll][aux] = 2 * (ph[ll] / 2. * ddph[ll][aux] + dph[ll][j] * dph[ll][k]);
+        // 2 - we compute the hessian, jk component ((yi-\hat y_i)d2ydcjdck+(dy/dcj)(dy/dck))
+        jk = 0u;
+        for (auto j = 0u; j < m_ncon; ++j) {
+            for (auto k = 0u; k <= j; ++k) {
+                for (auto idx_u = 0u; idx_u < ddph[jk].size(); ++idx_u) {
+                    ddph[jk][idx_u] = 2 * (ph[idx_u] / 2. * ddph[jk][idx_u] + dph[j][idx_u] * dph[k][idx_u]);
                 }
-                std::transform(ddmse[ll].begin(), ddmse[ll].end(), ddph[ll].begin(), ddmse[ll].begin(),
+                std::transform(ddmse[jk].begin(), ddmse[jk].end(), ddph[jk].begin(), ddmse[jk].begin(),
                                std::plus<double>());
+                jk++;
             }
         }
+
         // 3 - we compute the gradient 2 (yi-\hat y_i)dydcj
-        for (auto ll = 0u; ll < dph.size(); ++ll) {
-            for (auto j = 0u; j < m_ncon; ++j) {
-                dph[ll][j] = 2 * ph[ll] * dph[ll][j];
+        for (auto j = 0u; j < dph.size(); ++j) {
+            for (auto idx_u = 0u; idx_u < dph[j].size(); ++idx_u) {
+                dph[j][idx_u] = 2 * ph[idx_u] * dph[j][idx_u];
             }
-            std::transform(dmse[ll].begin(), dmse[ll].end(), dph[ll].begin(), dmse[ll].begin(), std::plus<double>());
+            std::transform(dmse[j].begin(), dmse[j].end(), dph[j].begin(), dmse[j].begin(), std::plus<double>());
         }
         // 4 - finally we compute (yi-\hat y_i)^2
-        for (auto j = 0u; j < ph.size(); ++j) {
-            ph[j] *= ph[j];
+        for (auto idx_u = 0u; idx_u < ph.size(); ++idx_u) {
+            ph[idx_u] *= ph[idx_u];
         }
         std::transform(mse.begin(), mse.end(), ph.begin(), mse.begin(), std::plus<double>());
     }
-    // And divide by the number of points (can be done before)
+    // Finlly we divide all by the number of points (can be done before)
     std::transform(mse.begin(), mse.end(), mse.begin(), [N_points](double &c) { return c / N_points; });
     for (auto &it : dmse) {
         std::transform(it.begin(), it.end(), it.begin(), [N_points](double &c) { return c / N_points; });
