@@ -123,26 +123,6 @@ TEST_CASE("phenotype")
 
 TEST_CASE("ddmse")
 {
-    //{
-    //    auto n_con = 1u;
-    //    auto n_var = 1u;
-    //    std::vector<std::string> kernels = {"sum", "diff", "mul", "div"};
-    //    expression ex(n_var, n_con, kernels);
-    //    // Manually assemble [x, c, xc]
-    //    std::vector<unsigned> geno = {2, 0, 1};
-    //    // Manually create a dataset
-    //    std::vector<std::vector<double> > xs = {{1.}};
-    //    std::vector<double> ys = {1.};
-    //    std::vector<double> cons = {2.};
-    //    // Return values 
-    //    std::vector<double> mse;
-    //    std::vector<std::vector<double>> dmse, ddmse;
-    //    // Call
-    //    ex.ddmse(geno, cons, xs, ys, mse, dmse, ddmse);
-    //    REQUIRE(mse == std::vector<double>{0, 1, 1});
-    //    REQUIRE(dmse[0] == std::vector<double>{0, 2, 2});
-    //    REQUIRE(ddmse[0] == std::vector<double>{0, 2, 2});
-    //}
     {
         auto n_con = 1u;
         auto n_var = 1u;
@@ -151,15 +131,62 @@ TEST_CASE("ddmse")
         // Manually assemble [x, c, xc]
         std::vector<unsigned> geno = {2, 0, 1};
         // Manually create a dataset
-        std::vector<std::vector<double> > xs = {{1.}, {2.}};
-        std::vector<double> ys = {1., 0.};
+        std::vector<std::vector<double> > xs = {{1.}};
+        std::vector<double> ys = {1.};
         std::vector<double> cons = {2.};
-        // Return values 
+        // Return values
         std::vector<double> mse;
         std::vector<std::vector<double>> dmse, ddmse;
         // Call
         ex.ddmse(geno, cons, xs, ys, mse, dmse, ddmse);
-        // Print
-        fmt::print("{}, {}, {}\n", mse, dmse, ddmse);
+        REQUIRE(mse == std::vector<double>{0, 1, 1});
+        REQUIRE(dmse[0] == std::vector<double>{0, 2, 2});
+        REQUIRE(ddmse[0] == std::vector<double>{0, 2, 2});
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, xc]
+        std::vector<unsigned> geno = {2, 0, 1};
+        // Manually create a dataset
+        std::vector<std::vector<double>> xs = {{1.}, {2.}};
+        std::vector<double> ys = {1., 0.};
+        std::vector<double> cons = {2.};
+        // Return values
+        std::vector<double> mse;
+        std::vector<std::vector<double>> dmse, ddmse;
+        // Call
+        ex.ddmse(geno, cons, xs, ys, mse, dmse, ddmse);
+        REQUIRE(mse == std::vector<double>{2, 2.5, 8.5});
+        REQUIRE(dmse[0] == std::vector<double>{0, 3, 9});
+        REQUIRE(ddmse[0] == std::vector<double>{0, 2, 5});
+    }
+    {
+        auto n_con = 2u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c0, c1, xc0, xc0c1]
+        std::vector<unsigned> geno = {2, 0, 1, 2, 3, 2};
+        // Manually create a dataset
+        std::vector<std::vector<double>> xs = {{1.}, {2.}};
+        std::vector<double> ys = {1., 0.};
+        std::vector<double> cons = {2., 1.};
+        // Return values
+        std::vector<double> mse;
+        std::vector<std::vector<double>> grad, hess;
+        // Call
+        ex.ddmse(geno, cons, xs, ys, mse, grad, hess);
+        // Test
+        REQUIRE(mse == std::vector<double>{2, 2.5, 0.5, 8.5, 8.5});
+
+        REQUIRE(grad[0] == std::vector<double>{0, 3, 0, 9, 9});
+        REQUIRE(grad[1] == std::vector<double>{0, 0, 1, 0, 18});
+
+        REQUIRE(hess[0] == std::vector<double>{0, 2, 0, 5, 5});
+        REQUIRE(hess[1] == std::vector<double>{0, 0, 0, 0, 19});
+        REQUIRE(hess[2] == std::vector<double>{0, 0, 2, 0, 20});
     }
 }

@@ -460,7 +460,9 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
 {
     auto N_points = xs.size();
     auto N_us = genotype.size() / 3 + m_nvar + m_ncon;
-
+    if (cons.size() != m_ncon) {
+        throw std::invalid_argument("When calling ddmse the vector of constants has the wrong size");
+    }
     // These will store values and derivatives of the expressions (not the loss)
     std::vector<double> ph;
     std::vector<std::vector<double>> dph(m_ncon);
@@ -511,7 +513,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
         for (decltype(m_ncon) j = 0u; j < m_ncon; ++j) {
             for (decltype(j) k = 0u; k <= j; ++k) {
                 for (decltype(ddph[jk].size()) idx_u = 0u; idx_u < ddph[jk].size(); ++idx_u) {
-                    ddph[jk][idx_u] = 2 * (ph[idx_u] / 2. * ddph[jk][idx_u] + dph[j][idx_u] * dph[k][idx_u]);
+                    ddph[jk][idx_u] = 2 * (ph[idx_u] * ddph[jk][idx_u] + dph[j][idx_u] * dph[k][idx_u]);
                 }
                 std::transform(hess[jk].begin(), hess[jk].end(), ddph[jk].begin(), hess[jk].begin(),
                                std::plus<double>());
