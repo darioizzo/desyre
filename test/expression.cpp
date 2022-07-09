@@ -120,3 +120,26 @@ TEST_CASE("phenotype")
         }
     }
 }
+
+TEST_CASE("ddmse")
+{
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, xc]
+        std::vector<unsigned> geno = {2, 0, 1};
+        // Manually create a dataset
+        std::vector<std::vector<double> > xs = {{1.}};
+        std::vector<double> ys = {1.};
+        std::vector<double> cons = {2.};
+        // Return values 
+        std::vector<double> mse;
+        std::vector<std::vector<double>> dmse, ddmse;
+        // Call
+        ex.ddmse(geno, cons, xs, ys, mse, dmse, ddmse);
+        // Print
+        fmt::print("{}, {}, {}\n", mse, dmse, ddmse);
+    }
+}
