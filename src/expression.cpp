@@ -390,10 +390,11 @@ std::vector<double> expression::mse(const std::vector<unsigned> &genotype, const
 }
 
 std::vector<double> expression::fitness(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-                                        const std::vector<std::vector<double>> &xs, const std::vector<double> &ys)
+                                        const std::vector<std::vector<double>> &xs, const std::vector<double> &ys,
+                                        std::vector<double> &errors)
 {
     std::vector<double> retval(3);
-    auto errors = mse(genotype, cons, xs, ys);
+    errors = mse(genotype, cons, xs, ys);
     retval[2] = std::reduce(errors.begin(), errors.end(), 0.0) / errors.size();
     retval[1] = *std::max_element(errors.begin(), errors.end());
     retval[0] = *std::min_element(errors.begin(), errors.end());
@@ -529,6 +530,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
             std::transform(gradient[j].begin(), gradient[j].end(), dph[j].begin(), gradient[j].begin(),
                            std::plus<double>());
         }
+
         // 4 - finally we compute (yi-\hat y_i)^2
         for (auto idx_u = 0u; idx_u < ph.size(); ++idx_u) {
             ph[idx_u] *= ph[idx_u];
@@ -564,9 +566,40 @@ std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsig
     return retval;
 }
 
-std::vector<unsigned> expression::mutation2(std::vector<unsigned> genotype, unsigned N)
+std::vector<unsigned> expression::mutation2(const std::vector<unsigned> &genotype, unsigned N)
 {
     auto retval = genotype;
+    // We generate N randomly selected indexes of the genotype triplets
+    std::vector<unsigned> choice(retval.size());
+    std::iota(choice.begin(), choice.end(), 0u);
+    std::shuffle(choice.begin(), choice.end(), m_rng);
+    // For each selected gene, we randomly regenerate a feasible one.
+    for (auto i = 0u; i < N; ++i) {
+        if (choice[i] % 3 == 0u) {
+            std::uniform_int_distribution<unsigned> dis(0, m_kernels.size() - 1);
+            retval[choice[i]] = dis(m_rng);
+        } else {
+            std::uniform_int_distribution<unsigned> dis(0, m_ncon + m_nvar + choice[i] / 3 - 1);
+            retval[choice[i]] = dis(m_rng);
+        }
+    }
+    return retval;
+}
+
+std::vector<unsigned> expression::mutation3(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
+                                            unsigned N)
+{
+    auto retval = genotype;
+    for (auto idx_u = m_nvar + m_ncon; idx_u < phenotype.size(); ++idx_u) {
+        if (!std::isfinite(phenotype[idx_u])) {
+            std::uniform_int_distribution<unsigned> dis1(0, m_kernels.size() - 1);
+            std::uniform_int_distribution<unsigned> dis2(0, idx_u - 1);
+            retval[(idx_u - m_nvar - m_ncon) * 3] = dis1(m_rng);
+            retval[(idx_u - m_nvar - m_ncon) * 3 + 1] = dis2(m_rng);
+            retval[(idx_u - m_nvar - m_ncon) * 3 + 2] = dis2(m_rng);
+        }
+    }
+
     // We generate N randomly selected indexes of the genotype triplets
     std::vector<unsigned> choice(retval.size());
     std::iota(choice.begin(), choice.end(), 0u);
