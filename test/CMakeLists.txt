@@ -26,3 +26,5 @@ function(ADD_DSYRE_TESTCASE arg1)
 endfunction()
 
 ADD_DSYRE_TESTCASE(expression)
+ADD_DSYRE_TESTCASE(update_constants)
+

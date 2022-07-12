@@ -55,6 +55,7 @@ message(STATUS "Library installation directory: ${DSYRE_INSTALL_LIBDIR}")
 set(DSYRE_SRC_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/expression.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/update_constants.cpp"
 )
 # dsyre library ###################################################################################################################3
 if(DSYRE_BUILD_STATIC_LIBRARY)
