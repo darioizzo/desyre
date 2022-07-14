@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-
+#include <boost/math/constants/constants.hpp>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
 #include <symengine/expression.h>
@@ -12,17 +12,19 @@
 #include <dsyre/expression.hpp>
 #include <dsyre/update_constants.hpp>
 
+constexpr double pi = boost::math::constants::pi<double>();
+constexpr double napier = boost::math::constants::e<double>();
 
 using namespace fmt;
 
 inline double P1(const std::vector<double> &x)
 {
-    return std::pow(x[0], 5) - 3.14151617 * std::pow(x[0], 3) + x[0];
+    return std::pow(x[0], 5) - pi * std::pow(x[0], 3) + x[0];
 }
 
 inline double P2(const std::vector<double> &x)
 {
-    return std::pow(x[0], 5) - 3.14151617 * std::pow(x[0], 3) + 2 * 3.14151617 / x[0];
+    return std::pow(x[0], 5) - pi * std::pow(x[0], 3) + 2 * pi / x[0];
 }
 
 inline double P3(const std::vector<double> &x)
@@ -32,12 +34,27 @@ inline double P3(const std::vector<double> &x)
 
 inline double P4(const std::vector<double> &x)
 {
-    return std::sin(3.14151617 * x[0]) + 1. / x[0];
+    return std::sin(pi * x[0]) + 1. / x[0];
 }
 
 inline double P5(const std::vector<double> &x)
 {
-    return 2.12 * std::cos(x[3]) + x[0] * x[0] - 3.123;
+    return napier * std::pow(x[0], 5) - pi * std::pow(x[0], 3) + x[0];
+}
+
+inline double P6(const std::vector<double> &x)
+{
+    return (napier * std::pow(x[0], 2) - 1.) / (pi * (x[0] + 2));
+}
+
+inline double P7(const std::vector<double> &x)
+{
+    return std::cos(pi * x[0]) + std::sin(napier * x[0]);
+}
+
+inline double P8(const std::vector<double> &x)
+{
+    return 2.5382 * std::cos(x[3]) + x[0] * x[0] - 0.5;
 }
 
 void generate_1d_data(std::vector<std::vector<double>> &xs, std::vector<double> &ys, unsigned N, double lb, double ub)
@@ -47,7 +64,7 @@ void generate_1d_data(std::vector<std::vector<double>> &xs, std::vector<double> 
     // i must be double
     for (double i = 0.; i < N; ++i) {
         xs[i] = {lb + i / (N - 1) * (ub - lb)};
-        ys[i] = P1(xs[i]);
+        ys[i] = P6(xs[i]);
     }
 }
 
@@ -65,7 +82,7 @@ void generate_md_data(std::vector<std::vector<double>> &xs, std::vector<double> 
         }
     }
     for (auto i = 0u; i < N; ++i) {
-        ys[i] = P5(xs[i]);
+        ys[i] = P8(xs[i]);
     }
 }
 
@@ -83,8 +100,8 @@ int main(int argc, char *argv[])
     // Generate data
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
-    generate_md_data(xs, ys, 100u, 5u);
-    // generate_1d_data(xs, ys, 10u, 1., 3.);
+    // generate_md_data(xs, ys, 100u, 5u);
+    generate_1d_data(xs, ys, 10u, -2.1, 1.);
     //    Allocate some stuff
     auto length = 20u;
     auto n_var = xs[0].size();
@@ -94,8 +111,9 @@ int main(int argc, char *argv[])
     std::vector<std::vector<double>> grad, hess;
 
     // The expression system
-    dsyre::expression ex(n_var, n_con, {"sum", "mul", "sin", "cos", "exp", "inv"});
-    // dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div"});
+    // dsyre::expression ex(n_var, n_con, {"sum", "mul", "sin", "cos", "exp", "inv"});
+    //dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div", "sin", "cos"});
+    dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div"});
 
     // Run the evolution
     // We run n_trials experiments
