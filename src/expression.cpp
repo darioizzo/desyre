@@ -74,9 +74,9 @@ std::vector<double> expression::random_constants(double lb, double ub)
 }
 
 // Assuming 0:+, 1:-, 2:* 3:/
-std::vector<unsigned> expression::random_genotype(unsigned length)
+void expression::random_genotype(std::vector<unsigned>& retval, unsigned length)
 {
-    std::vector<unsigned> retval(3 * length);
+    retval.resize(3 * length);
     unsigned nus = m_nvar + m_ncon;
     std::uniform_int_distribution<int> uni_ker(0, m_nker - 1);
     for (auto i = 0u; i < length; ++i) {
@@ -111,7 +111,6 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
         retval[3 * i + 2] = u2idx;
         nus++;
     }
-    return retval;
 }
 
 void expression::phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
@@ -547,7 +546,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     }
 }
 
-std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsigned N)
+std::vector<unsigned> expression::mutation(const std::vector<unsigned>& genotype, unsigned N)
 {
     auto retval = genotype;
     // We generate N randomly selected indexes of the genotype triplets
@@ -556,12 +555,12 @@ std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsig
     std::iota(choice.begin(), choice.end(), 0u);
     std::shuffle(choice.begin(), choice.end(), m_rng);
     // We generate a new feasible random genotype
-    auto muts = random_genotype(genotype.size());
+    random_genotype(retval, n_triplets);
     // For each selected triplet we use the randomly generated one
-    for (auto i = 0u; i < N; ++i) {
-        retval[3 * choice[i]] = muts[3 * choice[i]];
-        retval[3 * choice[i] + 1] = muts[3 * choice[i] + 1];
-        retval[3 * choice[i] + 2] = muts[3 * choice[i] + 2];
+    for (auto i = 0u; i < n_triplets - N; ++i) {
+        retval[3 * choice[i]] = genotype[3 * choice[i]];
+        retval[3 * choice[i] + 1] = genotype[3 * choice[i] + 1];
+        retval[3 * choice[i] + 2] = genotype[3 * choice[i] + 2];
     }
     return retval;
 }

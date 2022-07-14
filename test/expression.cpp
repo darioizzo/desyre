@@ -72,7 +72,8 @@ TEST_CASE("random_genotype")
         unsigned length = 20u;
         std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin", "cos"};
         expression ex(n_var, n_con, kernels);
-        auto geno = ex.random_genotype(length);
+        std::vector<unsigned> geno;
+        ex.random_genotype(geno, length);
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
@@ -89,7 +90,8 @@ TEST_CASE("random_genotype")
         unsigned length = 20u;
         std::vector<std::string> kernels = {"mul", "sin", "cos", "div", "diff", "sum"};
         expression ex(n_var, n_con, kernels);
-        auto geno = ex.random_genotype(length);
+        std::vector<unsigned> geno;
+        ex.random_genotype(geno, length);
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {

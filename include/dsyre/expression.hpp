@@ -29,7 +29,7 @@ public:
     std::vector<double> random_constants(double lb, double ub);
 
     // Generates the genotype at random.
-    std::vector<unsigned> random_genotype(unsigned length);
+    void random_genotype(std::vector<unsigned> &genotype, unsigned length);
 
     // Removes nested unary functions
     void remove_nesting(std::vector<unsigned> &g) const;
@@ -62,10 +62,11 @@ public:
 
     // Computes the fitness as the best,avg, worst mse over all the nodes
     std::vector<double> fitness(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-                                const std::vector<std::vector<double>> &xs, const std::vector<double> &ys,std::vector<double> &errors);
+                                const std::vector<std::vector<double>> &xs, const std::vector<double> &ys,
+                                std::vector<double> &errors);
 
     // Mutates the graph
-    std::vector<unsigned> mutation(std::vector<unsigned> genotype, unsigned N);
+    std::vector<unsigned> mutation(const std::vector<unsigned> &genotype, unsigned N);
     std::vector<unsigned> mutation2(const std::vector<unsigned> &genotype, unsigned N);
     std::vector<unsigned> mutation3(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                     unsigned N);
