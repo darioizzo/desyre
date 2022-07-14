@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     //    Allocate some stuff
     auto length = 20u;
     auto n_var = xs[0].size();
-    auto n_con = 2u;
+    auto n_con = 1u;
     std::vector<double> mse;
     std::vector<double> predicted_mse(n_con + n_var + length, 0.);
     std::vector<std::vector<double>> grad, hess;
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 
     for (auto j = 0u; j < n_trials; ++j) {
         // We let each run to convergence
-        best_x = ex.random_genotype(length);
+        ex.random_genotype(best_x, length);
         best_c = ex.random_constants(-1., 1.);
         auto best_f = ex.fitness(best_x, best_c, xs, ys, mse);
         auto count = 0u;

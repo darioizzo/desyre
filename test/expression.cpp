@@ -72,7 +72,8 @@ TEST_CASE("random_genotype")
         unsigned length = 20u;
         std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin", "cos"};
         expression ex(n_var, n_con, kernels);
-        auto geno = ex.random_genotype(length);
+        std::vector<unsigned> geno;
+        ex.random_genotype(geno, length);
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
@@ -89,7 +90,8 @@ TEST_CASE("random_genotype")
         unsigned length = 20u;
         std::vector<std::string> kernels = {"mul", "sin", "cos", "div", "diff", "sum"};
         expression ex(n_var, n_con, kernels);
-        auto geno = ex.random_genotype(length);
+        std::vector<unsigned> geno;
+        ex.random_genotype(geno, length);
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
@@ -102,21 +104,233 @@ TEST_CASE("random_genotype")
     }
 }
 
+TEST_CASE("remove_nesting")
+{
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "mul", "sin", "inv", "cos"};
+        expression ex(n_var, n_con, kernels);
+        std::vector<unsigned> genotype_not_nested = {1, 0, 1, 4, 1, 1, 3, 1, 2};
+        std::vector<unsigned> genotype_nested = {1, 0, 1, 4, 1, 1, 4, 3, 1};
+        std::vector<unsigned> tmp, tmp2;
+        // 1 - a non nested genotype remains unchanged
+        tmp = genotype_not_nested;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp == genotype_not_nested);
+        // 2 - a nested genotype is changed
+        tmp = genotype_nested;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp != genotype_nested);
+        // 3 - a changed nested genotype is no longer nested
+        tmp2 = tmp;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp == tmp2);
+    }
+    {
+        auto n_con = 3u;
+        auto n_var = 2u;
+        std::vector<std::string> kernels = {"sum", "mul", "sin", "inv", "cos"};
+        expression ex(n_var, n_con, kernels);
+        std::vector<unsigned> genotype_not_nested = {1, 0, 1, 4, 1, 1, 3, 1, 2};
+        std::vector<unsigned> genotype_nested = {1, 0, 1, 4, 1, 1, 4, 3, 1, 3, 5, 6, 4, 6, 2};
+        std::vector<unsigned> tmp, tmp2;
+        // 1 - a non nested genotype remains unchanged
+        tmp = genotype_not_nested;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp == genotype_not_nested);
+        // 2 - a nested genotype is changed
+        tmp = genotype_nested;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp != genotype_nested);
+        // 3 - a changed nested genotype is no longer nested
+        tmp2 = tmp;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp == tmp2);
+    }
+}
+
 TEST_CASE("phenotype")
+{
+    // Test throws
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble[x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
+        std::vector<double> phen;
+        REQUIRE_THROWS_AS(ex.phenotype(phen, geno, {0.2, 1.2, 3.4}, {0.1}), std::invalid_argument);
+        REQUIRE_THROWS_AS(ex.phenotype(phen, geno, {0.0}, {0.2, 1.2, 3.4}), std::invalid_argument);
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
+        double x = 3.1232133;
+        double c = -0.21312123;
+        std::vector<double> objective = {x, c, x * c, std::sin(x * c), x + std::sin(x * c), (x + std::sin(x * c)) / x};
+        std::vector<double> phen;
+        ex.phenotype(phen, geno, {x}, {c});
+        REQUIRE(phen == objective);
+    }
+}
+
+TEST_CASE("sphenotype")
 {
     {
         auto n_con = 1u;
         auto n_var = 1u;
         std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
         expression ex(n_var, n_con, kernels);
-        // Manually assemble (x + sin(cx)) / x
+        // Manually assemble [x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
+        std::vector<std::string> phen;
+        REQUIRE_THROWS_AS(ex.sphenotype(phen, geno, {"x", "y"}, {"c"}), std::invalid_argument);
+        REQUIRE_THROWS_AS(ex.sphenotype(phen, geno, {"x"}, {"c1", "c2"}), std::invalid_argument);
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble[x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
         std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
         std::vector<std::string> objective = {"x", "c", "(x*c)", "sin((x*c))", "(x+sin((x*c)))", "((x+sin((x*c)))/x)"};
         std::vector<std::string> sphen;
         ex.sphenotype(sphen, geno, {"x"}, {"c"});
+        REQUIRE(sphen == objective);
+    }
+}
 
-        for (decltype(sphen.size()) i = 0u; i < sphen.size(); ++i) {
-            REQUIRE(sphen[i] == objective[i]);
+TEST_CASE("dphenotype")
+{
+    // Test throws
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble[x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
+        std::vector<double> phen, dphen;
+        ex.phenotype(phen, geno, {0.12}, {0.3});
+        // derivative index is too high!
+        REQUIRE_THROWS_AS(ex.dphenotype(dphen, geno, phen, 34u), std::invalid_argument);
+        // wrong phenotype-genotype sizes
+        REQUIRE_THROWS_AS(ex.dphenotype(dphen, geno, {0.3, 0.4}, 1u), std::invalid_argument);
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
+        double x = 3.1232133;
+        double c = -0.21312123;
+        std::vector<double> phen, dphen;
+        ex.phenotype(phen, geno, {x}, {c});
+        // Test derivation with respect to x
+        {
+            std::vector<double> objective = {1.,
+                                             0.,
+                                             c,
+                                             std::cos(x * c) * c,
+                                             1 + std::cos(x * c) * c,
+                                             ((1 + std::cos(x * c) * c) * x - (x + std::sin(c * x))) / x / x};
+            ex.dphenotype(dphen, geno, phen, 0u);
+            REQUIRE_THAT(dphen, Catch::Approx(objective).margin(1e-14));
+        }
+        // Test derivation with respect to c
+        {
+            std::vector<double> objective = {0., 1., x, std::cos(x * c) * x, std::cos(x * c) * x, std::cos(x * c)};
+            ex.dphenotype(dphen, geno, phen, 1u);
+            REQUIRE_THAT(dphen, Catch::Approx(objective).margin(1e-14));
+        }
+    }
+}
+
+TEST_CASE("ddphenotype")
+{
+    // Test throws
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble[x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
+        std::vector<double> phen, dphen, ddphen;
+        ex.phenotype(phen, geno, {0.12}, {0.3});
+        // derivate w.r.t. x
+        ex.dphenotype(dphen, geno, phen, 0u);
+        // inconsistent dphenotype dimensions
+        REQUIRE_THROWS_AS(ex.ddphenotype(ddphen, geno, phen, dphen, {1., 2., 3.}), std::invalid_argument);
+        // inconsistent phenotype dphenotype dimensions
+        REQUIRE_THROWS_AS(ex.ddphenotype(ddphen, geno, {1.2, 3., 2.}, dphen, dphen), std::invalid_argument);
+        // inconsistent phenotype genotype  dimensions
+        REQUIRE_THROWS_AS(ex.ddphenotype(ddphen, geno, {1.2, 3., 2.}, {1.2, 3., 2.}, {1.2, 3., 2.}),
+                          std::invalid_argument);
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0};
+        double x = 3.1232133;
+        double c = -0.21312123;
+        std::vector<double> phen, dphen0, dphen1, ddphen;
+        ex.phenotype(phen, geno, {x}, {c});
+        ex.dphenotype(dphen0, geno, phen, 0u);
+        ex.dphenotype(dphen1, geno, phen, 1u);
+
+        // Test derivation with respect to x2
+        {
+            std::vector<double> objective
+                = {0.,
+                   0.,
+                   0,
+                   -std::sin(x * c) * c * c,
+                   -std::sin(x * c) * c * c,
+                   ((2 - c * c * x * x) * std::sin(c * x) - 2 * c * x * std::cos(c * x)) / x / x / x};
+            ex.ddphenotype(ddphen, geno, phen, dphen0, dphen0);
+            REQUIRE_THAT(ddphen, Catch::Approx(objective).margin(1e-14));
+        }
+        // Test derivation with respect to c2
+        {
+            std::vector<double> objective
+                = {0., 0., 0., -std::sin(x * c) * x * x, -std::sin(x * c) * x * x, -std::sin(x * c) * x};
+            ex.ddphenotype(ddphen, geno, phen, dphen1, dphen1);
+            REQUIRE_THAT(ddphen, Catch::Approx(objective).margin(1e-14));
+        }
+        // Test derivation with respect to c x
+        {
+            std::vector<double> objective = {0.,
+                                             0.,
+                                             1.,
+                                             std::cos(x * c) - std::sin(x * c) * x * c,
+                                             std::cos(x * c) - std::sin(x * c) * x * c,
+                                             -std::sin(x * c) * c};
+            ex.ddphenotype(ddphen, geno, phen, dphen1, dphen0);
+            REQUIRE_THAT(ddphen, Catch::Approx(objective).margin(1e-14));
+        }
+        // Test derivation with respect to x c
+        {
+            std::vector<double> objective = {0.,
+                                             0.,
+                                             1.,
+                                             std::cos(x * c) - std::sin(x * c) * x * c,
+                                             std::cos(x * c) - std::sin(x * c) * x * c,
+                                             -std::sin(x * c) * c};
+            ex.ddphenotype(ddphen, geno, phen, dphen0, dphen1);
+            REQUIRE_THAT(ddphen, Catch::Approx(objective).margin(1e-14));
         }
     }
 }

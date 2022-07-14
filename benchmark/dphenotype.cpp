@@ -50,7 +50,8 @@ void perform_speed_test(unsigned n_vars, unsigned n_cons, unsigned length, unsig
 
     // We log progress
     fmt::print("{} vars, {} cons, {} length, on {} data points: ", n_vars, n_cons, length, N);
-    auto genotype = ex.random_genotype(length);
+    std::vector<unsigned> genotype;
+    ex.random_genotype(genotype, length);
     auto start = high_resolution_clock::now();
     for (decltype(vars.size()) i = 0u; i < vars.size(); ++i) {
         ex.phenotype(phenotype, genotype, vars[i], cons[i]);

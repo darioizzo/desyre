@@ -24,6 +24,13 @@ namespace dsyre
 using ukernel_f_ptr = double (*)(double);
 using pkernel_f_ptr = std::string (*)(std::string);
 
+/** INSTRUCTIONS TO ADD ONE KERNEL (assumes the function, its derivative, its second order derivative and its string
+representation has been coded).
+
+1 - add it to ukernel_list, dukernel_list, ddukernel_list, pkernel_list
+2 - update if needed n_binary
+3 - add it to the map kernel_map */
+
 // Global array of function pointers for the unary kernels
 ukernel_f_ptr ukernel_list[] = {inv, cos, sin, exp};
 ukernel_f_ptr dukernel_list[] = {dinv, dcos, dsin, dexp};
@@ -74,9 +81,9 @@ std::vector<double> expression::random_constants(double lb, double ub)
 }
 
 // Assuming 0:+, 1:-, 2:* 3:/
-std::vector<unsigned> expression::random_genotype(unsigned length)
+void expression::random_genotype(std::vector<unsigned> &retval, unsigned length)
 {
-    std::vector<unsigned> retval(3 * length);
+    retval.resize(3 * length);
     unsigned nus = m_nvar + m_ncon;
     std::uniform_int_distribution<int> uni_ker(0, m_nker - 1);
     for (auto i = 0u; i < length; ++i) {
@@ -111,24 +118,12 @@ std::vector<unsigned> expression::random_genotype(unsigned length)
         retval[3 * i + 2] = u2idx;
         nus++;
     }
-    return retval;
 }
 
 void expression::phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                                const std::vector<double> &vars, const std::vector<double> &cons, bool check)
+                                const std::vector<double> &vars, const std::vector<double> &cons)
 {
     auto n_terminals = m_nvar + m_ncon;
-    if (check) {
-        check_genotype(genotype);
-        if (vars.size() != m_nvar) {
-            throw std::invalid_argument(
-                "When calling phenotype_impl the number of variables to compute this phenotype is wrong.");
-        }
-        if (cons.size() != m_ncon) {
-            throw std::invalid_argument(
-                "When calling phenotype_impl the number of constants to compute this phenotype is wrong.");
-        }
-    }
 
     // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
     auto n_triplets = genotype.size() / 3;
@@ -165,11 +160,20 @@ void expression::phenotype_impl(std::vector<double> &retval, const std::vector<u
 void expression::phenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                            const std::vector<double> &vars, const std::vector<double> &cons)
 {
-    phenotype_impl(retval, genotype, vars, cons, true);
+    check_genotype(genotype);
+    if (vars.size() != m_nvar) {
+        throw std::invalid_argument(
+            "When calling phenotype the number of variables to compute this phenotype is wrong.");
+    }
+    if (cons.size() != m_ncon) {
+        throw std::invalid_argument(
+            "When calling phenotype the number of constants to compute this phenotype is wrong.");
+    }
+    phenotype_impl(retval, genotype, vars, cons);
 }
 
 void expression::sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
-                                 const std::vector<std::string> &vars, const std::vector<std::string> &cons, bool check)
+                                 const std::vector<std::string> &vars, const std::vector<std::string> &cons)
 {
     auto n_terminals = m_nvar + m_ncon;
     auto vnames = vars;
@@ -183,18 +187,6 @@ void expression::sphenotype_impl(std::vector<std::string> &retval, const std::ve
     if (cnames.size() == 0) {
         for (auto i = 0u; i < m_ncon; ++i) {
             cnames.push_back("c" + std::to_string(i));
-        }
-    }
-
-    if (check) {
-        check_genotype(genotype);
-        if (vnames.size() != m_nvar) {
-            throw std::invalid_argument(
-                "When calling sphenotype_impl the number of variables to compute this phenotype is wrong.");
-        }
-        if (cnames.size() != m_ncon) {
-            throw std::invalid_argument(
-                "When calling sphenotype_impl the number of constants to compute this phenotype is wrong.");
         }
     }
 
@@ -233,20 +225,23 @@ void expression::sphenotype_impl(std::vector<std::string> &retval, const std::ve
 void expression::sphenotype(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
                             const std::vector<std::string> &vars, const std::vector<std::string> &cons)
 {
-    sphenotype_impl(retval, genotype, vars, cons, true);
+    check_genotype(genotype);
+    if (vars.size() != m_nvar) {
+        throw std::invalid_argument(
+            "When calling sphenotype the number of variables to compute this phenotype is wrong.");
+    }
+    if (cons.size() != m_ncon) {
+        throw std::invalid_argument(
+            "When calling sphenotype the number of constants to compute this phenotype is wrong.");
+    }
+
+    sphenotype_impl(retval, genotype, vars, cons);
 }
 
 // First order derivatives
 void expression::dphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                                 const std::vector<double> &phenotype, unsigned idx, bool check)
+                                 const std::vector<double> &phenotype, unsigned idx)
 {
-    if (check) {
-        check_genotype(genotype);
-        if (idx >= m_nvar + m_ncon) {
-            throw std::invalid_argument("When calling dphenotype_impl the idx of the derivation variable is larger "
-                                        "than the sum n_vars + n_cons");
-        }
-    }
     // Number of terminals (vars and cons)
     unsigned n_terminals = m_nvar + m_ncon;
     // Number of triplets (F idx0, idx1 in the chromosome)
@@ -289,27 +284,22 @@ void expression::dphenotype_impl(std::vector<double> &retval, const std::vector<
 void expression::dphenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                             const std::vector<double> &phenotype, unsigned idx)
 {
-    dphenotype_impl(retval, genotype, phenotype, idx, true);
+    check_genotype(genotype);
+    if (idx >= m_nvar + m_ncon) {
+        throw std::invalid_argument("When calling dphenotype the idx of the derivation variable is larger "
+                                    "than the sum n_vars + n_cons");
+    }
+    if ((phenotype.size() - m_nvar - m_ncon) * 3 != genotype.size()) {
+        throw std::invalid_argument(
+            "When calling dphenotype the phenotype and genotype lengths are not compatible");
+    }
+    dphenotype_impl(retval, genotype, phenotype, idx);
 }
 // Second order derivative
 void expression::ddphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                                   const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
-                                  const std::vector<double> &d1phenotype, bool check)
+                                  const std::vector<double> &d1phenotype)
 {
-    assert(d0phenotype.size() == d1phenotype.size());
-    assert(phenotype.size() == d1phenotype.size());
-    if (check) {
-        check_genotype(genotype);
-        if (d0phenotype.size() != d1phenotype.size()) {
-            throw std::invalid_argument(
-                "When calling ddphenotype_impl the sizes of the gradients (d2phen, d1phen) is to be equal");
-        }
-        if (phenotype.size() != d1phenotype.size()) {
-            throw std::invalid_argument("When calling ddphenotype_impl the sizes of the gradients (d1phen) is to be "
-                                        "equal to the size of the phenotype");
-        }
-    }
-
     // Number of terminals (vars and cons)
     unsigned n_terminals = m_nvar + m_ncon;
     // Number of triplets (F idx0, idx1 in the chromosome)
@@ -363,7 +353,21 @@ void expression::ddphenotype(std::vector<double> &retval, const std::vector<unsi
                              const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
                              const std::vector<double> &d1phenotype)
 {
-    ddphenotype_impl(retval, genotype, phenotype, d0phenotype, d1phenotype, true);
+    check_genotype(genotype);
+    if (d0phenotype.size() != d1phenotype.size()) {
+        throw std::invalid_argument(
+            "When calling ddphenotype the sizes of the gradients (d2phen, d1phen) is to be equal");
+    }
+    if (phenotype.size() != d1phenotype.size()) {
+        throw std::invalid_argument("When calling ddphenotype the sizes of the gradients (d1phen) is to be "
+                                    "equal to the size of the phenotype");
+    }
+    if ((phenotype.size() - m_nvar - m_ncon) * 3 != genotype.size()) {
+        throw std::invalid_argument(
+            "When calling ddphenotype the phenotype and genotype lengths are not compatible");
+    }
+
+    ddphenotype_impl(retval, genotype, phenotype, d0phenotype, d1phenotype);
 }
 
 std::vector<double> expression::mse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
@@ -434,18 +438,18 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     // Loop over data points
     for (decltype(N_points) i = 0u; i < N_points; ++i) {
         // The value of expression i will be stored in ph[i]
-        phenotype_impl(ph, genotype, xs[i], cons, false);
+        phenotype_impl(ph, genotype, xs[i], cons);
         // The gradient of expression i with respect to constant j will be stored in dph[j][i]
         for (decltype(m_ncon) j = 0u; j < m_ncon; ++j) {
             // The derivative value w.r.t. the jth constant
-            dphenotype_impl(dph[j], genotype, ph, j + m_nvar, false);
+            dphenotype_impl(dph[j], genotype, ph, j + m_nvar);
         }
         // The hessian of expression idx_u with respect to constants jk will be stored in dph[jk][idx_u] - jk =
         // [00,01,02,10,11,20]
         auto jk = 0u;
         for (decltype(m_ncon) j = 0u; j < m_ncon; ++j) {
             for (decltype(j) k = 0u; k <= j; ++k) {
-                ddphenotype_impl(ddph[jk], genotype, ph, dph[j], dph[k], false);
+                ddphenotype_impl(ddph[jk], genotype, ph, dph[j], dph[k]);
                 jk++;
             }
         }
@@ -494,7 +498,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     }
 }
 
-std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsigned N)
+std::vector<unsigned> expression::mutation(const std::vector<unsigned> &genotype, unsigned N)
 {
     auto retval = genotype;
     // We generate N randomly selected indexes of the genotype triplets
@@ -503,12 +507,12 @@ std::vector<unsigned> expression::mutation(std::vector<unsigned> genotype, unsig
     std::iota(choice.begin(), choice.end(), 0u);
     std::shuffle(choice.begin(), choice.end(), m_rng);
     // We generate a new feasible random genotype
-    auto muts = random_genotype(genotype.size());
+    random_genotype(retval, n_triplets);
     // For each selected triplet we use the randomly generated one
-    for (auto i = 0u; i < N; ++i) {
-        retval[3 * choice[i]] = muts[3 * choice[i]];
-        retval[3 * choice[i] + 1] = muts[3 * choice[i] + 1];
-        retval[3 * choice[i] + 2] = muts[3 * choice[i] + 2];
+    for (auto i = 0u; i < n_triplets - N; ++i) {
+        retval[3 * choice[i]] = genotype[3 * choice[i]];
+        retval[3 * choice[i] + 1] = genotype[3 * choice[i] + 1];
+        retval[3 * choice[i] + 2] = genotype[3 * choice[i] + 2];
     }
     return retval;
 }
@@ -564,16 +568,18 @@ std::vector<unsigned> expression::mutation3(const std::vector<unsigned> &genotyp
     return retval;
 }
 
+// NOTE: the inv function although unary will not count for nesting as to allow 1/sin.
+// this allows for inv(inv) TODO: make a special case
 void expression::remove_nesting(std::vector<unsigned> &g) const
 {
     auto n_triplets = g.size() / 3;
-    for (auto i = 1u; i < n_triplets; ++i) {   // skip first triplet as connection genes are surely var or con
-        if (m_kernels[g[3 * i]] >= n_binary) { // unary operator
+    for (auto i = 1u; i < n_triplets; ++i) {       // skip first triplet as connection genes are surely var or con
+        if (m_kernels[g[3 * i]] >= n_binary + 1) { // unary operator (and not inv)
             auto u1 = g[3 * i + 1];
             if (u1 > m_ncon + m_nvar) { // not taking in a var or con
-                std::uniform_int_distribution<int> random_kernel(0u, m_kernels.size() - 1);
-                // this loop is infinite if no binary operators are in the kernels.
-                while (m_kernels[g[3 * (u1 - m_ncon - m_nvar)]] >= n_binary) { // and nesting one more unary
+                std::uniform_int_distribution<unsigned> random_kernel(0u, m_kernels.size() - 1);
+                // this loop is infinite if no binary operators(or inv) are in the kernels.
+                while (m_kernels[g[3 * (u1 - m_ncon - m_nvar)]] >= n_binary + 1) { // and nesting one more unary
                     // we change the operator randomly
                     g[3 * (u1 - m_ncon - m_nvar)] = random_kernel(m_rng);
                 }
