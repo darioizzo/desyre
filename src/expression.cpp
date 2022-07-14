@@ -74,7 +74,7 @@ std::vector<double> expression::random_constants(double lb, double ub)
 }
 
 // Assuming 0:+, 1:-, 2:* 3:/
-void expression::random_genotype(std::vector<unsigned>& retval, unsigned length)
+void expression::random_genotype(std::vector<unsigned> &retval, unsigned length)
 {
     retval.resize(3 * length);
     unsigned nus = m_nvar + m_ncon;
@@ -546,7 +546,7 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     }
 }
 
-std::vector<unsigned> expression::mutation(const std::vector<unsigned>& genotype, unsigned N)
+std::vector<unsigned> expression::mutation(const std::vector<unsigned> &genotype, unsigned N)
 {
     auto retval = genotype;
     // We generate N randomly selected indexes of the genotype triplets
@@ -616,16 +616,18 @@ std::vector<unsigned> expression::mutation3(const std::vector<unsigned> &genotyp
     return retval;
 }
 
+// NOTE: the inv function although unary will not count for nesting as to allow 1/sin.
+// this allows for inv(inv) TODO: make a special case
 void expression::remove_nesting(std::vector<unsigned> &g) const
 {
     auto n_triplets = g.size() / 3;
     for (auto i = 1u; i < n_triplets; ++i) {   // skip first triplet as connection genes are surely var or con
-        if (m_kernels[g[3 * i]] >= n_binary) { // unary operator
+        if (m_kernels[g[3 * i]] >= n_binary + 1) { // unary operator (and not inv)
             auto u1 = g[3 * i + 1];
             if (u1 > m_ncon + m_nvar) { // not taking in a var or con
-                std::uniform_int_distribution<int> random_kernel(0u, m_kernels.size() - 1);
-                // this loop is infinite if no binary operators are in the kernels.
-                while (m_kernels[g[3 * (u1 - m_ncon - m_nvar)]] >= n_binary) { // and nesting one more unary
+                std::uniform_int_distribution<unsigned> random_kernel(0u, m_kernels.size() - 1);
+                // this loop is infinite if no binary operators(or inv) are in the kernels.
+                while (m_kernels[g[3 * (u1 - m_ncon - m_nvar)]] >= n_binary + 1) { // and nesting one more unary
                     // we change the operator randomly
                     g[3 * (u1 - m_ncon - m_nvar)] = random_kernel(m_rng);
                 }

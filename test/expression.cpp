@@ -104,6 +104,52 @@ TEST_CASE("random_genotype")
     }
 }
 
+TEST_CASE("remove_nesting")
+{
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "mul", "sin", "inv", "cos"};
+        expression ex(n_var, n_con, kernels);
+        std::vector<unsigned> genotype_not_nested = {1, 0, 1, 4, 1, 1, 3, 1, 2};
+        std::vector<unsigned> genotype_nested = {1, 0, 1, 4, 1, 1, 4, 3, 1};
+        std::vector<unsigned> tmp, tmp2;
+        // 1 - a non nested genotype remains unchanged
+        tmp = genotype_not_nested;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp == genotype_not_nested);
+        // 2 - a nested genotype is changed
+        tmp = genotype_nested;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp != genotype_nested);
+        // 3 - a changed nested genotype is no longer nested
+        tmp2 = tmp;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp == tmp2);
+    }
+    {
+        auto n_con = 3u;
+        auto n_var = 2u;
+        std::vector<std::string> kernels = {"sum", "mul", "sin", "inv", "cos"};
+        expression ex(n_var, n_con, kernels);
+        std::vector<unsigned> genotype_not_nested = {1, 0, 1, 4, 1, 1, 3, 1, 2};
+        std::vector<unsigned> genotype_nested = {1, 0, 1, 4, 1, 1, 4, 3, 1, 3, 5, 6, 4, 6, 2};
+        std::vector<unsigned> tmp, tmp2;
+        // 1 - a non nested genotype remains unchanged
+        tmp = genotype_not_nested;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp == genotype_not_nested);
+        // 2 - a nested genotype is changed
+        tmp = genotype_nested;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp != genotype_nested);
+        // 3 - a changed nested genotype is no longer nested
+        tmp2 = tmp;
+        ex.remove_nesting(tmp);
+        REQUIRE(tmp == tmp2);
+    }
+}
+
 TEST_CASE("phenotype")
 {
     {

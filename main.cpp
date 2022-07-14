@@ -94,8 +94,8 @@ int main(int argc, char *argv[])
     std::vector<std::vector<double>> grad, hess;
 
     // The expression system
-    dsyre::expression ex(n_var, n_con, {"sum", "mul", "sin", "cos", "exp", "inv"});
-    // dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div"});
+    //dsyre::expression ex(n_var, n_con, {"sum", "mul", "sin", "cos", "exp", "inv"});
+    dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div"});
 
     // Run the evolution
     // We run n_trials experiments
