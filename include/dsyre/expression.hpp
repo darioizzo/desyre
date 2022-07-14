@@ -31,7 +31,7 @@ public:
     // Generates the genotype at random.
     void random_genotype(std::vector<unsigned> &genotype, unsigned length);
 
-    // Removes nested unary functions
+    // Removes nested unary functions (but not inv)
     void remove_nesting(std::vector<unsigned> &g) const;
 
     // Computes the phenotype (i.e. the numerical values of all the graph odes)
@@ -78,17 +78,17 @@ public:
 private:
     // Computes the phenotype (i.e. the numerical values of all the graph odes) - no checks
     void phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                        const std::vector<double> &vars, const std::vector<double> &cons, bool check);
+                        const std::vector<double> &vars, const std::vector<double> &cons);
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes) - no checks
     void sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
-                         const std::vector<std::string> &vars, const std::vector<std::string> &cons, bool check);
+                         const std::vector<std::string> &vars, const std::vector<std::string> &cons);
     // First order derivatives - no checks
     void dphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                         const std::vector<double> &phenotype, unsigned idx, bool check);
+                         const std::vector<double> &phenotype, unsigned idx);
     // Second order derivatives - no checks
     void ddphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                           const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
-                          const std::vector<double> &d1phenotype, bool check);
+                          const std::vector<double> &d1phenotype);
 
     // Serialization.
     friend class boost::serialization::access;
