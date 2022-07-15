@@ -22,17 +22,16 @@ class DSYRE_DLL_PUBLIC expression
 {
 public:
     // Constructor
-    expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"},
-               decltype(std::random_device{}()) seed = std::random_device{}());
+    expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"});
 
     // Generates the constants at random within bounds.
-    std::vector<double> random_constants(double lb, double ub);
+    std::vector<double> random_constants(double lb, double ub, std::mt19937 &rng);
 
     // Generates the genotype at random.
-    void random_genotype(std::vector<unsigned> &genotype, unsigned length);
+    void random_genotype(std::vector<unsigned> &genotype, unsigned length, std::mt19937 &rng);
 
     // Removes nested unary functions (but not inv)
-    void remove_nesting(std::vector<unsigned> &g) const;
+    void remove_nesting(std::vector<unsigned> &g, std::mt19937 &rng) const;
 
     // Computes the phenotype (i.e. the numerical values of all the graph nodes)
     void phenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype, const std::vector<double> &vars,
@@ -71,10 +70,10 @@ public:
                                 std::vector<double> &errors);
 
     // Mutates the graph
-    std::vector<unsigned> mutation(const std::vector<unsigned> &genotype, unsigned N);
-    std::vector<unsigned> mutation2(const std::vector<unsigned> &genotype, unsigned N);
+    std::vector<unsigned> mutation(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng);
+    std::vector<unsigned> mutation2(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng);
     std::vector<unsigned> mutation3(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
-                                    unsigned N);
+                                    unsigned N, std::mt19937 &rng);
 
     void check_genotype(const std::vector<unsigned> &genotype) const;
 
@@ -85,8 +84,9 @@ private:
     void phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                         const std::vector<double> &vars, const std::vector<double> &cons);
     // Computes the phenotype (i.e. the numerical values of all the graph nodes) - no checks
-    void phenotype_and_complexity_impl(std::vector<double> &retval, std::vector<unsigned> &complexity, const std::vector<unsigned> &genotype,
-                        const std::vector<double> &vars, const std::vector<double> &cons);
+    void phenotype_and_complexity_impl(std::vector<double> &retval, std::vector<unsigned> &complexity,
+                                       const std::vector<unsigned> &genotype, const std::vector<double> &vars,
+                                       const std::vector<double> &cons);
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes) - no checks
     void sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
                          const std::vector<std::string> &vars, const std::vector<std::string> &cons);
@@ -114,7 +114,6 @@ private:
     unsigned m_ncon;
     unsigned m_nker;
     std::vector<unsigned> m_kernels;
-    mutable std::mt19937 m_rng;
 };
 
 } // namespace dsyre

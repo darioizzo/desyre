@@ -31,12 +31,13 @@ TEST_CASE("construction")
 
 TEST_CASE("random_constants")
 {
+    std::mt19937 rng(1234u);
     {
         auto n_con = 1u;
         double lb = -0.1;
         double ub = 3.;
         expression ex(1u, n_con);
-        auto values = ex.random_constants(lb, ub);
+        auto values = ex.random_constants(lb, ub, rng);
         REQUIRE(values.size() == n_con);
         CHECK(std::all_of(values.begin(), values.end(), [lb](double x) { return x > lb; }));
         CHECK(std::all_of(values.begin(), values.end(), [ub](double x) { return x < ub; }));
@@ -46,7 +47,7 @@ TEST_CASE("random_constants")
         double lb = -103.2;
         double ub = 1e2;
         expression ex(1u, n_con);
-        auto values = ex.random_constants(lb, ub);
+        auto values = ex.random_constants(lb, ub, rng);
         REQUIRE(values.size() == n_con);
         CHECK(std::all_of(values.begin(), values.end(), [lb](double x) { return x > lb; }));
         CHECK(std::all_of(values.begin(), values.end(), [ub](double x) { return x < ub; }));
@@ -56,16 +57,19 @@ TEST_CASE("random_constants")
         auto n_con = 7u;
         double lb = -103.2;
         double ub = 1e2;
-        expression ex1(1u, n_con, {"sum", "diff", "mul", "div"}, 7824323u);
-        expression ex2(1u, n_con, {"sum", "diff", "mul", "div"}, 7824323u);
-        auto values1 = ex1.random_constants(lb, ub);
-        auto values2 = ex2.random_constants(lb, ub);
+        expression ex1(1u, n_con, {"sum", "diff", "mul", "div"});
+        expression ex2(1u, n_con, {"sum", "diff", "mul", "div"});
+        rng.seed(123u);
+        auto values1 = ex1.random_constants(lb, ub, rng);
+        rng.seed(123u);
+        auto values2 = ex2.random_constants(lb, ub, rng);
         REQUIRE(values1 == values2);
     }
 }
 
 TEST_CASE("random_genotype")
 {
+    std::mt19937 rng(1234u);
     {
         auto n_con = 0u;
         auto n_var = 1u;
@@ -73,7 +77,7 @@ TEST_CASE("random_genotype")
         std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin", "cos"};
         expression ex(n_var, n_con, kernels);
         std::vector<unsigned> geno;
-        ex.random_genotype(geno, length);
+        ex.random_genotype(geno, length, rng);
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
@@ -91,7 +95,7 @@ TEST_CASE("random_genotype")
         std::vector<std::string> kernels = {"mul", "sin", "cos", "div", "diff", "sum"};
         expression ex(n_var, n_con, kernels);
         std::vector<unsigned> geno;
-        ex.random_genotype(geno, length);
+        ex.random_genotype(geno, length, rng);
         REQUIRE(geno.size() == length * 3u);
         for (decltype(geno.size()) i = 0u; i < geno.size(); ++i) {
             if (i % 3 == 0u) {
@@ -106,6 +110,7 @@ TEST_CASE("random_genotype")
 
 TEST_CASE("remove_nesting")
 {
+    std::mt19937 rng(1234u);
     {
         auto n_con = 1u;
         auto n_var = 1u;
@@ -116,15 +121,15 @@ TEST_CASE("remove_nesting")
         std::vector<unsigned> tmp, tmp2;
         // 1 - a non nested genotype remains unchanged
         tmp = genotype_not_nested;
-        ex.remove_nesting(tmp);
+        ex.remove_nesting(tmp, rng);
         REQUIRE(tmp == genotype_not_nested);
         // 2 - a nested genotype is changed
         tmp = genotype_nested;
-        ex.remove_nesting(tmp);
+        ex.remove_nesting(tmp, rng);
         REQUIRE(tmp != genotype_nested);
         // 3 - a changed nested genotype is no longer nested
         tmp2 = tmp;
-        ex.remove_nesting(tmp);
+        ex.remove_nesting(tmp, rng);
         REQUIRE(tmp == tmp2);
     }
     {
@@ -137,15 +142,15 @@ TEST_CASE("remove_nesting")
         std::vector<unsigned> tmp, tmp2;
         // 1 - a non nested genotype remains unchanged
         tmp = genotype_not_nested;
-        ex.remove_nesting(tmp);
+        ex.remove_nesting(tmp, rng);
         REQUIRE(tmp == genotype_not_nested);
         // 2 - a nested genotype is changed
         tmp = genotype_nested;
-        ex.remove_nesting(tmp);
+        ex.remove_nesting(tmp, rng);
         REQUIRE(tmp != genotype_nested);
         // 3 - a changed nested genotype is no longer nested
         tmp2 = tmp;
-        ex.remove_nesting(tmp);
+        ex.remove_nesting(tmp, rng);
         REQUIRE(tmp == tmp2);
     }
 }
@@ -225,8 +230,10 @@ TEST_CASE("phenotype_and_complexity")
         double x = 3.1232133;
         double c = -0.21312123;
         std::vector<double> target_phenotype
-            = {3.1232133, -0.21312123, 2.91009207, 0.21312123000000005, 14.654632483117705, 0.21151153890618252, 14.866144022023887, 0.6202024013716463, 3.530294471371646, 3.530294471371646, 0.5811998787507274, 0.7943211087507275};
-        std::vector<unsigned> target_complexity = { 1, 1, 3, 5, 7, 6, 14, 9, 13, 13, 10, 16 };
+            = {3.1232133,          -0.21312123,         2.91009207,         0.21312123000000005,
+               14.654632483117705, 0.21151153890618252, 14.866144022023887, 0.6202024013716463,
+               3.530294471371646,  3.530294471371646,   0.5811998787507274, 0.7943211087507275};
+        std::vector<unsigned> target_complexity = {1, 1, 3, 5, 7, 6, 14, 9, 13, 13, 10, 16};
         std::vector<double> phen;
         ex.phenotype_and_complexity(phen, complexity, geno, {x}, {c});
         REQUIRE_THAT(phen, Catch::Approx(target_phenotype).margin(1e-13));

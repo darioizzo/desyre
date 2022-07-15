@@ -20,11 +20,10 @@ using namespace std::chrono;
 
 // In this benchmark
 
-std::vector<std::vector<double>> generate_random_data(unsigned N, unsigned dim, unsigned seed)
+std::vector<std::vector<double>> generate_random_data(unsigned N, unsigned dim, std::mt19937 &rng)
 {
     std::vector<double> phenotype(dim);
     std::vector<std::vector<double>> retval(N, phenotype);
-    std::mt19937 rng(seed);
     std::uniform_real_distribution<> dis(-10., 10.);
 
     for (auto &v_item : retval) {
@@ -37,12 +36,14 @@ std::vector<std::vector<double>> generate_random_data(unsigned N, unsigned dim, 
 
 void perform_speed_test(unsigned n_vars, unsigned n_cons, unsigned length, unsigned N, unsigned seed)
 {
+    // the rng
+    std::mt19937 rng(12201220u);
     // We construct the expression (default arithmetic kernels)
     expression ex(n_vars, n_cons, {"sum", "diff", "mul", "div", "sin", "cos"});
 
-    // We generte the randomly sampled data points
-    auto vars = generate_random_data(N, n_vars, seed);
-    auto cons = generate_random_data(N, n_cons, seed - 10u);
+    // We generate the randomly sampled data points
+    auto vars = generate_random_data(N, n_vars, rng);
+    auto cons = generate_random_data(N, n_cons, rng);
 
     // Here is where the phenotype will be written
     std::vector<double> phenotype;
@@ -51,7 +52,7 @@ void perform_speed_test(unsigned n_vars, unsigned n_cons, unsigned length, unsig
     // We log progress
     fmt::print("{} vars, {} cons, {} length, on {} data points: ", n_vars, n_cons, length, N);
     std::vector<unsigned> genotype;
-    ex.random_genotype(genotype, length);
+    ex.random_genotype(genotype, length, rng);
     auto start = high_resolution_clock::now();
     for (decltype(vars.size()) i = 0u; i < vars.size(); ++i) {
         ex.phenotype(phenotype, genotype, vars[i], cons[i]);

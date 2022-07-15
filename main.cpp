@@ -126,15 +126,15 @@ int main(int argc, char *argv[])
 
     for (auto j = 0u; j < n_trials; ++j) {
         // We let each run to convergence
-        ex.random_genotype(best_x, length);
-        best_c = ex.random_constants(-1., 1.);
+        ex.random_genotype(best_x, length, rng);
+        best_c = ex.random_constants(-1., 1., rng);
         auto best_f = ex.fitness(best_x, best_c, xs, ys, mse);
         auto count = 0u;
         ERT++;
         while (count < restart) {
             for (auto i = 0u; i < 4u; ++i) {
-                auto new_x = ex.mutation3(best_x, mse, 3 * i + 3);
-                ex.remove_nesting(new_x);
+                auto new_x = ex.mutation3(best_x, mse, 3 * i + 3, rng);
+                ex.remove_nesting(new_x, rng);
                 // We now have a new candidate genotype new_x and see what a Newton step could produce.
                 // 1 - We compute the mse its gradient and hessian
                 ex.ddmse(new_x, best_c, xs, ys, mse, grad, hess);

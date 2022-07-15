@@ -53,9 +53,8 @@ std::unordered_map<std::string, unsigned> kernel_map{{"sum", 0},
                                                      {"exp", n_binary + 3}};
 
 // Constructor
-expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels,
-                       decltype(std::random_device{}()) seed)
-    : m_nvar(nvar), m_ncon(ncon), m_rng(seed)
+expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels)
+    : m_nvar(nvar), m_ncon(ncon)
 {
     m_kernels.resize(kernels.size());
     // We initialize the internal kernel id (unsigned) with the user requests (strings)
@@ -70,30 +69,30 @@ expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> ke
 };
 
 // Methods
-std::vector<double> expression::random_constants(double lb, double ub)
+std::vector<double> expression::random_constants(double lb, double ub, std::mt19937 &rng)
 {
     std::uniform_real_distribution<> dis(lb, ub);
     std::vector<double> retval(m_ncon, 0.);
     for (auto &el : retval) {
-        el = dis(m_rng);
+        el = dis(rng);
     }
     return retval;
 }
 
 // Assuming 0:+, 1:-, 2:* 3:/
-void expression::random_genotype(std::vector<unsigned> &retval, unsigned length)
+void expression::random_genotype(std::vector<unsigned> &retval, unsigned length, std::mt19937 &rng)
 {
     retval.resize(3 * length);
     unsigned nus = m_nvar + m_ncon;
     std::uniform_int_distribution<int> uni_ker(0, m_nker - 1);
     for (auto i = 0u; i < length; ++i) {
         // Lets pick a random kernel
-        auto funidx = uni_ker(m_rng);
+        auto funidx = uni_ker(rng);
         // Lets pick a random u1
         std::uniform_int_distribution<int> uni_us(0, nus - 1);
         unsigned u1idx, u2idx;
         while (true) { // TODO -> CHANGE THIS LOGIC!!!! infinite loops and unclear
-            u1idx = uni_us(m_rng);
+            u1idx = uni_us(rng);
             if (m_kernels[funidx] < n_binary) { // binary operator
                 break;
             } else { // unary operator->do not select a constant
@@ -104,7 +103,7 @@ void expression::random_genotype(std::vector<unsigned> &retval, unsigned length)
         }
         // ... and a random u1 not equal to u2 if the kernel is diff
         while (true) { // TODO -> CHANGE THIS LOGIC!!!! infinite loops and unclear
-            u2idx = uni_us(m_rng);
+            u2idx = uni_us(rng);
             if (m_kernels[funidx] != 1u) { // if diff force u1 and u2 to be different
                 break;
             } else {
@@ -209,9 +208,9 @@ void expression::phenotype_and_complexity_impl(std::vector<double> &retval, std:
             default:
                 retval[i + n_terminals] = ukernel_list[m_kernels[fidx] - n_binary](u0);
         }
-        if (m_kernels[fidx] > n_binary) { //unary
+        if (m_kernels[fidx] > n_binary) { // unary
             complexity[i + n_terminals] = 1u + complexity[genotype[3 * i + 1]];
-        } else { //binary
+        } else { // binary
             complexity[i + n_terminals] = 1u + complexity[genotype[3 * i + 1]] + complexity[genotype[3 * i + 2]];
         }
     }
@@ -557,16 +556,16 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     }
 }
 
-std::vector<unsigned> expression::mutation(const std::vector<unsigned> &genotype, unsigned N)
+std::vector<unsigned> expression::mutation(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng)
 {
     auto retval = genotype;
     // We generate N randomly selected indexes of the genotype triplets
     auto n_triplets = genotype.size() / 3;
     std::vector<unsigned> choice(n_triplets);
     std::iota(choice.begin(), choice.end(), 0u);
-    std::shuffle(choice.begin(), choice.end(), m_rng);
+    std::shuffle(choice.begin(), choice.end(), rng);
     // We generate a new feasible random genotype
-    random_genotype(retval, n_triplets);
+    random_genotype(retval, n_triplets, rng);
     // For each selected triplet we use the randomly generated one
     for (auto i = 0u; i < n_triplets - N; ++i) {
         retval[3 * choice[i]] = genotype[3 * choice[i]];
@@ -576,52 +575,52 @@ std::vector<unsigned> expression::mutation(const std::vector<unsigned> &genotype
     return retval;
 }
 
-std::vector<unsigned> expression::mutation2(const std::vector<unsigned> &genotype, unsigned N)
+std::vector<unsigned> expression::mutation2(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng)
 {
     auto retval = genotype;
     // We generate N randomly selected indexes of the genotype triplets
     std::vector<unsigned> choice(retval.size());
     std::iota(choice.begin(), choice.end(), 0u);
-    std::shuffle(choice.begin(), choice.end(), m_rng);
+    std::shuffle(choice.begin(), choice.end(), rng);
     // For each selected gene, we randomly regenerate a feasible one.
     for (auto i = 0u; i < N; ++i) {
         if (choice[i] % 3 == 0u) {
             std::uniform_int_distribution<unsigned> dis(0, m_kernels.size() - 1);
-            retval[choice[i]] = dis(m_rng);
+            retval[choice[i]] = dis(rng);
         } else {
             std::uniform_int_distribution<unsigned> dis(0, m_ncon + m_nvar + choice[i] / 3 - 1);
-            retval[choice[i]] = dis(m_rng);
+            retval[choice[i]] = dis(rng);
         }
     }
     return retval;
 }
 
 std::vector<unsigned> expression::mutation3(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
-                                            unsigned N)
+                                            unsigned N, std::mt19937 &rng)
 {
     auto retval = genotype;
     for (auto idx_u = m_nvar + m_ncon; idx_u < phenotype.size(); ++idx_u) {
         if (!std::isfinite(phenotype[idx_u])) {
             std::uniform_int_distribution<unsigned> dis1(0, m_kernels.size() - 1);
             std::uniform_int_distribution<unsigned> dis2(0, idx_u - 1);
-            retval[(idx_u - m_nvar - m_ncon) * 3] = 1;     // dis1(m_rng);
-            retval[(idx_u - m_nvar - m_ncon) * 3 + 1] = 0; // dis2(m_rng);
-            retval[(idx_u - m_nvar - m_ncon) * 3 + 2] = 1; // dis2(m_rng);
+            retval[(idx_u - m_nvar - m_ncon) * 3] = dis1(rng);
+            retval[(idx_u - m_nvar - m_ncon) * 3 + 1] = dis2(rng);
+            retval[(idx_u - m_nvar - m_ncon) * 3 + 2] = dis2(rng);
         }
     }
 
     // We generate N randomly selected indexes of the genotype triplets
     std::vector<unsigned> choice(retval.size());
     std::iota(choice.begin(), choice.end(), 0u);
-    std::shuffle(choice.begin(), choice.end(), m_rng);
+    std::shuffle(choice.begin(), choice.end(), rng);
     // For each selected gene, we randomly regenerate a feasible one.
     for (auto i = 0u; i < N; ++i) {
         if (choice[i] % 3 == 0u) {
             std::uniform_int_distribution<unsigned> dis(0, m_kernels.size() - 1);
-            retval[choice[i]] = dis(m_rng);
+            retval[choice[i]] = dis(rng);
         } else {
             std::uniform_int_distribution<unsigned> dis(0, m_ncon + m_nvar + choice[i] / 3 - 1);
-            retval[choice[i]] = dis(m_rng);
+            retval[choice[i]] = dis(rng);
         }
     }
     return retval;
@@ -629,7 +628,7 @@ std::vector<unsigned> expression::mutation3(const std::vector<unsigned> &genotyp
 
 // NOTE: the inv function although unary will not count for nesting as to allow 1/sin.
 // this allows for inv(inv) TODO: make a special case
-void expression::remove_nesting(std::vector<unsigned> &g) const
+void expression::remove_nesting(std::vector<unsigned> &g, std::mt19937 &rng) const
 {
     auto n_triplets = g.size() / 3;
     for (auto i = 1u; i < n_triplets; ++i) {       // skip first triplet as connection genes are surely var or con
@@ -640,7 +639,7 @@ void expression::remove_nesting(std::vector<unsigned> &g) const
                 // this loop is infinite if no binary operators(or inv) are in the kernels.
                 while (m_kernels[g[3 * (u1 - m_ncon - m_nvar)]] >= n_binary + 1) { // and nesting one more unary
                     // we change the operator randomly
-                    g[3 * (u1 - m_ncon - m_nvar)] = random_kernel(m_rng);
+                    g[3 * (u1 - m_ncon - m_nvar)] = random_kernel(rng);
                 }
             }
         }
