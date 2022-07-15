@@ -64,7 +64,7 @@ void generate_1d_data(std::vector<std::vector<double>> &xs, std::vector<double> 
     // i must be double
     for (double i = 0.; i < N; ++i) {
         xs[i] = {lb + i / (N - 1) * (ub - lb)};
-        ys[i] = P6(xs[i]);
+        ys[i] = P1(xs[i]);
     }
 }
 
@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
     std::vector<std::vector<double>> xs;
     std::vector<double> ys;
     // generate_md_data(xs, ys, 100u, 5u);
-    generate_1d_data(xs, ys, 10u, -2.1, 1.);
-    //    Allocate some stuff
+    generate_1d_data(xs, ys, 10u, 1., 3.);
+    // Allocate some stuff
     auto length = 20u;
     auto n_var = xs[0].size();
     auto n_con = 1u;

@@ -226,11 +226,11 @@ void expression::sphenotype(std::vector<std::string> &retval, const std::vector<
                             const std::vector<std::string> &vars, const std::vector<std::string> &cons)
 {
     check_genotype(genotype);
-    if (vars.size() != m_nvar) {
+    if (vars.size() != m_nvar && vars.size() > 0) {
         throw std::invalid_argument(
             "When calling sphenotype the number of variables to compute this phenotype is wrong.");
     }
-    if (cons.size() != m_ncon) {
+    if (cons.size() != m_ncon && cons.size() > 0) {
         throw std::invalid_argument(
             "When calling sphenotype the number of constants to compute this phenotype is wrong.");
     }
@@ -290,8 +290,7 @@ void expression::dphenotype(std::vector<double> &retval, const std::vector<unsig
                                     "than the sum n_vars + n_cons");
     }
     if ((phenotype.size() - m_nvar - m_ncon) * 3 != genotype.size()) {
-        throw std::invalid_argument(
-            "When calling dphenotype the phenotype and genotype lengths are not compatible");
+        throw std::invalid_argument("When calling dphenotype the phenotype and genotype lengths are not compatible");
     }
     dphenotype_impl(retval, genotype, phenotype, idx);
 }
@@ -363,8 +362,7 @@ void expression::ddphenotype(std::vector<double> &retval, const std::vector<unsi
                                     "equal to the size of the phenotype");
     }
     if ((phenotype.size() - m_nvar - m_ncon) * 3 != genotype.size()) {
-        throw std::invalid_argument(
-            "When calling ddphenotype the phenotype and genotype lengths are not compatible");
+        throw std::invalid_argument("When calling ddphenotype the phenotype and genotype lengths are not compatible");
     }
 
     ddphenotype_impl(retval, genotype, phenotype, d0phenotype, d1phenotype);
