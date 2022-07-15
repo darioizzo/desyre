@@ -218,6 +218,7 @@ TEST_CASE("phenotype_and_complexity")
         auto n_var = 1u;
         std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
         expression ex(n_var, n_con, kernels);
+        // A random genotype (but fixed)
         std::vector<unsigned> geno
             = {0, 1, 0, 1, 0, 2, 3, 0, 3, 4, 3, 1, 0, 4, 5, 2, 2, 3, 0, 7, 2, 0, 2, 7, 4, 7, 3, 0, 10, 3},
             complexity;
@@ -228,7 +229,7 @@ TEST_CASE("phenotype_and_complexity")
         std::vector<unsigned> target_complexity = { 1, 1, 3, 5, 7, 6, 14, 9, 13, 13, 10, 16 };
         std::vector<double> phen;
         ex.phenotype_and_complexity(phen, complexity, geno, {x}, {c});
-        REQUIRE_THAT(phen, Catch::Approx(target_phenotype).margin(1e-8));
+        REQUIRE_THAT(phen, Catch::Approx(target_phenotype).margin(1e-13));
         REQUIRE(complexity == target_complexity);
     }
 }
