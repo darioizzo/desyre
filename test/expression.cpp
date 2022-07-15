@@ -180,6 +180,59 @@ TEST_CASE("phenotype")
     }
 }
 
+TEST_CASE("phenotype_and_complexity")
+{
+    // Test throws
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble[x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0}, complexity;
+        std::vector<double> phen;
+        REQUIRE_THROWS_AS(ex.phenotype_and_complexity(phen, complexity, geno, {0.2, 1.2, 3.4}, {0.1}),
+                          std::invalid_argument);
+        REQUIRE_THROWS_AS(ex.phenotype_and_complexity(phen, complexity, geno, {0.0}, {0.2, 1.2, 3.4}),
+                          std::invalid_argument);
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0}, complexity;
+        double x = 3.1232133;
+        double c = -0.21312123;
+        std::vector<double> target_phenotype
+            = {x, c, x * c, std::sin(x * c), x + std::sin(x * c), (x + std::sin(x * c)) / x};
+        std::vector<unsigned> target_complexity = {1, 1, 3, 4, 6, 8};
+        std::vector<double> phen;
+        ex.phenotype_and_complexity(phen, complexity, geno, {x}, {c});
+        REQUIRE(phen == target_phenotype);
+        REQUIRE(complexity == target_complexity);
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        std::vector<unsigned> geno
+            = {0, 1, 0, 1, 0, 2, 3, 0, 3, 4, 3, 1, 0, 4, 5, 2, 2, 3, 0, 7, 2, 0, 2, 7, 4, 7, 3, 0, 10, 3},
+            complexity;
+        double x = 3.1232133;
+        double c = -0.21312123;
+        std::vector<double> target_phenotype
+            = {3.1232133, -0.21312123, 2.91009207, 0.21312123000000005, 14.654632483117705, 0.21151153890618252, 14.866144022023887, 0.6202024013716463, 3.530294471371646, 3.530294471371646, 0.5811998787507274, 0.7943211087507275};
+        std::vector<unsigned> target_complexity = { 1, 1, 3, 5, 7, 6, 14, 9, 13, 13, 10, 16 };
+        std::vector<double> phen;
+        ex.phenotype_and_complexity(phen, complexity, geno, {x}, {c});
+        REQUIRE_THAT(phen, Catch::Approx(target_phenotype).margin(1e-8));
+        REQUIRE(complexity == target_complexity);
+    }
+}
+
 TEST_CASE("sphenotype")
 {
     {

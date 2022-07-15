@@ -34,9 +34,14 @@ public:
     // Removes nested unary functions (but not inv)
     void remove_nesting(std::vector<unsigned> &g) const;
 
-    // Computes the phenotype (i.e. the numerical values of all the graph odes)
+    // Computes the phenotype (i.e. the numerical values of all the graph nodes)
     void phenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype, const std::vector<double> &vars,
                    const std::vector<double> &cons);
+
+    // Computes the phenotype (i.e. the numerical values of all the graph nodes and the expression complexity)
+    void phenotype_and_complexity(std::vector<double> &retval, std::vector<unsigned> &complexity,
+                                  const std::vector<unsigned> &genotype, const std::vector<double> &vars,
+                                  const std::vector<double> &cons);
 
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes)
     void sphenotype(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
@@ -76,8 +81,11 @@ public:
     const std::vector<unsigned> &get_kernels_idx() const;
 
 private:
-    // Computes the phenotype (i.e. the numerical values of all the graph odes) - no checks
+    // Computes the phenotype (i.e. the numerical values of all the graph nodes) - no checks
     void phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
+                        const std::vector<double> &vars, const std::vector<double> &cons);
+    // Computes the phenotype (i.e. the numerical values of all the graph nodes) - no checks
+    void phenotype_and_complexity_impl(std::vector<double> &retval, std::vector<unsigned> &complexity, const std::vector<unsigned> &genotype,
                         const std::vector<double> &vars, const std::vector<double> &cons);
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes) - no checks
     void sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,

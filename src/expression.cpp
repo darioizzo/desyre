@@ -172,6 +172,67 @@ void expression::phenotype(std::vector<double> &retval, const std::vector<unsign
     phenotype_impl(retval, genotype, vars, cons);
 }
 
+void expression::phenotype_and_complexity_impl(std::vector<double> &retval, std::vector<unsigned> &complexity,
+                                               const std::vector<unsigned> &genotype, const std::vector<double> &vars,
+                                               const std::vector<double> &cons)
+{
+    auto n_terminals = m_nvar + m_ncon;
+
+    // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
+    auto n_triplets = genotype.size() / 3;
+    retval.resize(n_terminals + n_triplets);
+    complexity.resize(n_terminals + n_triplets);
+    // The u0, u1, ... are the values of variables and constants
+    std::copy(vars.begin(), vars.end(), retval.begin());
+    std::copy(cons.begin(), cons.end(), retval.begin() + m_nvar);
+    // The complexity of the model made by only a variable or a constant is one
+    std::fill(complexity.begin(), complexity.begin() + n_terminals, 1u);
+    // We loop and for each triplet compute the corresponding function and add to the expression complexity
+    for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
+        auto u0 = retval[genotype[3 * i + 1]];
+        auto u1 = retval[genotype[3 * i + 2]];
+        auto fidx = genotype[3 * i];
+        switch (m_kernels[fidx]) {
+            case 0:
+                retval[i + n_terminals] = u0 + u1;
+                break;
+            case 1:
+                retval[i + n_terminals] = u0 - u1;
+                break;
+            case 2:
+                retval[i + n_terminals] = u0 * u1;
+                break;
+            case 3:
+                retval[i + n_terminals] = u0 / u1;
+                break;
+            // non arithmetic kernels (unary only all assumed before binary ones)
+            default:
+                retval[i + n_terminals] = ukernel_list[m_kernels[fidx] - n_binary](u0);
+        }
+        if (m_kernels[fidx] > n_binary) { //unary
+            complexity[i + n_terminals] = 1u + complexity[genotype[3 * i + 1]];
+        } else { //binary
+            complexity[i + n_terminals] = 1u + complexity[genotype[3 * i + 1]] + complexity[genotype[3 * i + 2]];
+        }
+    }
+}
+
+void expression::phenotype_and_complexity(std::vector<double> &retval, std::vector<unsigned> &complexity,
+                                          const std::vector<unsigned> &genotype, const std::vector<double> &vars,
+                                          const std::vector<double> &cons)
+{
+    check_genotype(genotype);
+    if (vars.size() != m_nvar) {
+        throw std::invalid_argument(
+            "When calling phenotype the number of variables to compute this phenotype is wrong.");
+    }
+    if (cons.size() != m_ncon) {
+        throw std::invalid_argument(
+            "When calling phenotype the number of constants to compute this phenotype is wrong.");
+    }
+    phenotype_and_complexity_impl(retval, complexity, genotype, vars, cons);
+}
+
 void expression::sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
                                  const std::vector<std::string> &vars, const std::vector<std::string> &cons)
 {
