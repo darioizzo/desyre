@@ -94,6 +94,12 @@ private:
     bool m_multi_objective;
     // The expression object
     expression m_ex;
+
+    // Some mutable containers to avoid allocating in fitness
+    mutable std::vector<double> m_cons;
+    mutable std::vector<unsigned> m_geno;
+    mutable std::vector<double> m_mse;
+    mutable std::vector<unsigned> m_complexity;
 };
 } // namespace dsyre
 #endif

@@ -51,23 +51,21 @@ pagmo::vector_double::size_type sr_problem::get_nobj() const
 
 pagmo::vector_double sr_problem::fitness(const pagmo::vector_double &x) const
 {
-    std::vector<double> cons(m_ncon);
-    std::vector<unsigned> geno(3 * m_length);
-    std::vector<double> mse;
     std::vector<double> retval(1u + m_multi_objective, 0.);
+    m_cons.resize(m_ncon);
+    m_geno.resize(3 * m_length);
     // We need to copy the pagmo chromosome into dsyre genotype and constants
-    std::copy(x.begin(), x.begin() + m_ncon, cons.begin());
-    std::copy(x.begin() + m_ncon, x.end(), geno.begin());
+    std::copy(x.begin(), x.begin() + m_ncon, m_cons.begin());
+    std::copy(x.begin() + m_ncon, x.end(), m_geno.begin());
     // Here we compute the mse fo all us.
-    m_ex.mse(mse, geno, cons, m_points, m_labels);
+    m_ex.mse(m_mse, m_geno, m_cons, m_points, m_labels);
     // Here we select the smallest.
-    auto best_it = std::min_element(mse.begin(), mse.end());
+    auto best_it = std::min_element(m_mse.begin(), m_mse.end());
     retval[0] = *best_it;
-    if (m_multi_objective)  {
-        auto best_idx = std::distance(mse.begin(), best_it);
-        std::vector<unsigned> complexity;
-        m_ex.complexity(complexity, geno);
-        retval[1] = complexity[best_idx];
+    if (m_multi_objective) {
+        auto best_idx = std::distance(m_mse.begin(), best_it);
+        m_ex.complexity(m_complexity, m_geno);
+        retval[1] = m_complexity[best_idx];
     }
     return retval;
 }
