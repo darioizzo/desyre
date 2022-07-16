@@ -56,18 +56,13 @@ public:
                      const std::vector<double> &d1phenotype);
 
     // Mean Squared Error
-    std::vector<double> mse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
+    void mse(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &cons,
                             const std::vector<std::vector<double>> &xs, const std::vector<double> &ys);
 
     // Computes mse, dmse and ddmse in one go
     void ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
                const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, std::vector<double> &mse,
                std::vector<std::vector<double>> &dmse, std::vector<std::vector<double>> &ddmse);
-
-    // Computes the fitness as the best,avg, worst mse over all the nodes
-    std::vector<double> fitness(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-                                const std::vector<std::vector<double>> &xs, const std::vector<double> &ys,
-                                std::vector<double> &errors);
 
     // Mutates the graph
     std::vector<unsigned> mutation(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng);

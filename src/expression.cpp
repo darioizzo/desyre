@@ -53,8 +53,7 @@ std::unordered_map<std::string, unsigned> kernel_map{{"sum", 0},
                                                      {"exp", n_binary + 3}};
 
 // Constructor
-expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels)
-    : m_nvar(nvar), m_ncon(ncon)
+expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels) : m_nvar(nvar), m_ncon(ncon)
 {
     m_kernels.resize(kernels.size());
     // We initialize the internal kernel id (unsigned) with the user requests (strings)
@@ -428,12 +427,14 @@ void expression::ddphenotype(std::vector<double> &retval, const std::vector<unsi
     ddphenotype_impl(retval, genotype, phenotype, d0phenotype, d1phenotype);
 }
 
-std::vector<double> expression::mse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-                                    const std::vector<std::vector<double>> &xs, const std::vector<double> &ys)
+void expression::mse(std::vector<double> &retval, const std::vector<unsigned> &genotype,
+                     const std::vector<double> &cons, const std::vector<std::vector<double>> &xs,
+                     const std::vector<double> &ys)
 {
     auto N = xs.size();
     assert(m_nvar == xs[0].size());
-    std::vector<double> retval(m_nvar + m_ncon + genotype.size() / 3, 0u);
+    retval.resize(m_nvar + m_ncon + genotype.size() / 3, 0u);
+    std::fill(retval.begin(), retval.end(), 0);
     std::vector<double> squared_err;
     for (decltype(xs.size()) i = 0u; i < N; ++i) {
         // compute all values in the phenotype (u0, u1, u2, .... un) at xs[i], cons
@@ -447,20 +448,6 @@ std::vector<double> expression::mse(const std::vector<unsigned> &genotype, const
         std::transform(retval.begin(), retval.end(), squared_err.begin(), retval.begin(), std::plus<double>());
     }
     std::transform(retval.begin(), retval.end(), retval.begin(), [N](double &c) { return c / N; });
-
-    return retval;
-}
-
-std::vector<double> expression::fitness(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-                                        const std::vector<std::vector<double>> &xs, const std::vector<double> &ys,
-                                        std::vector<double> &errors)
-{
-    std::vector<double> retval(3);
-    errors = mse(genotype, cons, xs, ys);
-    retval[2] = std::reduce(errors.begin(), errors.end(), 0.0) / errors.size();
-    retval[1] = *std::max_element(errors.begin(), errors.end());
-    retval[0] = *std::min_element(errors.begin(), errors.end());
-    return retval;
 }
 
 void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,

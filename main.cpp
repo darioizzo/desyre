@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
     auto n_success = 0u;
     std::vector<unsigned> best_x;
     std::vector<double> best_c;
+    double best_f, new_f;
 
     std::vector<unsigned> active;
 
@@ -128,7 +129,10 @@ int main(int argc, char *argv[])
         // We let each run to convergence
         ex.random_genotype(best_x, length, rng);
         best_c = ex.random_constants(-1., 1., rng);
-        auto best_f = ex.fitness(best_x, best_c, xs, ys, mse);
+        // We compute the initial fitness
+        ex.mse(mse,best_x, best_c,xs, ys);
+        best_f = *std::min_element(mse.begin(), mse.end());
+        // Iterations
         auto count = 0u;
         ERT++;
         while (count < restart) {
@@ -142,11 +146,12 @@ int main(int argc, char *argv[])
                 auto new_c = best_c;
                 dsyre::update_constants(new_c, mse, grad, hess);
                 // 3 - We compute the fitness of the new genotype with the updated constants
-                auto new_f = ex.fitness(new_x, new_c, xs, ys, mse);
+                ex.mse(mse,new_x, new_c,xs, ys);
+                new_f = *std::min_element(mse.begin(), mse.end());
                 count++;
                 ERT++;
                 // 4 - Reinsertion if better or equal
-                if (new_f[0] <= best_f[0]) {
+                if (new_f <= best_f) {
                     best_x = new_x;
                     best_f = new_f;
                     best_c = new_c;
@@ -156,14 +161,14 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            if (best_f[0] < 1e-10) {
+            if (best_f < 1e-10) {
                 n_success++;
                 fmt::print(".");
                 fflush(stdout);
                 break;
             }
         }
-        if (best_f[0] > 1e-10) {
+        if (best_f > 1e-10) {
             fmt::print("x");
         }
         fflush(stdout);
@@ -184,7 +189,7 @@ int main(int argc, char *argv[])
     print("Best prettied phenotype: {}\n", exs);
 
     std::vector<double> phen;
-    mse = ex.mse(best_x, best_c, xs, ys);
+    ex.mse(mse, best_x, best_c, xs, ys);
     auto tmp = std::min_element(mse.begin(), mse.end());
     auto idx = std::distance(mse.begin(), tmp);
     print("Best prettied phenotype: {}\n", exs[idx]);
