@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include <fmt/ostream.h>
+#include <fmt/ranges.h>
 #include <pagmo/types.hpp>
 
 #include <dsyre/expression.hpp>
@@ -23,7 +25,7 @@ sr_problem::sr_problem()
 {
     m_points[0] = {1.};
     m_labels[0] = 1.;
-    m_expression = expression(1, 0u, m_kernels);
+    m_ex = expression(1, 0u, m_kernels);
     m_nvar = 1u;
 }
 
@@ -37,7 +39,7 @@ sr_problem::sr_problem(const std::vector<std::vector<double>> &points, const std
     // We check the dataset for consistency (and avoid empty dataset)
     sanity_checks(points, labels);
     // We initialize the dsyre expression
-    m_expression = expression(m_points[0].size(), m_ncon, m_kernels);
+    m_ex = expression(m_points[0].size(), m_ncon, m_kernels);
     // We store the number of varables / constants
     m_nvar = points[0].size();
 }
@@ -45,6 +47,29 @@ sr_problem::sr_problem(const std::vector<std::vector<double>> &points, const std
 pagmo::vector_double::size_type sr_problem::get_nobj() const
 {
     return 1u + m_multi_objective;
+}
+
+pagmo::vector_double sr_problem::fitness(const pagmo::vector_double &x) const
+{
+    std::vector<double> cons(m_ncon);
+    std::vector<unsigned> geno(3 * m_length);
+    std::vector<double> mse;
+    std::vector<double> retval(1u + m_multi_objective, 0.);
+    // We need to copy the pagmo chromosome into dsyre genotype and constants
+    std::copy(x.begin(), x.begin() + m_ncon, cons.begin());
+    std::copy(x.begin() + m_ncon, x.end(), geno.begin());
+    // Here we compute the mse fo all us.
+    m_ex.mse(mse, geno, cons, m_points, m_labels);
+    // Here we select the smallest.
+    auto best_it = std::min_element(mse.begin(), mse.end());
+    retval[0] = *best_it;
+    if (m_multi_objective)  {
+        auto best_idx = std::distance(mse.begin(), best_it);
+        std::vector<unsigned> complexity;
+        m_ex.complexity(complexity, geno);
+        retval[1] = complexity[best_idx];
+    }
+    return retval;
 }
 
 std::pair<pagmo::vector_double, pagmo::vector_double> sr_problem::get_bounds() const
@@ -56,7 +81,7 @@ std::pair<pagmo::vector_double, pagmo::vector_double> sr_problem::get_bounds() c
     unsigned nus = m_ncon + m_nvar;
     for (auto i = 0u; i < m_length; ++i) {
         lb[3 * i + m_ncon] = 0;
-        ub[3 * i + m_ncon + 1] = m_kernels.size() - 1;
+        ub[3 * i + m_ncon] = m_kernels.size() - 1;
         lb[3 * i + m_ncon + 1] = 0;
         ub[3 * i + m_ncon + 1] = nus - 1;
         lb[3 * i + m_ncon + 2] = 0;
@@ -78,7 +103,7 @@ std::string sr_problem::get_name() const
 
 const expression &sr_problem::get_expression() const
 {
-    return m_expression;
+    return m_ex;
 }
 
 void sr_problem::sanity_checks(const std::vector<std::vector<double>> &points, const std::vector<double> &labels) const
@@ -96,5 +121,16 @@ void sr_problem::sanity_checks(const std::vector<std::vector<double>> &points, c
             throw std::invalid_argument("Dataset malformed: check the dimensions of all points.");
         }
     }
+}
+
+/// Extra info
+std::string sr_problem::get_extra_info() const
+{
+    std::string retval;
+    retval += fmt::format("\tNumber of variables: {}\n", m_points[0].size());
+    retval += fmt::format("\tNumber of constants: {}\n", m_ncon);
+    retval += fmt::format("\tDataset dimension {}\n", m_points.size());
+    retval += fmt::format("\tKernels: {}\n", m_kernels);
+    return retval;
 }
 } // namespace dsyre

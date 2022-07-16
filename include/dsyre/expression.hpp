@@ -25,45 +25,43 @@ public:
     expression(unsigned nvar = 1, unsigned ncon = 0, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"});
 
     // Generates the constants at random within bounds.
-    std::vector<double> random_constants(double lb, double ub, std::mt19937 &rng);
+    std::vector<double> random_constants(double lb, double ub, std::mt19937 &rng) const;
 
     // Generates the genotype at random.
-    void random_genotype(std::vector<unsigned> &genotype, unsigned length, std::mt19937 &rng);
+    void random_genotype(std::vector<unsigned> &genotype, unsigned length, std::mt19937 &rng) const;
 
     // Removes nested unary functions (but not inv)
     void remove_nesting(std::vector<unsigned> &g, std::mt19937 &rng) const;
 
     // Computes the phenotype (i.e. the numerical values of all the graph nodes)
     void phenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype, const std::vector<double> &vars,
-                   const std::vector<double> &cons);
+                   const std::vector<double> &cons) const;
 
-    // Computes the phenotype (i.e. the numerical values of all the graph nodes and the expression complexity)
-    void phenotype_and_complexity(std::vector<double> &retval, std::vector<unsigned> &complexity,
-                                  const std::vector<unsigned> &genotype, const std::vector<double> &vars,
-                                  const std::vector<double> &cons);
+    // Computes the us complexity
+    void complexity(std::vector<unsigned> &retval, const std::vector<unsigned> &geno) const;
 
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes)
     void sphenotype(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
-                    const std::vector<std::string> &vars = {}, const std::vector<std::string> &cons = {});
+                    const std::vector<std::string> &vars = {}, const std::vector<std::string> &cons = {}) const;
 
     // First order derivatives
     void dphenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                    const std::vector<double> &phenotype, unsigned idx);
+                    const std::vector<double> &phenotype, unsigned idx) const;
 
     // Second order derivatives
     void ddphenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                      const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
-                     const std::vector<double> &d1phenotype);
+                     const std::vector<double> &d1phenotype) const;
 
     // Mean Squared Error
     void mse(std::vector<double> &retval, const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-             const std::vector<std::vector<double>> &xs, const std::vector<double> &ys);
+             const std::vector<std::vector<double>> &xs, const std::vector<double> &ys) const;
 
     // Computes mse, dmse and ddmse in one go
     void ddmse(std::vector<double> &mse, std::vector<std::vector<double>> &gradient,
                std::vector<std::vector<double>> &hessian, const std::vector<unsigned> &genotype,
                const std::vector<double> &cons, const std::vector<std::vector<double>> &xs,
-               const std::vector<double> &ys);
+               const std::vector<double> &ys) const;
 
     // Mutates the graph
     std::vector<unsigned> mutation(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng);
@@ -78,21 +76,19 @@ public:
 private:
     // Computes the phenotype (i.e. the numerical values of all the graph nodes) - no checks
     void phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                        const std::vector<double> &vars, const std::vector<double> &cons);
+                        const std::vector<double> &vars, const std::vector<double> &cons) const;
     // Computes the phenotype (i.e. the numerical values of all the graph nodes) - no checks
-    void phenotype_and_complexity_impl(std::vector<double> &retval, std::vector<unsigned> &complexity,
-                                       const std::vector<unsigned> &genotype, const std::vector<double> &vars,
-                                       const std::vector<double> &cons);
+    void complexity_impl(std::vector<unsigned> &complexity, const std::vector<unsigned> &geno) const;
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes) - no checks
     void sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
-                         const std::vector<std::string> &vars, const std::vector<std::string> &cons);
+                         const std::vector<std::string> &vars, const std::vector<std::string> &cons) const;
     // First order derivatives - no checks
     void dphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                         const std::vector<double> &phenotype, unsigned idx);
+                         const std::vector<double> &phenotype, unsigned idx) const;
     // Second order derivatives - no checks
     void ddphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                           const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
-                          const std::vector<double> &d1phenotype);
+                          const std::vector<double> &d1phenotype) const;
 
     // Serialization.
     friend class boost::serialization::access;

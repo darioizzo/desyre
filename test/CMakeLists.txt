@@ -12,7 +12,7 @@ set_property(TARGET dsyre_test PROPERTY CXX_EXTENSIONS NO)
 
 function(ADD_DSYRE_TESTCASE arg1)
   add_executable(${arg1} ${arg1}.cpp)
-  target_link_libraries(${arg1} PRIVATE dsyre_test dsyre fmt::fmt)
+  target_link_libraries(${arg1} PRIVATE dsyre_test dsyre fmt::fmt Pagmo::pagmo)
   target_compile_options(${arg1} PRIVATE
     "$<$<CONFIG:Debug>:${DSYRE_CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${DSYRE_CXX_FLAGS_RELEASE}>"
@@ -27,4 +27,5 @@ endfunction()
 
 ADD_DSYRE_TESTCASE(expression)
 ADD_DSYRE_TESTCASE(update_constants)
+ADD_DSYRE_TESTCASE(sr_problem)
 

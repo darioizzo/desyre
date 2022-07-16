@@ -75,7 +75,7 @@ public:
         ar &m_ncon;
         ar &m_nvar;
         ar &m_multi_objective;
-        ar &m_expression;
+        ar &m_ex;
     }
 
 private:
@@ -93,7 +93,7 @@ private:
     // Multiobjective problem
     bool m_multi_objective;
     // The expression object
-    expression m_expression;
+    expression m_ex;
 };
 } // namespace dsyre
 #endif

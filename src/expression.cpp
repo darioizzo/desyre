@@ -68,7 +68,7 @@ expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> ke
 };
 
 // Methods
-std::vector<double> expression::random_constants(double lb, double ub, std::mt19937 &rng)
+std::vector<double> expression::random_constants(double lb, double ub, std::mt19937 &rng) const
 {
     std::uniform_real_distribution<> dis(lb, ub);
     std::vector<double> retval(m_ncon, 0.);
@@ -79,7 +79,7 @@ std::vector<double> expression::random_constants(double lb, double ub, std::mt19
 }
 
 // Assuming 0:+, 1:-, 2:* 3:/
-void expression::random_genotype(std::vector<unsigned> &retval, unsigned length, std::mt19937 &rng)
+void expression::random_genotype(std::vector<unsigned> &retval, unsigned length, std::mt19937 &rng) const
 {
     retval.resize(3 * length);
     unsigned nus = m_nvar + m_ncon;
@@ -119,7 +119,7 @@ void expression::random_genotype(std::vector<unsigned> &retval, unsigned length,
 }
 
 void expression::phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                                const std::vector<double> &vars, const std::vector<double> &cons)
+                                const std::vector<double> &vars, const std::vector<double> &cons) const
 {
     auto n_terminals = m_nvar + m_ncon;
 
@@ -156,7 +156,7 @@ void expression::phenotype_impl(std::vector<double> &retval, const std::vector<u
 }
 
 void expression::phenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                           const std::vector<double> &vars, const std::vector<double> &cons)
+                           const std::vector<double> &vars, const std::vector<double> &cons) const
 {
     check_genotype(genotype);
     if (vars.size() != m_nvar) {
@@ -170,69 +170,35 @@ void expression::phenotype(std::vector<double> &retval, const std::vector<unsign
     phenotype_impl(retval, genotype, vars, cons);
 }
 
-void expression::phenotype_and_complexity_impl(std::vector<double> &retval, std::vector<unsigned> &complexity,
-                                               const std::vector<unsigned> &genotype, const std::vector<double> &vars,
-                                               const std::vector<double> &cons)
-{
-    auto n_terminals = m_nvar + m_ncon;
-
-    // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
-    auto n_triplets = genotype.size() / 3;
-    retval.resize(n_terminals + n_triplets);
-    complexity.resize(n_terminals + n_triplets);
-    // The u0, u1, ... are the values of variables and constants
-    std::copy(vars.begin(), vars.end(), retval.begin());
-    std::copy(cons.begin(), cons.end(), retval.begin() + m_nvar);
-    // The complexity of the model made by only a variable or a constant is one
-    std::fill(complexity.begin(), complexity.begin() + n_terminals, 1u);
-    // We loop and for each triplet compute the corresponding function and add to the expression complexity
-    for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
-        auto u0 = retval[genotype[3 * i + 1]];
-        auto u1 = retval[genotype[3 * i + 2]];
-        auto fidx = genotype[3 * i];
-        switch (m_kernels[fidx]) {
-            case 0:
-                retval[i + n_terminals] = u0 + u1;
-                break;
-            case 1:
-                retval[i + n_terminals] = u0 - u1;
-                break;
-            case 2:
-                retval[i + n_terminals] = u0 * u1;
-                break;
-            case 3:
-                retval[i + n_terminals] = u0 / u1;
-                break;
-            // non arithmetic kernels (unary only all assumed before binary ones)
-            default:
-                retval[i + n_terminals] = ukernel_list[m_kernels[fidx] - n_binary](u0);
-        }
-        if (m_kernels[fidx] > n_binary) { // unary
-            complexity[i + n_terminals] = 1u + complexity[genotype[3 * i + 1]];
-        } else { // binary
-            complexity[i + n_terminals] = 1u + complexity[genotype[3 * i + 1]] + complexity[genotype[3 * i + 2]];
-        }
-    }
-}
-
-void expression::phenotype_and_complexity(std::vector<double> &retval, std::vector<unsigned> &complexity,
-                                          const std::vector<unsigned> &genotype, const std::vector<double> &vars,
-                                          const std::vector<double> &cons)
+void expression::complexity(std::vector<unsigned> &retval, const std::vector<unsigned> &genotype) const
 {
     check_genotype(genotype);
-    if (vars.size() != m_nvar) {
-        throw std::invalid_argument(
-            "When calling phenotype the number of variables to compute this phenotype is wrong.");
+    complexity_impl(retval, genotype);
+}
+
+void expression::complexity_impl(std::vector<unsigned> &retval, const std::vector<unsigned> &genotype) const
+{
+    {
+        auto n_terminals = m_nvar + m_ncon;
+        // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
+        auto n_triplets = genotype.size() / 3;
+        retval.resize(n_terminals + n_triplets);
+        // The complexity of the model made by only a variable or a constant is one
+        std::fill(retval.begin(), retval.begin() + n_terminals, 1u);
+        // We loop and for each triplet compute the corresponding function and add to the expression complexity
+        for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
+            auto fidx = genotype[3 * i];
+            if (m_kernels[fidx] > n_binary) { // unary
+                retval[i + n_terminals] = 1u + retval[genotype[3 * i + 1]];
+            } else { // binary
+                retval[i + n_terminals] = 1u + retval[genotype[3 * i + 1]] + retval[genotype[3 * i + 2]];
+            }
+        }
     }
-    if (cons.size() != m_ncon) {
-        throw std::invalid_argument(
-            "When calling phenotype the number of constants to compute this phenotype is wrong.");
-    }
-    phenotype_and_complexity_impl(retval, complexity, genotype, vars, cons);
 }
 
 void expression::sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
-                                 const std::vector<std::string> &vars, const std::vector<std::string> &cons)
+                                 const std::vector<std::string> &vars, const std::vector<std::string> &cons) const
 {
     auto n_terminals = m_nvar + m_ncon;
     auto vnames = vars;
@@ -282,7 +248,7 @@ void expression::sphenotype_impl(std::vector<std::string> &retval, const std::ve
 }
 
 void expression::sphenotype(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
-                            const std::vector<std::string> &vars, const std::vector<std::string> &cons)
+                            const std::vector<std::string> &vars, const std::vector<std::string> &cons) const
 {
     check_genotype(genotype);
     if (vars.size() != m_nvar && vars.size() > 0) {
@@ -299,7 +265,7 @@ void expression::sphenotype(std::vector<std::string> &retval, const std::vector<
 
 // First order derivatives
 void expression::dphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                                 const std::vector<double> &phenotype, unsigned idx)
+                                 const std::vector<double> &phenotype, unsigned idx) const
 {
     // Number of terminals (vars and cons)
     unsigned n_terminals = m_nvar + m_ncon;
@@ -341,7 +307,7 @@ void expression::dphenotype_impl(std::vector<double> &retval, const std::vector<
 }
 
 void expression::dphenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
-                            const std::vector<double> &phenotype, unsigned idx)
+                            const std::vector<double> &phenotype, unsigned idx) const
 {
     check_genotype(genotype);
     if (idx >= m_nvar + m_ncon) {
@@ -356,7 +322,7 @@ void expression::dphenotype(std::vector<double> &retval, const std::vector<unsig
 // Second order derivative
 void expression::ddphenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                                   const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
-                                  const std::vector<double> &d1phenotype)
+                                  const std::vector<double> &d1phenotype) const
 {
     // Number of terminals (vars and cons)
     unsigned n_terminals = m_nvar + m_ncon;
@@ -409,7 +375,7 @@ void expression::ddphenotype_impl(std::vector<double> &retval, const std::vector
 
 void expression::ddphenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                              const std::vector<double> &phenotype, const std::vector<double> &d0phenotype,
-                             const std::vector<double> &d1phenotype)
+                             const std::vector<double> &d1phenotype) const
 {
     check_genotype(genotype);
     if (d0phenotype.size() != d1phenotype.size()) {
@@ -429,7 +395,7 @@ void expression::ddphenotype(std::vector<double> &retval, const std::vector<unsi
 
 void expression::mse(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                      const std::vector<double> &cons, const std::vector<std::vector<double>> &xs,
-                     const std::vector<double> &ys)
+                     const std::vector<double> &ys) const
 {
     auto N = xs.size();
     assert(m_nvar == xs[0].size());
@@ -455,13 +421,13 @@ void expression::mse(std::vector<double> &retval, const std::vector<unsigned> &g
 // If we focus (say) on the i constant and some phenotype [u0, u1, ..., un]
 // grad[i] -> The derivative of all the phenotype w.r.t. the constant. [du0, du1, ..., dun]
 // For the Hessian, the relation is more complex as we flattened a symmetric matrix (i and j) -> ij
-// following the convention [00 10 11 20 21 22 ....]. 
-// If we seek the derivative w.r.t the constants i and j, then 
+// following the convention [00 10 11 20 21 22 ....].
+// If we seek the derivative w.r.t the constants i and j, then
 // hess[ij] - > The second order derivative w.r.t i and j. [ddu00, ddu10, ddu11, ddu20 ...]
 void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>> &grad,
                        std::vector<std::vector<double>> &hess, const std::vector<unsigned> &genotype,
                        const std::vector<double> &cons, const std::vector<std::vector<double>> &xs,
-                       const std::vector<double> &ys)
+                       const std::vector<double> &ys) const
 {
     auto N_points = xs.size();
     auto N_us = genotype.size() / 3 + m_nvar + m_ncon;
@@ -497,7 +463,7 @@ void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>
             // The derivative value w.r.t. the jth constant
             dphenotype_impl(dph[j], genotype, ph, j + m_nvar);
         }
-        // The hessian of expression idx_u with respect to constants jk will be stored in dph[jk][idx_u] 
+        // The hessian of expression idx_u with respect to constants jk will be stored in dph[jk][idx_u]
         // jk = [00,10,11,20,21,22,....]
         auto jk = 0u;
         for (decltype(m_ncon) j = 0u; j < m_ncon; ++j) {
@@ -507,8 +473,8 @@ void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>
             }
         }
 
-        // We now must construct the value, gradient and hessian for the loss (mse) .... (so far we computed it for the phenotype)
-        // 1 - we compute (yi-\hat y_i)
+        // We now must construct the value, gradient and hessian for the loss (mse) .... (so far we computed it for the
+        // phenotype) 1 - we compute (yi-\hat y_i)
         for (decltype(ph.size()) idx_u = 0u; idx_u < ph.size(); ++idx_u) {
             ph[idx_u] -= ys[i];
         }
@@ -659,9 +625,11 @@ void expression::check_genotype(const std::vector<unsigned> &g) const
                 "The genotype contains a function gene id out of the available implemented ones");
         }
         if ((g[3 * i + 1] >= i + m_ncon + m_nvar) || (g[3 * i + 2] >= i + m_ncon + m_nvar)) {
-            fmt::print("genotype: {}\n", g);
-            fmt::print("position: {}\n", i);
-            throw std::invalid_argument("The genotype contains an incompatibe connection gene");
+            std::string err_msg;
+            err_msg+=fmt::format("genotype: {}\n", g);
+            err_msg+=fmt::format("position: {}\n", i);
+            err_msg+=fmt::format("The genotype contains an incompatibe connection gene");
+            throw std::invalid_argument(err_msg);
         }
     }
 }
