@@ -24,8 +24,8 @@ namespace dsyre
 using ukernel_f_ptr = double (*)(double);
 using pkernel_f_ptr = std::string (*)(std::string);
 
-/** INSTRUCTIONS TO ADD ONE KERNEL (assumes the function, its derivative, its second order derivative and its string
-representation has been coded).
+/** INSTRUCTIONS TO ADD ONE KERNEL (assumes the kernel, its derivative, its second order derivative and its string
+representation has been put already in kernels.hpp).
 
 1 - add it to ukernel_list, dukernel_list, ddukernel_list, pkernel_list
 2 - update if needed n_binary

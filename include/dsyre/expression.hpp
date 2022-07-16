@@ -22,7 +22,7 @@ class DSYRE_DLL_PUBLIC expression
 {
 public:
     // Constructor
-    expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"});
+    expression(unsigned nvar=1, unsigned ncon=0, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"});
 
     // Generates the constants at random within bounds.
     std::vector<double> random_constants(double lb, double ub, std::mt19937 &rng);

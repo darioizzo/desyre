@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     std::vector<double> mse;
     std::vector<double> predicted_mse(n_con + n_var + length, 0.);
     std::vector<std::vector<double>> grad, hess;
-
+ 
     // The expression system
     // dsyre::expression ex(n_var, n_con, {"sum", "mul", "sin", "cos", "exp", "inv"});
     //dsyre::expression ex(n_var, n_con, {"sum", "mul", "diff", "div", "sin", "cos"});

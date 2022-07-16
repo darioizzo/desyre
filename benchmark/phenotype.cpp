@@ -39,7 +39,7 @@ void perform_speed_test(unsigned n_vars, unsigned n_cons, unsigned length, unsig
     // the rng
     std::mt19937 rng(12201220u);
     // We construct the expression (default arithmetic kernels)
-    expression ex(n_vars, n_cons, {"sum", "diff", "mul", "div", "sin", "cos"});
+    expression ex(n_vars, n_cons, {"sum", "diff", "mul", "div", "sin", "cos", "inv"});
 
     // We generte the randomly sampled data points
     auto vars = generate_random_data(N, n_vars, rng);

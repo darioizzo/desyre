@@ -55,8 +55,10 @@ message(STATUS "Library installation directory: ${DSYRE_INSTALL_LIBDIR}")
 set(DSYRE_SRC_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/expression.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/sr_problem.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/update_constants.cpp"
 )
+
 # dsyre library ###################################################################################################################3
 if(DSYRE_BUILD_STATIC_LIBRARY)
     # Setup of the dsyre static library.
@@ -113,9 +115,15 @@ message(STATUS "Eigen include directory: ${EIGEN3_INCLUDE_DIR}")
 message(STATUS "Eigen version detected: ${EIGEN3_VERSION}")
 include_directories(${EIGEN3_INCLUDE_DIR})
 
+# Pagmo setup
+find_package(Pagmo REQUIRED)
+message(STATUS "Pagmo dir is: ${Pagmo_DIR}")
+target_link_libraries(dsyre PRIVATE Pagmo::pagmo)
+
+
 # main.cpp ###################################################################################################################3
 add_executable(main main.cpp)
-target_link_libraries(main fmt::fmt dsyre)
+target_link_libraries(main dsyre fmt::fmt)
 target_include_directories(main PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -124,14 +132,6 @@ target_include_directories(main PUBLIC
 set_property(TARGET main PROPERTY CXX_STANDARD 17)
 set_property(TARGET main PROPERTY CXX_STANDARD_REQUIRED YES)
 set_property(TARGET main PROPERTY CXX_EXTENSIONS NO)
-
-# koza_quintic_simple.cpp ###################################################################################################################3
-add_executable(koza koza_quintic_simple.cpp)
-target_link_libraries(koza fmt::fmt)
-
-set_property(TARGET koza PROPERTY CXX_STANDARD 17)
-set_property(TARGET koza PROPERTY CXX_STANDARD_REQUIRED YES)
-set_property(TARGET koza PROPERTY CXX_EXTENSIONS NO)
 
 # tests
 if(DSYRE_BUILD_TESTS)
