@@ -16,7 +16,7 @@ endif()
 function(ADD_DSYRE_BENCHMARK arg1)
   add_executable(${arg1} ${arg1}.cpp)
   # NOTE: fmt was already located in the main CMakeLists.
-  target_link_libraries(${arg1} PRIVATE dsyre Boost::boost Boost::program_options fmt::fmt)
+  target_link_libraries(${arg1} PRIVATE dsyre Boost::boost Boost::program_options fmt::fmt Pagmo::pagmo)
   target_compile_definitions(${arg1} PRIVATE BOOST_ALLOW_DEPRECATED_HEADERS)
   target_compile_options(${arg1} PRIVATE
     "$<$<CONFIG:Debug>:${DSYRE_CXX_FLAGS_DEBUG}>"
@@ -32,3 +32,4 @@ endfunction()
 ADD_DSYRE_BENCHMARK(phenotype)
 ADD_DSYRE_BENCHMARK(dphenotype)
 ADD_DSYRE_BENCHMARK(ddphenotype)
+ADD_DSYRE_BENCHMARK(sr_problem_fitness)
