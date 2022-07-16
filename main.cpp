@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
                 ex.remove_nesting(new_x, rng);
                 // We now have a new candidate genotype new_x and see what a Newton step could produce.
                 // 1 - We compute the mse its gradient and hessian
-                ex.ddmse(new_x, best_c, xs, ys, mse, grad, hess);
+                ex.ddmse(mse, grad, hess, new_x, best_c, xs, ys);
                 // 2 - We compute the new constants based on the best predicted u
                 auto new_c = best_c;
                 dsyre::update_constants(new_c, mse, grad, hess);

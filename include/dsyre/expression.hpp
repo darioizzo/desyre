@@ -22,7 +22,7 @@ class DSYRE_DLL_PUBLIC expression
 {
 public:
     // Constructor
-    expression(unsigned nvar=1, unsigned ncon=0, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"});
+    expression(unsigned nvar = 1, unsigned ncon = 0, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"});
 
     // Generates the constants at random within bounds.
     std::vector<double> random_constants(double lb, double ub, std::mt19937 &rng);
@@ -56,13 +56,14 @@ public:
                      const std::vector<double> &d1phenotype);
 
     // Mean Squared Error
-    void mse(std::vector<double>& retval, const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-                            const std::vector<std::vector<double>> &xs, const std::vector<double> &ys);
+    void mse(std::vector<double> &retval, const std::vector<unsigned> &genotype, const std::vector<double> &cons,
+             const std::vector<std::vector<double>> &xs, const std::vector<double> &ys);
 
     // Computes mse, dmse and ddmse in one go
-    void ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-               const std::vector<std::vector<double>> &xs, const std::vector<double> &ys, std::vector<double> &mse,
-               std::vector<std::vector<double>> &dmse, std::vector<std::vector<double>> &ddmse);
+    void ddmse(std::vector<double> &mse, std::vector<std::vector<double>> &gradient,
+               std::vector<std::vector<double>> &hessian, const std::vector<unsigned> &genotype,
+               const std::vector<double> &cons, const std::vector<std::vector<double>> &xs,
+               const std::vector<double> &ys);
 
     // Mutates the graph
     std::vector<unsigned> mutation(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng);

@@ -413,7 +413,7 @@ TEST_CASE("ddmse")
         std::vector<double> mse;
         std::vector<std::vector<double>> dmse, ddmse;
         // Call
-        ex.ddmse(geno, cons, xs, ys, mse, dmse, ddmse);
+        ex.ddmse(mse, dmse, ddmse, geno, cons, xs, ys);
         // Test
         REQUIRE(mse == std::vector<double>{0, 1, 1});
         REQUIRE(dmse[0] == std::vector<double>{0, 2, 2});
@@ -434,7 +434,7 @@ TEST_CASE("ddmse")
         std::vector<double> mse;
         std::vector<std::vector<double>> dmse, ddmse;
         // Call
-        ex.ddmse(geno, cons, xs, ys, mse, dmse, ddmse);
+        ex.ddmse(mse, dmse, ddmse, geno, cons, xs, ys);
         // Test
         REQUIRE(mse == std::vector<double>{2, 2.5, 8.5});
         REQUIRE(dmse[0] == std::vector<double>{0, 3, 9});
@@ -455,7 +455,7 @@ TEST_CASE("ddmse")
         std::vector<double> mse;
         std::vector<std::vector<double>> grad, hess;
         // Call
-        ex.ddmse(geno, cons, xs, ys, mse, grad, hess);
+        ex.ddmse(mse, grad, hess, geno, cons, xs, ys);
         // Test
         REQUIRE(mse == std::vector<double>{2, 2.5, 0.5, 8.5, 8.5});
 

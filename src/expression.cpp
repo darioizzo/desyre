@@ -450,10 +450,11 @@ void expression::mse(std::vector<double> &retval, const std::vector<unsigned> &g
     std::transform(retval.begin(), retval.end(), retval.begin(), [N](double &c) { return c / N; });
 }
 
-void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<double> &cons,
-                       const std::vector<std::vector<double>> &xs, const std::vector<double> &ys,
-                       std::vector<double> &mse, std::vector<std::vector<double>> &gradient,
-                       std::vector<std::vector<double>> &hess)
+// This is the main computational routine.
+void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>> &grad,
+                       std::vector<std::vector<double>> &hess, const std::vector<unsigned> &genotype,
+                       const std::vector<double> &cons, const std::vector<std::vector<double>> &xs,
+                       const std::vector<double> &ys)
 {
     auto N_points = xs.size();
     auto N_us = genotype.size() / 3 + m_nvar + m_ncon;
@@ -469,8 +470,8 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
     mse.resize(N_us);
     std::fill(mse.begin(), mse.end(), 0.);
 
-    gradient.resize(m_ncon);
-    for (auto &it : gradient) {
+    grad.resize(m_ncon);
+    for (auto &it : grad) {
         it.resize(N_us);
         std::fill(it.begin(), it.end(), 0.);
     }
@@ -523,19 +524,18 @@ void expression::ddmse(const std::vector<unsigned> &genotype, const std::vector<
             for (decltype(dph[j].size()) idx_u = 0u; idx_u < dph[j].size(); ++idx_u) {
                 dph[j][idx_u] = 2 * ph[idx_u] * dph[j][idx_u];
             }
-            std::transform(gradient[j].begin(), gradient[j].end(), dph[j].begin(), gradient[j].begin(),
-                           std::plus<double>());
+            std::transform(grad[j].begin(), grad[j].end(), dph[j].begin(), grad[j].begin(), std::plus<double>());
         }
 
-        // 4 - finally we compute (yi-\hat y_i)^2
+        // 4 - and we compute (yi-\hat y_i)^2
         for (auto idx_u = 0u; idx_u < ph.size(); ++idx_u) {
             ph[idx_u] *= ph[idx_u];
         }
         std::transform(mse.begin(), mse.end(), ph.begin(), mse.begin(), std::plus<double>());
     }
-    // Finlly we divide all by the number of points (can be done before)
+    // Finally we divide all by the number of points (can be done before)
     std::transform(mse.begin(), mse.end(), mse.begin(), [N_points](double &c) { return c / N_points; });
-    for (auto &it : gradient) {
+    for (auto &it : grad) {
         std::transform(it.begin(), it.end(), it.begin(), [N_points](double &c) { return c / N_points; });
     }
     for (auto &it : hess) {
