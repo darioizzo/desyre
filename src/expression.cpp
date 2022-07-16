@@ -450,7 +450,14 @@ void expression::mse(std::vector<double> &retval, const std::vector<unsigned> &g
     std::transform(retval.begin(), retval.end(), retval.begin(), [N](double &c) { return c / N; });
 }
 
-// This is the main computational routine.
+// This is the main computational routine whose efficiency determines the overall efficiency of dsyre.
+// Conventions followed for the grad and hess --------------------------------------------------------
+// If we focus (say) on the i constant and some phenotype [u0, u1, ..., un]
+// grad[i] -> The derivative of all the phenotype w.r.t. the constant. [du0, du1, ..., dun]
+// For the Hessian, the relation is more complex as we flattened a symmetric matrix (i and j) -> ij
+// following the convention [00 10 11 20 21 22 ....]. 
+// If we seek the derivative w.r.t the constants i and j, then 
+// hess[ij] - > The second order derivative w.r.t i and j. [ddu00, ddu10, ddu11, ddu20 ...]
 void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>> &grad,
                        std::vector<std::vector<double>> &hess, const std::vector<unsigned> &genotype,
                        const std::vector<double> &cons, const std::vector<std::vector<double>> &xs,
@@ -490,8 +497,8 @@ void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>
             // The derivative value w.r.t. the jth constant
             dphenotype_impl(dph[j], genotype, ph, j + m_nvar);
         }
-        // The hessian of expression idx_u with respect to constants jk will be stored in dph[jk][idx_u] - jk =
-        // [00,01,02,10,11,20]
+        // The hessian of expression idx_u with respect to constants jk will be stored in dph[jk][idx_u] 
+        // jk = [00,10,11,20,21,22,....]
         auto jk = 0u;
         for (decltype(m_ncon) j = 0u; j < m_ncon; ++j) {
             for (decltype(j) k = 0u; k <= j; ++k) {
@@ -500,7 +507,7 @@ void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>
             }
         }
 
-        // We now must construct the value, gradient and hessian for the loss (mse) ....
+        // We now must construct the value, gradient and hessian for the loss (mse) .... (so far we computed it for the phenotype)
         // 1 - we compute (yi-\hat y_i)
         for (decltype(ph.size()) idx_u = 0u; idx_u < ph.size(); ++idx_u) {
             ph[idx_u] -= ys[i];
