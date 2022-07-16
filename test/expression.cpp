@@ -396,6 +396,64 @@ TEST_CASE("ddphenotype")
     }
 }
 
+TEST_CASE("mse")
+{
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, xc]
+        std::vector<unsigned> geno = {2, 0, 1};
+        // Manually create a dataset
+        std::vector<std::vector<double>> xs = {{1.}};
+        std::vector<double> ys = {1.};
+        std::vector<double> cons = {2.};
+        // Return values
+        std::vector<double> mse;
+        // Call
+        ex.mse(mse, geno, cons, xs, ys);
+        // Test
+        REQUIRE(mse == std::vector<double>{0, 1, 1});
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, xc]
+        std::vector<unsigned> geno = {2, 0, 1};
+        // Manually create a dataset
+        std::vector<std::vector<double>> xs = {{1.}, {2.}};
+        std::vector<double> ys = {1., 0.};
+        std::vector<double> cons = {2.};
+        // Return values
+        std::vector<double> mse;
+        // Call
+        ex.mse(mse, geno, cons, xs, ys);
+        // Test
+        REQUIRE(mse == std::vector<double>{2, 2.5, 8.5});
+    }
+    {
+        auto n_con = 2u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c0, c1, xc0, xc0c1]
+        std::vector<unsigned> geno = {2, 0, 1, 2, 3, 2};
+        // Manually create a dataset
+        std::vector<std::vector<double>> xs = {{1.}, {2.}};
+        std::vector<double> ys = {1., 0.};
+        std::vector<double> cons = {2., 1.};
+        // Return values
+        std::vector<double> mse;
+        // Call
+        ex.mse(mse, geno, cons, xs, ys);
+        // Test
+        REQUIRE(mse == std::vector<double>{2, 2.5, 0.5, 8.5, 8.5});
+    }
+}
+
 TEST_CASE("ddmse")
 {
     {
