@@ -132,26 +132,45 @@ void sr_problem::sanity_checks(const std::vector<std::vector<double>> &points, c
     }
 }
 
+void sr_problem::pagmo2dsyre(std::vector<unsigned> &geno, std::vector<double> &cons,
+                             const pagmo::vector_double &x) const
+{
+    geno.resize(x.size() - m_ncon);
+    cons.resize(m_ncon);
+    std::copy(x.begin(), x.begin() + m_ncon, cons.begin());
+    std::copy(x.begin() + m_ncon, x.end(), geno.begin());
+}
+
+void sr_problem::dsyre2pagmo(pagmo::vector_double &x, const std::vector<unsigned> &geno,
+                             const std::vector<double> &cons) const
+{
+    x.resize(geno.size() + cons.size());
+    std::copy(geno.begin(), geno.end(), x.begin() + m_ncon);
+    std::copy(cons.begin(), cons.end(), x.begin());
+}
+
+// Pretty (from dsyre) - parenthesis will be unnecessarily used
 std::string sr_problem::pretty(const pagmo::vector_double &x) const
 {
-    std::vector<unsigned> geno(x.size() - m_ncon);
-    std::vector<double> cons(m_ncon);
+    std::vector<unsigned> geno;
+    std::vector<double> cons;
     std::vector<double> mse;
     std::vector<std::string> retval;
 
-    std::copy(x.begin(), x.begin() + m_ncon, cons.begin());
-    std::copy(x.begin() + m_ncon, x.end(), geno.begin());
+    pagmo2dsyre(geno, cons, x);
 
     // We compute the idx of the best u in the phenotype
     m_ex.mse(mse, geno, cons, m_points, m_labels);
     auto best_it = std::min_element(mse.begin(), mse.end());
-    auto best_idx = std::distance(m_mse.begin(), best_it);
+    auto best_idx = std::distance(mse.begin(), best_it);
     // We compute the symbolic representation of all us in the phenotype
     m_ex.sphenotype(retval, geno);
+
     // We return the best
     return retval[best_idx];
 }
 
+// Prettier (from symengine)
 std::string sr_problem::prettier(const pagmo::vector_double &x) const
 {
     SymEngine::Expression symengine_ex(pretty(x));

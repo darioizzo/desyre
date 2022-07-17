@@ -57,6 +57,7 @@ set(DSYRE_SRC_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/sr_problem.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/update_constants.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/mes4dsyre.cpp"
 )
 
 # dsyre library ###################################################################################################################3
@@ -132,6 +133,18 @@ target_include_directories(main PUBLIC
 set_property(TARGET main PROPERTY CXX_STANDARD 17)
 set_property(TARGET main PROPERTY CXX_STANDARD_REQUIRED YES)
 set_property(TARGET main PROPERTY CXX_EXTENSIONS NO)
+
+# mes4dsyre.cpp ###################################################################################################################3
+add_executable(mes4dsyre mes4dsyre.cpp)
+target_link_libraries(mes4dsyre dsyre fmt::fmt Pagmo::pagmo)
+target_include_directories(mes4dsyre PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+set_property(TARGET mes4dsyre PROPERTY CXX_STANDARD 17)
+set_property(TARGET mes4dsyre PROPERTY CXX_STANDARD_REQUIRED YES)
+set_property(TARGET mes4dsyre PROPERTY CXX_EXTENSIONS NO)
 
 # tests
 if(DSYRE_BUILD_TESTS)

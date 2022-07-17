@@ -13,6 +13,7 @@
 
 namespace dsyre
 {
+// takes cons and updates it.
 void update_constants(std::vector<double> &cons, const std::vector<double> &mse,
                       const std::vector<std::vector<double>> &grad, const std::vector<std::vector<double>> &hess)
 {

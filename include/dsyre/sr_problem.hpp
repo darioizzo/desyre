@@ -16,6 +16,7 @@
 #include <pagmo/types.hpp>
 
 #include <dsyre/expression.hpp>
+#include <dsyre/detail/visibility.hpp>
 
 namespace dsyre
 {
@@ -63,6 +64,12 @@ public:
 
     /// Gets the dataset labels
     const std::vector<double> &get_labels() const;
+
+    /// Transforms the chromosome into dsyre structures
+    void pagmo2dsyre(std::vector<unsigned> &geno, std::vector<double> &cons, const pagmo::vector_double &x) const;
+
+    /// Transforms the dsyre structures into a pagmo chromosome
+    void dsyre2pagmo(pagmo::vector_double &x, const std::vector<unsigned> &geno, const std::vector<double> &cons) const;
 
 private:
     // Sanity checks for the dataset
