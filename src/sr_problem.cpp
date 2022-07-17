@@ -13,6 +13,7 @@
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
 #include <pagmo/types.hpp>
+#include <symengine/expression.h>
 
 #include <dsyre/expression.hpp>
 #include <dsyre/sr_problem.hpp>
@@ -104,6 +105,16 @@ const expression &sr_problem::get_expression() const
     return m_ex;
 }
 
+const std::vector<std::vector<double>> &sr_problem::get_points() const
+{
+    return m_points;
+}
+
+const std::vector<double> &sr_problem::get_labels() const
+{
+    return m_labels;
+}
+
 void sr_problem::sanity_checks(const std::vector<std::vector<double>> &points, const std::vector<double> &labels) const
 {
     if (points.size() != labels.size()) {
@@ -119,6 +130,33 @@ void sr_problem::sanity_checks(const std::vector<std::vector<double>> &points, c
             throw std::invalid_argument("Dataset malformed: check the dimensions of all points.");
         }
     }
+}
+
+std::string sr_problem::pretty(const pagmo::vector_double &x) const
+{
+    std::vector<unsigned> geno(x.size() - m_ncon);
+    std::vector<double> cons(m_ncon);
+    std::vector<double> mse;
+    std::vector<std::string> retval;
+
+    std::copy(x.begin(), x.begin() + m_ncon, cons.begin());
+    std::copy(x.begin() + m_ncon, x.end(), geno.begin());
+
+    // We compute the idx of the best u in the phenotype
+    m_ex.mse(mse, geno, cons, m_points, m_labels);
+    auto best_it = std::min_element(mse.begin(), mse.end());
+    auto best_idx = std::distance(m_mse.begin(), best_it);
+    // We compute the symbolic representation of all us in the phenotype
+    m_ex.sphenotype(retval, geno);
+    // We return the best
+    return retval[best_idx];
+}
+
+std::string sr_problem::prettier(const pagmo::vector_double &x) const
+{
+    SymEngine::Expression symengine_ex(pretty(x));
+    auto retval = fmt::format("{}", symengine_ex);
+    return retval;
 }
 
 /// Extra info

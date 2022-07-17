@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
         ERT++;
         while (count < restart) {
             for (auto i = 0u; i < 4u; ++i) {
-                auto new_x = ex.mutation3(best_x, mse, 3 * i + 3, rng);
+                auto new_x = ex.mutation2(best_x, 3 * i + 3, rng);
                 ex.remove_nesting(new_x, rng);
                 // We now have a new candidate genotype new_x and see what a Newton step could produce.
                 // 1 - We compute the mse its gradient and hessian

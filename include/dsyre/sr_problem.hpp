@@ -26,10 +26,9 @@ public:
     sr_problem();
 
     // The constructor
-    sr_problem(const std::vector<std::vector<double>> &points, const std::vector<double> &labels,
-                        unsigned length = 20u, std::vector<std::string> kernels = {"sum", "diff", "mul", "div"},
-                        unsigned n_con = 0u,
-                        bool multi_objective = false // when true the fitness also returns the formula complexity
+    sr_problem(const std::vector<std::vector<double>> &points, const std::vector<double> &labels, unsigned length = 20u,
+               std::vector<std::string> kernels = {"sum", "diff", "mul", "div"}, unsigned n_con = 0u,
+               bool multi_objective = false // when true the fitness also returns the formula complexity
     );
 
     /// Number of objectives
@@ -58,6 +57,12 @@ public:
 
     /// Gets the inner expression object
     const expression &get_expression() const;
+
+    /// Gets the dataset points
+    const std::vector<std::vector<double>> &get_points() const;
+
+    /// Gets the dataset labels
+    const std::vector<double> &get_labels() const;
 
 private:
     // Sanity checks for the dataset
@@ -101,5 +106,6 @@ private:
     mutable std::vector<double> m_mse;
     mutable std::vector<unsigned> m_complexity;
 };
+
 } // namespace dsyre
 #endif
