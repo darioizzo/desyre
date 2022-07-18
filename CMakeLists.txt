@@ -58,6 +58,8 @@ set(DSYRE_SRC_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/sr_problem.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/update_constants.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/mes4dsyre.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gym/gym.cpp"
+
 )
 
 # dsyre library ###################################################################################################################3
