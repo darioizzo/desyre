@@ -58,7 +58,7 @@ pagmo::vector_double sr_problem::fitness(const pagmo::vector_double &x) const
     // We need to copy the pagmo chromosome into dsyre genotype and constants
     std::copy(x.begin(), x.begin() + m_ncon, m_cons.begin());
     std::copy(x.begin() + m_ncon, x.end(), m_geno.begin());
-    // Here we compute the mse fo all us.
+    // Here we compute the mse for all us.
     m_ex.mse(m_mse, m_geno, m_cons, m_points, m_labels);
     // Here we select the smallest.
     auto best_it = std::min_element(m_mse.begin(), m_mse.end());

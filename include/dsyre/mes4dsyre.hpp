@@ -71,10 +71,7 @@ public:
     void set_verbosity(unsigned level);
 
     /// Gets the verbosity level
-    unsigned get_verbosity() const
-    {
-        return m_verbosity;
-    }
+    unsigned get_verbosity() const;
 
     /// Algorithm name
     std::string get_name() const;

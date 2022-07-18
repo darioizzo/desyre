@@ -124,7 +124,7 @@ target_link_libraries(dsyre PRIVATE Pagmo::pagmo)
 
 # main.cpp ###################################################################################################################3
 add_executable(main main.cpp)
-target_link_libraries(main dsyre fmt::fmt)
+target_link_libraries(main dsyre fmt::fmt Pagmo::pagmo)
 target_include_directories(main PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>

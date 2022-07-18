@@ -166,6 +166,11 @@ void mes4dsyre::set_verbosity(unsigned level)
     m_verbosity = level;
 }
 
+unsigned mes4dsyre::get_verbosity() const
+{
+    return m_verbosity;
+}
+
 std::string mes4dsyre::get_name() const
 {
     return "M-ES for DSYRE: A memetic Evolutionary Strategy for the dsyre encoding";

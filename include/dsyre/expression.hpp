@@ -68,7 +68,6 @@ public:
     std::vector<unsigned> mutation2(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng);
     std::vector<unsigned> mutation3(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                     unsigned N, std::mt19937 &rng);
-
     void check_genotype(const std::vector<unsigned> &genotype) const;
 
     const std::vector<unsigned> &get_kernels_idx() const;
