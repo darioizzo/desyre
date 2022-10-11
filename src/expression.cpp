@@ -7,12 +7,14 @@
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
-#include <fmt/ostream.h>
-#include <fmt/ranges.h>
 #include <numeric>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+#include <fmt/ranges.h>
 
 #include <dsyre/detail/visibility.hpp>
 #include <dsyre/expression.hpp>
@@ -41,8 +43,17 @@ pkernel_f_ptr pkernel_list[] = {pinv, pcos, psin, pexp};
 unsigned n_binary = 4u;
 unsigned n_unary = std::size(ukernel_list);
 
-// Global map between kernel names and an unsigned (must correspond to the order in the global arrays as its used
+// Global maps between kernel names and an unsigned (must correspond to the order in the global arrays as its used
 // in the switch cases.
+std::unordered_map<unsigned, std::string>
+build_reversed_map(const std::unordered_map<std::string, unsigned> &kernel_map)
+{
+    std::unordered_map<unsigned, std::string> retval;
+    for (auto i = kernel_map.begin(); i != kernel_map.end(); ++i) {
+        retval[i->second] = i->first;
+    }
+    return retval;
+}
 std::unordered_map<std::string, unsigned> kernel_map{{"sum", 0},
                                                      {"diff", 1},
                                                      {"mul", 2},
@@ -51,6 +62,8 @@ std::unordered_map<std::string, unsigned> kernel_map{{"sum", 0},
                                                      {"cos", n_binary + 1},
                                                      {"sin", n_binary + 2},
                                                      {"exp", n_binary + 3}};
+
+std::unordered_map<unsigned, std::string> reversed_kernel_map = build_reversed_map(kernel_map);
 
 // Constructor
 expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels) : m_nvar(nvar), m_ncon(ncon)
@@ -626,11 +639,34 @@ void expression::check_genotype(const std::vector<unsigned> &g) const
         }
         if ((g[3 * i + 1] >= i + m_ncon + m_nvar) || (g[3 * i + 2] >= i + m_ncon + m_nvar)) {
             std::string err_msg;
-            err_msg+=fmt::format("genotype: {}\n", g);
-            err_msg+=fmt::format("position: {}\n", i);
-            err_msg+=fmt::format("The genotype contains an incompatibe connection gene");
+            err_msg += fmt::format("genotype: {}\n", g);
+            err_msg += fmt::format("position: {}\n", i);
+            err_msg += fmt::format("The genotype contains an incompatibe connection gene");
             throw std::invalid_argument(err_msg);
         }
     }
 }
+
+/// Streaming operator for dsyre::expression.
+/**
+ * @param os target stream.
+ * @param p the dsyre::expression
+ *
+ * @return a reference to \p os.
+ */
+std::ostream &operator<<(std::ostream &os, const expression &p)
+{
+    os << fmt::format("A differentiable expression using the dsyre encoding.\n");
+    os << fmt::format("Number of variables: {}\n", p.m_nvar);
+    os << fmt::format("Number of constants: {}\n", p.m_ncon);
+    os << fmt::format("Number of kernels: {}\n", p.m_nker);
+    std::vector<std::string> kernels_names;
+    for (auto item : p.m_kernels) {
+        kernels_names.push_back(reversed_kernel_map[item]);
+    }
+    os << fmt::format("Kernels: {}\n", kernels_names);
+
+    return os;
+}
+
 } // namespace dsyre

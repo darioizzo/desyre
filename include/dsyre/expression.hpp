@@ -72,6 +72,9 @@ public:
 
     const std::vector<unsigned> &get_kernels_idx() const;
 
+    // Streaming operator for the class dsyre::expression.
+    friend std::ostream &operator<<(std::ostream &os, const expression &d);
+
 private:
     // Computes the phenotype (i.e. the numerical values of all the graph nodes) - no checks
     void phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
@@ -106,6 +109,8 @@ private:
     unsigned m_nker;
     std::vector<unsigned> m_kernels;
 };
+
+DSYRE_DLL_PUBLIC std::ostream &operator<<(std::ostream &os, const expression &d);
 
 } // namespace dsyre
 

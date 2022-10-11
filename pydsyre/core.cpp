@@ -1,8 +1,12 @@
 #include <cmath>
+#include <string>
+#include <vector>
+
+#include <iostream>
 
 #include <boost/optional.hpp>
 #include <pybind11/pybind11.h>
-#include <tbb/global_control.h>
+#include <pybind11/stl.h>
 
 #include <dsyre/expression.hpp>
 
@@ -20,10 +24,15 @@ PYBIND11_MODULE(core, m)
     auto exp_ = py::class_<dsyre::expression>(
                     m, "pydsyre_expression",
                     "An object to generate and manipulate symbolic regression expressions using the dsyre encoding.")
-                    // Default constructor exposed
+                    // Default constructor
                     .def(py::init<>())
-                    // From number of variamles, number of constants, kernels
+                    // Constructor from number of variables, number of constants, and kernels
                     .def(py::init<unsigned, unsigned, std::vector<std::string>>(), py::arg("nvar"), py::arg("ncon"),
-                         py::arg("kernels"), pydsyre_expression_init_doc().c_str());
+                         py::arg("kernels"), pydsyre_expression_init_doc().c_str())
+                    .def("__repr__", [](const dsyre::expression &instance) -> std::string {
+                        std::ostringstream oss;
+                        std::cout << instance;
+                        return oss.str();
+                    });
 
 } // namespace details
