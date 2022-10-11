@@ -34,3 +34,23 @@ set_target_properties(core PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(core PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE)
 target_compile_features(core PRIVATE cxx_std_17)
 set_property(TARGET core PROPERTY CXX_EXTENSIONS NO)
+
+# Installation setup.
+if(PYDSYRE_INSTALL_PATH STREQUAL "")
+    message(STATUS "pydsyre will be installed in the default location: ${Python3_SITEARCH}")
+    set(_PYDSYRE_INSTALL_DIR "${Python3_SITEARCH}/pydsyre")
+else()
+    message(STATUS "pydsyre will be installed in the custom location: ${PYDSYRE_INSTALL_PATH}")
+    set(_PYDSYRE_INSTALL_DIR "${PYDSYRE_INSTALL_PATH}/pydsyre")
+endif()
+
+# Install the core module.
+install(TARGETS core
+    RUNTIME DESTINATION ${_PYDSYRE_INSTALL_DIR}
+    LIBRARY DESTINATION ${_PYDSYRE_INSTALL_DIR}
+)
+
+# Install the Python files.
+install(FILES ${PYDSYRE_PYTHON_FILES} DESTINATION ${_PYDSYRE_INSTALL_DIR})
+
+unset(_PYDSYRE_INSTALL_DIR)

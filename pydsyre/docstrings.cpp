@@ -7,7 +7,7 @@ namespace pydsyre
 
 std::string module_doc()
 {
-    return R"(PYthon module implementing the Differentiable SYmbolic REgression approach (pronounce as pie-desire)
+    return R"(The core functionalities implemented in cpp and exposed to python
 )";
 }
 }
