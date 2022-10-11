@@ -13,7 +13,8 @@
 #include <dsyre/kernels.hpp>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
-#include <symengine/expression.h>
+
+#include <dsyre/symengine.hpp>
 
 #include "catch.hpp"
 

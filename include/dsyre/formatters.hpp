@@ -10,7 +10,8 @@
 #define DSYRE_FORMATTERS_HPP
 
 #include <fmt/format.h>
-#include <symengine/expression.h>
+
+#include <dsyre/symengine.hpp>
 
 template <>
 struct fmt::formatter<SymEngine::Expression> {

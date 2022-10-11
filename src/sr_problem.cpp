@@ -13,11 +13,11 @@
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
 #include <pagmo/types.hpp>
-#include <symengine/expression.h>
 
 #include <dsyre/expression.hpp>
 #include <dsyre/formatters.hpp>
 #include <dsyre/sr_problem.hpp>
+#include <dsyre/symengine.hpp>
 
 namespace dsyre
 {

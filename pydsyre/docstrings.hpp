@@ -5,8 +5,11 @@
 
 namespace pydsyre
 {
-// utilities
+// Modules
 std::string module_doc();
+
+// Expression
+std::string pydsyre_expression_init_doc();
 } // namespace pydsyre
 
 #endif
