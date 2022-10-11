@@ -18,6 +18,7 @@
 #include <symengine/expression.h>
 
 #include <dsyre/expression.hpp>
+#include <dsyre/formatters.hpp>
 #include <dsyre/gym/gym.hpp>
 #include <dsyre/update_constants.hpp>
 
@@ -126,7 +127,8 @@ int main(int argc, char *argv[])
     ex.mse(mse, best_x, best_c, xs, ys);
     auto tmp = std::min_element(mse.begin(), mse.end());
     auto idx = std::distance(mse.begin(), tmp);
-    print("Best prettied phenotype: {}\n", exs[idx]);
+    print("Best prettied phenotype: {:e}\n", exs[idx]);
+    print("Best prettied phenotype: {:v}\n", exs[idx]);
 
     return 0;
 }

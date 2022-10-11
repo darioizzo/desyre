@@ -16,6 +16,7 @@
 #include <symengine/expression.h>
 
 #include <dsyre/expression.hpp>
+#include <dsyre/formatters.hpp>
 #include <dsyre/sr_problem.hpp>
 
 namespace dsyre
