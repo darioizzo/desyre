@@ -1,3 +1,6 @@
+# Main dsyre/pydsyre project version.
+set(DSYRE_PROJECT_VERSION 0.0.1)
+
 # NOTE: C++17 supported since CMake 3.8.0:
 # https://cmake.org/cmake/help/v3.8/prop_tgt/CXX_STANDARD.html
 cmake_minimum_required(VERSION 3.8.0)
@@ -11,7 +14,7 @@ if(NOT CMAKE_BUILD_TYPE)
 	FORCE)
 endif()
 
-project(dsyre VERSION 0.0.1 LANGUAGES CXX)
+project(dsyre VERSION ${DSYRE_PROJECT_VERSION} LANGUAGES CXX)
 # We allow to find yacma 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/yacma")
 
@@ -27,7 +30,10 @@ include(YACMACompilerLinkerSettings)
 option(DSYRE_BUILD_TESTS "Build unit tests." OFF)
 option(DSYRE_BUILD_BENCHMARKS "Build benchmarks." OFF)
 option(DSYRE_BUILD_STATIC_LIBRARY "Build dsyre as a static library, instead of dynamic." OFF)
-option(DSYRE_SETUP_DOCS "Setup the files for building the docs." ON)
+option(DSYRE_BUILD_PYTHON "Builds the python module" OFF)
+option(DSYRE_BUILD_MAIN "Builds the file main.cpp and co." ON)
+option(DSYRE_SETUP_DOCS "Setup the files for building the docs." OFF)
+
 
 # NOTE: on Unix systems, the correct library installation path
 # could be something other than just "lib", such as "lib64",
@@ -94,8 +100,8 @@ target_include_directories(dsyre PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-# Mandatory dependency on fmt.
-find_package(fmt)
+# Mandatory dependency on fmt. At least version 9 is needed for the formatters to work.
+find_package(fmt 9)
 target_link_libraries(dsyre PRIVATE fmt::fmt)
 
 # Mandatory dependency on Boost.
@@ -123,31 +129,31 @@ find_package(Pagmo REQUIRED)
 message(STATUS "Pagmo dir is: ${Pagmo_DIR}")
 target_link_libraries(dsyre PRIVATE Pagmo::pagmo)
 
+if(DSYRE_BUILD_MAIN)
+    # main.cpp ###################################################################################################################3
+    add_executable(main main.cpp)
+    target_link_libraries(main dsyre fmt::fmt Pagmo::pagmo)
+    target_include_directories(main PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
 
-# main.cpp ###################################################################################################################3
-add_executable(main main.cpp)
-target_link_libraries(main dsyre fmt::fmt Pagmo::pagmo)
-target_include_directories(main PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
+    set_property(TARGET main PROPERTY CXX_STANDARD 17)
+    set_property(TARGET main PROPERTY CXX_STANDARD_REQUIRED YES)
+    set_property(TARGET main PROPERTY CXX_EXTENSIONS NO)
 
-set_property(TARGET main PROPERTY CXX_STANDARD 17)
-set_property(TARGET main PROPERTY CXX_STANDARD_REQUIRED YES)
-set_property(TARGET main PROPERTY CXX_EXTENSIONS NO)
+    # mes4dsyre.cpp ###################################################################################################################3
+    add_executable(mes4dsyre mes4dsyre.cpp)
+    target_link_libraries(mes4dsyre dsyre fmt::fmt Pagmo::pagmo)
+    target_include_directories(mes4dsyre PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
 
-# mes4dsyre.cpp ###################################################################################################################3
-add_executable(mes4dsyre mes4dsyre.cpp)
-target_link_libraries(mes4dsyre dsyre fmt::fmt Pagmo::pagmo)
-target_include_directories(mes4dsyre PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-
-set_property(TARGET mes4dsyre PROPERTY CXX_STANDARD 17)
-set_property(TARGET mes4dsyre PROPERTY CXX_STANDARD_REQUIRED YES)
-set_property(TARGET mes4dsyre PROPERTY CXX_EXTENSIONS NO)
-
+    set_property(TARGET mes4dsyre PROPERTY CXX_STANDARD 17)
+    set_property(TARGET mes4dsyre PROPERTY CXX_STANDARD_REQUIRED YES)
+    set_property(TARGET mes4dsyre PROPERTY CXX_EXTENSIONS NO)
+endif()
 # tests
 if(DSYRE_BUILD_TESTS)
     enable_testing()
@@ -157,6 +163,27 @@ endif()
 # benchmarks
 if(DSYRE_BUILD_BENCHMARKS)
     add_subdirectory(benchmark)
+endif()
+
+if(DSYRE_BUILD_PYTHON)
+    # Find python
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+    message(STATUS "Python3 interpreter: ${Python3_EXECUTABLE}")
+    message(STATUS "Python3 installation directory: ${Python3_SITEARCH}")
+    set(PYDSYRE_INSTALL_PATH "" CACHE STRING "dsyre module installation path")
+    mark_as_advanced(PYDSYRE_INSTALL_PATH)
+
+    # pybind11.
+    find_package(pybind11 REQUIRED)
+    if(${pybind11_VERSION} VERSION_LESS "2.10")
+        message(FATAL_ERROR "pybind11 >= 2.10 is required, but version ${pybind11_VERSION} was found instead.")
+    endif()
+
+    # Finding dsyre (cpp) 
+    find_package(dsyre ${DSYRE_PROJECT_VERSION} EXACT REQUIRED)
+
+    # Build directory
+    add_subdirectory("${CMAKE_SOURCE_DIR}/pydsyre")
 endif()
 
 # Configuration files #############################################################################################################3
@@ -195,3 +222,4 @@ else()
     write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/dsyre-config-version.cmake" COMPATIBILITY SameMinorVersion)
 endif()
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/dsyre-config-version.cmake" DESTINATION "${DSYRE_INSTALL_LIBDIR}/cmake/dsyre")
+
