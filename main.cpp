@@ -15,11 +15,11 @@
 #include <boost/math/constants/constants.hpp>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
-#include <symengine/expression.h>
 
 #include <dsyre/expression.hpp>
 #include <dsyre/formatters.hpp>
 #include <dsyre/gym/gym.hpp>
+#include <dsyre/symengine.hpp>
 #include <dsyre/update_constants.hpp>
 
 using namespace fmt;

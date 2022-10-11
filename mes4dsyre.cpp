@@ -18,11 +18,11 @@
 #include <pagmo/algorithm.hpp>
 #include <pagmo/population.hpp>
 #include <pagmo/problem.hpp>
-#include <symengine/expression.h>
 
-#include <dsyre/mes4dsyre.hpp>
 #include <dsyre/gym/gym.hpp>
+#include <dsyre/mes4dsyre.hpp>
 #include <dsyre/sr_problem.hpp>
+#include <dsyre/symengine.hpp>
 
 using namespace fmt;
 using namespace dsyre;
