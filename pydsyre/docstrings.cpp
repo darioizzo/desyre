@@ -221,7 +221,7 @@ std::string expression_mse_doc()
 {
     return R"(mse(geno, cons, xs, ys)
         
-Computes the symbolic value of the phenotype expressed by geno.
+Computes the mean squared error of the phenotype expressed by geno as evaluated on xs.
 
 Args:
     geno: genotype.
@@ -231,7 +231,7 @@ Args:
 
 Raises:
     ValueError: if geno is incompatible with the expression.
-    ValueError: if the dataset and labels are malformed.
+    ValueError: if xs or ys are malformed.
 
 Returns:
     the mean squared error on the dataset, labels for each of the phenotype expressions.
@@ -248,4 +248,41 @@ Examples:
 )";
 }
 
+std::string expression_ddmse_doc()
+{
+    return R"(ddmse(geno, cons, xs, ys)
+        
+Computes the mean squared error of the phenotype expressed by geno as evaluated on xs, its gradient and its hessian with repect to the constants.
+
+Args:
+    geno: genotype.
+    cons: constants value.
+    xs: dataset.
+    ys: labels.
+
+Raises:
+    ValueError: if geno is incompatible with the expression.
+    ValueError: if xs or ys are malformed.
+
+Returns:
+    the mean squared error, the gradient and the hessian. If we focus (say) on the i constant
+    and indicate the phenotype with [u0, u1, ..., un], then grad[i] will contain the derivative of
+    each expression in the the phenotype w.r.t. the constant, i.e. [du0, du1, ..., dun]
+    For the Hessian, the relation is more complex as we flatten a symmetric matrix (i and j) -> ij
+    following the convention ij = [00 10 11 20 21 22 ....].
+    If we seek the derivative w.r.t the constants i and j, then hess[ij] contains the second order
+    derivative w.r.t i and j, i.e. [didju0, didju1, didju2, ...]
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> import numpy as np
+    >>> ex = dsy.expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> geno = ex.random_genotype(length = 10)
+    >>> cons = ex.random_constants(-1,1)
+    >>> xs = np.random.randn(12,1)
+    >>> ys = np.random.randn(12)
+    >>> mse, grad, hess = ex.ddmse(geno, cons, xs, ys)
+)";
 }
+
+} // namespace pydsyre

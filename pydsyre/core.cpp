@@ -99,5 +99,17 @@ PYBIND11_MODULE(core, m)
                       ex.mse(retval, geno, cons, xs, ys);
                       return retval;
                   },
-                  expression_mse_doc().c_str());
+                  expression_mse_doc().c_str())
+              .def(
+                  "ddmse",
+                  [](const dsyre::expression &ex, const std::vector<unsigned> &geno, const std::vector<double> &cons,
+                     const std::vector<std::vector<double>> &xs, const std::vector<double> &ys) {
+                      std::vector<double> mse;
+                      std::vector<std::vector<double>> grad;
+                      std::vector<std::vector<double>> hess;
+                      ex.ddmse(mse, grad, hess, geno, cons, xs, ys);
+                      py::tuple retval = py::make_tuple(mse, grad, hess);
+                      return retval;
+                  },
+                  expression_ddmse_doc().c_str());
 } // namespace details
