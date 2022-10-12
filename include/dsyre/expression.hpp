@@ -72,7 +72,7 @@ public:
 
     const std::vector<unsigned> &get_kernels_idx() const;
 
-    // Streaming operator for the class dsyre::expression.
+    // Streaming operator friendship declaration
     friend std::ostream &operator<<(std::ostream &os, const expression &d);
 
 private:
@@ -110,6 +110,7 @@ private:
     std::vector<unsigned> m_kernels;
 };
 
+// Streaming operator
 DSYRE_DLL_PUBLIC std::ostream &operator<<(std::ostream &os, const expression &d);
 
 } // namespace dsyre

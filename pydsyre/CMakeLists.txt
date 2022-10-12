@@ -29,7 +29,12 @@ target_compile_options(core PRIVATE
     "$<$<CONFIG:Release>:${DSYRE_CXX_FLAGS_RELEASE}>"
     "$<$<CONFIG:RelWithDebInfo>:${DSYRE_CXX_FLAGS_RELEASE}>"
     "$<$<CONFIG:MinSizeRel>:${DSYRE_CXX_FLAGS_RELEASE}>"
+    
 )
+target_include_directories(dsyre PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 set_target_properties(core PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(core PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE)
 target_compile_features(core PRIVATE cxx_std_17)

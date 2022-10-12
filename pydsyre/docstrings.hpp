@@ -8,8 +8,15 @@ namespace pydsyre
 // Modules
 std::string module_doc();
 
+// Utilities
+std::string set_global_seed_doc();
+std::string rand_doc();
+
 // Expression
-std::string pydsyre_expression_init_doc();
+std::string expression_doc();
+std::string expression_random_constants_doc();
+std::string expression_random_genotype_doc();
+
 } // namespace pydsyre
 
 #endif
