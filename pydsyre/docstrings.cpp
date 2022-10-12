@@ -59,7 +59,7 @@ Raises:
 
 Examples:
     >>> import pydsyre as dsy
-    >>> ex = dsy.pydsyre_expression(nvars=1, ncons=1, kernels=["sum","mul","diff"])
+    >>> ex = dsy.expression(nvars=1, ncons=1, kernels=["sum","mul","diff"])
     >>> print(ex)
     A differentiable expression using the dsyre encoding.
     Number of variables: 1
@@ -112,6 +112,139 @@ Examples:
     >>> geno = ex.random_genotype(length = 10)
     >>> len(geno)
     30
+)";
+}
+
+std::string expression_remove_nesting_doc()
+{
+    return R"(remove_nesting(geno)
+        
+Modifies geno so that nested non linear expressions such as sin(sin(sin(x))) are no longer in the phenotype.
+
+Args:
+    geno: genotype that needs nesting removed from.
+
+Raises:
+    TypeError: if length is negative.
+    ValueError: if geno is incompatible with the expression.
+
+
+Returns:
+    the genotype with nesting removed. Note that this is not a copy as the input geno will be changed and returned.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> ex = dsy.pydsyre_expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> geno = ex.random_genotype(length = 10)
+    >>> geno = ex.remove_nesting(geno)
+)";
+}
+
+std::string expression_phenotype_doc()
+{
+    return R"(phenotype(geno, vars, cons)
+        
+Computes the numerical value of the phenotype expressed by geno.
+
+Args:
+    geno: genotype.
+    vars: variables.
+    cons: constants.
+
+Raises:
+    ValueError: if geno is incompatible with the expression.
+    ValueError: if the dimensions of vars and cons are not conistent.
+
+Returns:
+    the numeric phenotype.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> ex = dsy.pydsyre_expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> geno = ex.random_genotype(length = 10)
+    >>> cons = ex.random_constants(-1,1)
+    >>> phen = ex.phenotype(geno, [1.23], cons)
+)";
+}
+
+std::string expression_complexity_doc()
+{
+    return R"(complexity(geno)
+        
+Computes the complexity of the phenotype expressed by geno.
+
+Args:
+    geno: genotype.
+
+Raises:
+    ValueError: if geno is incompatible with the expression.
+
+Returns:
+    the formulas complexity.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> ex = dsy.pydsyre_expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> geno = ex.random_genotype(length = 10)
+    >>> ex.complexity(geno)
+)";
+}
+
+std::string expression_sphenotype_doc()
+{
+    return R"(sphenotype(geno, vars = [], cons = [])
+        
+Computes the symbolic value of the phenotype expressed by geno.
+
+Args:
+    geno: genotype.
+    vars: variables. If empty names will be given automatically as "x0" ...
+    cons: constants. If empty names will be given automatically as "c0" ...
+
+Raises:
+    ValueError: if geno is incompatible with the expression.
+    ValueError: if the dimensions of vars and cons are not conistent.
+
+Returns:
+    the symbolic phenotype.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> ex = dsy.pydsyre_expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> geno = ex.random_genotype(length = 10)
+    >>> cons = ex.random_constants(-1,1)
+    >>> sphen = ex.sphenotype(geno)
+)";
+}
+
+std::string expression_mse_doc()
+{
+    return R"(mse(geno, cons, xs, ys)
+        
+Computes the symbolic value of the phenotype expressed by geno.
+
+Args:
+    geno: genotype.
+    cons: constants value.
+    xs: dataset.
+    ys: labels.
+
+Raises:
+    ValueError: if geno is incompatible with the expression.
+    ValueError: if the dataset and labels are malformed.
+
+Returns:
+    the mean squared error on the dataset, labels for each of the phenotype expressions.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> import numpy as np
+    >>> ex = dsy.expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> geno = ex.random_genotype(length = 10)
+    >>> cons = ex.random_constants(-1,1)
+    >>> xs = np.random.randn(12,1)
+    >>> ys = np.random.randn(12)
+    >>> ex.mse(geno, cons, xs, ys)
 )";
 }
 

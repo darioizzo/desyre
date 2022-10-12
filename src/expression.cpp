@@ -173,12 +173,10 @@ void expression::phenotype(std::vector<double> &retval, const std::vector<unsign
 {
     check_genotype(genotype);
     if (vars.size() != m_nvar) {
-        throw std::invalid_argument(
-            "When calling phenotype the number of variables to compute this phenotype is wrong.");
+        throw std::invalid_argument("The dimensions of vars to compute this phenotype seems wrong.");
     }
     if (cons.size() != m_ncon) {
-        throw std::invalid_argument(
-            "When calling phenotype the number of constants to compute this phenotype is wrong.");
+        throw std::invalid_argument("The dimensions of cons to compute this phenotype seems wrong.");
     }
     phenotype_impl(retval, genotype, vars, cons);
 }
@@ -411,7 +409,10 @@ void expression::mse(std::vector<double> &retval, const std::vector<unsigned> &g
                      const std::vector<double> &ys) const
 {
     auto N = xs.size();
-    assert(m_nvar == xs[0].size());
+    if (xs.size() != ys.size()) {
+        throw std::invalid_argument("When computing the mse the data xs, ys seems to be malformed.");
+    }
+
     retval.resize(m_nvar + m_ncon + genotype.size() / 3, 0u);
     std::fill(retval.begin(), retval.end(), 0);
     std::vector<double> squared_err;
@@ -444,8 +445,8 @@ void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>
 {
     auto N_points = xs.size();
     auto N_us = genotype.size() / 3 + m_nvar + m_ncon;
-    if (cons.size() != m_ncon) {
-        throw std::invalid_argument("When calling ddmse the vector of constants has the wrong size");
+    if (xs.size() != ys.size()) {
+        throw std::invalid_argument("When computing the mse the data xs, ys seems to be malformed.");
     }
     // These will store values and derivatives of the expressions (not the loss)
     std::vector<double> ph;

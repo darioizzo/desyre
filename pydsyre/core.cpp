@@ -33,7 +33,7 @@ PYBIND11_MODULE(core, m)
         "rand", []() { return rng(); }, rand_doc().c_str());
 
     auto exp_
-        = py::class_<dsyre::expression>(m, "pydsyre_expression", expression_doc().c_str())
+        = py::class_<dsyre::expression>(m, "expression", expression_doc().c_str())
               // Default constructor
               .def(py::init<>())
               // Constructor from number of variables, number of constants, and kernels
@@ -63,7 +63,7 @@ PYBIND11_MODULE(core, m)
                       ex.remove_nesting(g, rng);
                       return g;
                   },
-                  py::arg("gen"))
+                  py::arg("geno"), expression_remove_nesting_doc().c_str())
               .def(
                   "phenotype",
                   [](const dsyre::expression &ex, const std::vector<unsigned> &g, const std::vector<double> &v,
@@ -72,7 +72,7 @@ PYBIND11_MODULE(core, m)
                       ex.phenotype(retval, g, v, c);
                       return retval;
                   },
-                  py::arg("gen"), py::arg("vars"), py::arg("cons"))
+                  py::arg("geno"), py::arg("vars"), py::arg("cons"), expression_phenotype_doc().c_str())
               .def(
                   "complexity",
                   [](const dsyre::expression &ex, const std::vector<unsigned> &g) {
@@ -80,7 +80,7 @@ PYBIND11_MODULE(core, m)
                       ex.complexity(retval, g);
                       return retval;
                   },
-                  py::arg("gen"))
+                  py::arg("geno"), expression_complexity_doc().c_str())
               .def(
                   "sphenotype",
                   [](const dsyre::expression &ex, const std::vector<unsigned> &g, const std::vector<std::string> &v,
@@ -90,5 +90,14 @@ PYBIND11_MODULE(core, m)
                       return retval;
                   },
                   py::arg("geno"), py::arg("vars") = std::vector<std::string>{},
-                  py::arg("cons") = std::vector<std::string>{});
+                  py::arg("cons") = std::vector<std::string>{}, expression_sphenotype_doc().c_str())
+              .def(
+                  "mse",
+                  [](const dsyre::expression &ex, const std::vector<unsigned> &geno, const std::vector<double> &cons,
+                     const std::vector<std::vector<double>> &xs, const std::vector<double> &ys) {
+                      std::vector<double> retval;
+                      ex.mse(retval, geno, cons, xs, ys);
+                      return retval;
+                  },
+                  expression_mse_doc().c_str());
 } // namespace details

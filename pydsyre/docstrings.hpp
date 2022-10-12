@@ -16,6 +16,12 @@ std::string rand_doc();
 std::string expression_doc();
 std::string expression_random_constants_doc();
 std::string expression_random_genotype_doc();
+std::string expression_remove_nesting_doc();
+std::string expression_phenotype_doc();
+std::string expression_complexity_doc();
+std::string expression_sphenotype_doc();
+std::string expression_mse_doc();
+std::string expression_ddmse_doc();
 
 } // namespace pydsyre
 
