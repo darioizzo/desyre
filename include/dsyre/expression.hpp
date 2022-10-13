@@ -9,15 +9,18 @@
 #ifndef DSYRE_EXPRESSION_HPP
 #define DSYRE_EXPRESSION_HPP
 
+#include <random>
+#include <unordered_map>
+#include <vector>
+
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-#include <random>
-#include <vector>
 
 #include <dsyre/detail/visibility.hpp>
 
 namespace dsyre
 {
+
 class DSYRE_DLL_PUBLIC expression
 {
 public:
@@ -112,6 +115,10 @@ private:
 
 // Streaming operator
 DSYRE_DLL_PUBLIC std::ostream &operator<<(std::ostream &os, const expression &d);
+
+// Available kernels. Since the map is built manually in the cpp file, this helper allow access to it.
+DSYRE_DLL_PUBLIC std::unordered_map<std::string, unsigned> get_kernel_map();
+DSYRE_DLL_PUBLIC std::unordered_map<unsigned, std::string> get_reverse_kernel_map();
 
 } // namespace dsyre
 

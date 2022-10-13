@@ -31,6 +31,9 @@ PYBIND11_MODULE(core, m)
         "set_global_seed", [](unsigned seed) { rng.seed(seed); }, set_global_seed_doc().c_str(), py::arg("seed"));
     m.def(
         "rand", []() { return rng(); }, rand_doc().c_str());
+    // We expose the kernel maps
+    m.def("get_kernel_map", &dsyre::get_kernel_map, get_kernel_map_doc().c_str());
+    m.def("get_reverse_kernel_map", &dsyre::get_reverse_kernel_map, get_reverse_kernel_map_doc().c_str());
 
     auto exp_
         = py::class_<dsyre::expression>(m, "expression", expression_doc().c_str())
@@ -111,5 +114,7 @@ PYBIND11_MODULE(core, m)
                       py::tuple retval = py::make_tuple(mse, grad, hess);
                       return retval;
                   },
-                  expression_ddmse_doc().c_str());
+                  expression_ddmse_doc().c_str())
+              .def("get_kernels_idx", &dsyre::expression::get_kernels_idx, expression_get_kernels_idx_doc().c_str())
+              .def("check_genotype", &dsyre::expression::check_genotype, expression_check_genotype_doc().c_str());
 } // namespace details

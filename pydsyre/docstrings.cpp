@@ -35,6 +35,30 @@ Examples:
 )";
 }
 
+std::string get_kernel_map_doc()
+{
+    return R"(get_kernel_map()
+        
+Returns a dictionary mapping kernel names to their global id
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> kmap = dsy.get_kernel_map()
+)";
+}
+
+std::string get_reverse_kernel_map_doc()
+{
+    return R"(get_reverse_kernel_map()
+        
+Returns a dictionary mapping global ids to the kernel names
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> kmap = dsy.get_reverse_kernel_map()
+)";
+}
+
 std::string expression_doc()
 {
     return R"(__init__(nvars, ncons, kernels)
@@ -282,6 +306,34 @@ Examples:
     >>> xs = np.random.randn(12,1)
     >>> ys = np.random.randn(12)
     >>> mse, grad, hess = ex.ddmse(geno, cons, xs, ys)
+)";
+}
+
+std::string expression_get_kernels_idx_doc()
+{
+    return R"(get_kernel_idx()
+        
+Returns:
+    the global idx of the kernels used in the expression.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> ex = dsy.expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> ex.get_kernel_idx()
+)";
+}
+
+std::string expression_check_genotype_doc()
+{
+    return R"(check_genotype(geno)
+        
+Raises:
+    ValueError: if geno is incompatible with the expression.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> ex = dsy.expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> ex.check_genotype([0,1,0,0,1,1,0,4,3])
 )";
 }
 

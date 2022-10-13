@@ -2,7 +2,7 @@
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/_version.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/_version.py" @ONLY)   
 
 # The list of pydsyre's Python files.
-set(PYDSYRE_PYTHON_FILES __init__.py _version.py)
+set(PYDSYRE_PYTHON_FILES __init__.py _version.py test.py)
 
 # Copy the python files in the current binary dir,
 # so that we can import pydesyre from the build dir.

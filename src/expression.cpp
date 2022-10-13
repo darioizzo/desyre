@@ -45,8 +45,7 @@ unsigned n_unary = std::size(ukernel_list);
 
 // Global maps between kernel names and an unsigned (must correspond to the order in the global arrays as its used
 // in the switch cases.
-std::unordered_map<unsigned, std::string>
-build_reversed_map(const std::unordered_map<std::string, unsigned> &kernel_map)
+std::unordered_map<unsigned, std::string> build_reverse_map(const std::unordered_map<std::string, unsigned> &kernel_map)
 {
     std::unordered_map<unsigned, std::string> retval;
     for (auto i = kernel_map.begin(); i != kernel_map.end(); ++i) {
@@ -63,7 +62,7 @@ std::unordered_map<std::string, unsigned> kernel_map{{"sum", 0},
                                                      {"sin", n_binary + 2},
                                                      {"exp", n_binary + 3}};
 
-std::unordered_map<unsigned, std::string> reversed_kernel_map = build_reversed_map(kernel_map);
+std::unordered_map<unsigned, std::string> reverse_kernel_map = build_reverse_map(kernel_map);
 
 // Constructor
 expression::expression(unsigned nvar, unsigned ncon, std::vector<std::string> kernels) : m_nvar(nvar), m_ncon(ncon)
@@ -641,8 +640,8 @@ void expression::check_genotype(const std::vector<unsigned> &g) const
         if ((g[3 * i + 1] >= i + m_ncon + m_nvar) || (g[3 * i + 2] >= i + m_ncon + m_nvar)) {
             std::string err_msg;
             err_msg += fmt::format("genotype: {}\n", g);
-            err_msg += fmt::format("position: {}\n", i);
-            err_msg += fmt::format("The genotype contains an incompatibe connection gene");
+            err_msg += fmt::format("position: {}\n", i * 3);
+            err_msg += fmt::format("this triplet contains an incompatibe connection gene");
             throw std::invalid_argument(err_msg);
         }
     }
@@ -663,11 +662,21 @@ std::ostream &operator<<(std::ostream &os, const expression &p)
     os << fmt::format("Number of kernels: {}\n", p.m_nker);
     std::vector<std::string> kernels_names;
     for (auto item : p.m_kernels) {
-        kernels_names.push_back(reversed_kernel_map[item]);
+        kernels_names.push_back(reverse_kernel_map[item]);
     }
     os << fmt::format("Kernels: {}\n", kernels_names);
 
     return os;
+}
+
+std::unordered_map<std::string, unsigned> get_kernel_map()
+{
+    return kernel_map;
+}
+
+std::unordered_map<unsigned, std::string> get_reverse_kernel_map()
+{
+    return reverse_kernel_map;
 }
 
 } // namespace dsyre
