@@ -24,6 +24,8 @@ std::string expression_complexity_doc();
 std::string expression_sphenotype_doc();
 std::string expression_mse_doc();
 std::string expression_ddmse_doc();
+std::string expression_mutate_doc();
+std::string expression_mutate_triplets_doc();
 std::string expression_get_kernels_idx_doc();
 std::string expression_check_genotype_doc();
 

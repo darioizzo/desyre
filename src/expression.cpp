@@ -529,10 +529,12 @@ void expression::ddmse(std::vector<double> &mse, std::vector<std::vector<double>
     }
 }
 
-std::vector<unsigned> expression::mutation(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng)
+// Mutate triplets
+std::vector<unsigned> expression::mutate_triplets(const std::vector<unsigned> &genotype, unsigned N,
+                                                  std::mt19937 &rng) const
 {
     auto retval = genotype;
-    // We generate N randomly selected indexes of the genotype triplets
+    // We select at random N triplets
     auto n_triplets = genotype.size() / 3;
     std::vector<unsigned> choice(n_triplets);
     std::iota(choice.begin(), choice.end(), 0u);
@@ -548,10 +550,11 @@ std::vector<unsigned> expression::mutation(const std::vector<unsigned> &genotype
     return retval;
 }
 
-std::vector<unsigned> expression::mutation2(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng)
+// Mutates single genes
+std::vector<unsigned> expression::mutate(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng) const
 {
     auto retval = genotype;
-    // We generate N randomly selected indexes of the genotype triplets
+    // We select at random N genes
     std::vector<unsigned> choice(retval.size());
     std::iota(choice.begin(), choice.end(), 0u);
     std::shuffle(choice.begin(), choice.end(), rng);
@@ -568,6 +571,7 @@ std::vector<unsigned> expression::mutation2(const std::vector<unsigned> &genotyp
     return retval;
 }
 
+// Mutates N single genes after mutating also the triplets with an infinite phenotype
 std::vector<unsigned> expression::mutation3(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                             unsigned N, std::mt19937 &rng)
 {

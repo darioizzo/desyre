@@ -195,9 +195,11 @@ std::string expression_complexity_doc()
 {
     return R"(complexity(geno)
         
-Computes the complexity of the phenotype expressed by geno.
+Computes the complexity of the phenotype expressed by geno. The complexity c(u_k) of each 
+expression in the phenotype (i.e. u_k=f(u_i,u_j)) is computed as 1+c(u_i)+c(u_j) for binary operators
+and as 1+c(u_i) for unary operators. 
 
-Args:
+Args: 
     geno: genotype.
 
 Raises:
@@ -306,6 +308,49 @@ Examples:
     >>> xs = np.random.randn(12,1)
     >>> ys = np.random.randn(12)
     >>> mse, grad, hess = ex.ddmse(geno, cons, xs, ys)
+)";
+}
+
+std::string expression_mutate_doc()
+{
+    return R"(mutate(geno, N)
+        
+Mutates N reandomly selected genes in geno.
+
+Args:
+    geno: genotype.
+    N: number of genes to mutate.
+
+Returns:
+    the mutated genotype.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> ex = dsy.pydsyre_expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> geno = ex.random_genotype(length = 10)
+    >>> ex.mutate(geno, 4)
+)";
+}
+
+std::string expression_mutate_triplets_doc()
+{
+    return R"(mutate_triplets(geno, N)
+        
+Mutates N reandomly selected triplets in geno. Note this will produce three times 
+the amount of mutations w.r.t. a normal mutation (using the same N)
+
+Args:
+    geno: genotype.
+    N: number of triplets to mutate.
+
+Returns:
+    the mutated genotype.
+
+Examples:
+    >>> import pydsyre as dsy
+    >>> ex = dsy.pydsyre_expression(nvars=1, ncons=3, kernels=["sum","mul","diff"])
+    >>> geno = ex.random_genotype(length = 10)
+    >>> ex.mutate_triplets(geno, 4)
 )";
 }
 

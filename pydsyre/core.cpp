@@ -102,7 +102,7 @@ PYBIND11_MODULE(core, m)
                       ex.mse(retval, geno, cons, xs, ys);
                       return retval;
                   },
-                  expression_mse_doc().c_str())
+                  py::arg("geno"), py::arg("cons"), py::arg("xs"), py::arg("ys"), expression_mse_doc().c_str())
               .def(
                   "ddmse",
                   [](const dsyre::expression &ex, const std::vector<unsigned> &geno, const std::vector<double> &cons,
@@ -114,7 +114,20 @@ PYBIND11_MODULE(core, m)
                       py::tuple retval = py::make_tuple(mse, grad, hess);
                       return retval;
                   },
-                  expression_ddmse_doc().c_str())
+                  py::arg("geno"), py::arg("cons"), py::arg("xs"), py::arg("ys"), expression_ddmse_doc().c_str())
+              .def(
+                  "mutate",
+                  [](const dsyre::expression &ex, const std::vector<unsigned> &geno, unsigned N) {
+                      return ex.mutate(geno, N, rng);
+                  },
+                  py::arg("geno"), py::arg("N"), expression_mutate_doc().c_str())
+              .def(
+                  "mutate_triplets",
+                  [](const dsyre::expression &ex, const std::vector<unsigned> &geno, unsigned N) {
+                      return ex.mutate(geno, N, rng);
+                  },
+                  py::arg("geno"), py::arg("N"), expression_mutate_triplets_doc().c_str())
               .def("get_kernels_idx", &dsyre::expression::get_kernels_idx, expression_get_kernels_idx_doc().c_str())
-              .def("check_genotype", &dsyre::expression::check_genotype, expression_check_genotype_doc().c_str());
+              .def("check_genotype", &dsyre::expression::check_genotype, py::arg("geno"),
+                   expression_check_genotype_doc().c_str());
 } // namespace details

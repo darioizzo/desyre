@@ -111,7 +111,7 @@ pagmo::population mes4dsyre::evolve(pagmo::population pop) const
 
         for (decltype(NP) i = 0u; i < NP; ++i) {
             // 1 - We create a mutated genotype
-            new_geno = ex.mutation2(best_geno, dis(m_e), m_e); // TODO
+            new_geno = ex.mutate(best_geno, dis(m_e), m_e); // TODO
             ex.remove_nesting(new_geno, m_e);
             // 2 - We compute its mse its gradient and hessian
             ex.ddmse(mse, grad, hess, new_geno, best_c, points, labels);

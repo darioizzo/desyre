@@ -67,8 +67,8 @@ public:
                const std::vector<double> &ys) const;
 
     // Mutates the graph
-    std::vector<unsigned> mutation(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng);
-    std::vector<unsigned> mutation2(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng);
+    std::vector<unsigned> mutate_triplets(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng) const;
+    std::vector<unsigned> mutate(const std::vector<unsigned> &genotype, unsigned N, std::mt19937 &rng) const;
     std::vector<unsigned> mutation3(const std::vector<unsigned> &genotype, const std::vector<double> &phenotype,
                                     unsigned N, std::mt19937 &rng);
     void check_genotype(const std::vector<unsigned> &genotype) const;
