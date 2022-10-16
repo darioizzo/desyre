@@ -17,12 +17,12 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'dsyre'
+project = 'py-dsyre'
 copyright = '2020, 2021, 2022 Francesco Biscani, Dario Izzo'
 author = 'Francesco Biscani, Dario Izzo'
 
 # The full version, including alpha/beta/rc tags
-release = '@dsyre_VERSION@'
+release = '0.0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -32,7 +32,7 @@ release = '@dsyre_VERSION@'
 # ones.
 extensions = [
     'sphinx.ext.mathjax',
-    'sphinxcontrib.bibtex',
+    'nbsphinx',
     'sphinx.ext.intersphinx'
 ]
 
@@ -54,15 +54,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_book_theme"
-
-html_logo = "images/white_logo.png"
-
-html_theme_options = {
-    "repository_url": "https://github.com/darioizzo/dsyre",
-    "use_repository_button": True,
-    "use_issues_button": True,
-}
+html_theme = "alabaster"
 
 
 # Add any paths that contain custom static files (such as style sheets) here,

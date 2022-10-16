@@ -192,7 +192,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINA
 
 if(DSYRE_SETUP_DOCS)
     # Configure the doc files.
-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py" @ONLY)
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/docs/conf.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/docs/source/conf.py" @ONLY)
 endif()
 
 # Installation of the header files.
