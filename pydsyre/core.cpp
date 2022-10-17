@@ -16,7 +16,8 @@
 namespace py = pybind11;
 using namespace pydsyre;
 
-// We instantiate and init the global random number generator for pydsyre.
+// We instantiate and init the global random number generator for pydsyre. The keyword thread_local should make sure
+// each thread will maintain a separate copy.
 thread_local std::mt19937 rng(std::random_device{}());
 
 PYBIND11_MODULE(core, m)
@@ -75,6 +76,17 @@ PYBIND11_MODULE(core, m)
                       return retval;
                   },
                   py::arg("geno"), py::arg("vars"), py::arg("cons"), expression_phenotype_doc().c_str())
+              .def(
+                  "phenotype",
+                  [](const dsyre::expression &ex, const std::vector<unsigned> &g,
+                     const std::vector<std::vector<double>> &xs, const std::vector<double> &c) {
+                      std::vector<std::vector<double>> retval(xs.size());
+                      for (decltype(xs.size()) i = 0u; i < xs.size(); ++i) {
+                          ex.phenotype(retval[i], g, xs[i], c);
+                      }
+                      return retval;
+                  },
+                  py::arg("geno"), py::arg("xs"), py::arg("cons"))
               .def(
                   "complexity",
                   [](const dsyre::expression &ex, const std::vector<unsigned> &g) {

@@ -22,14 +22,27 @@ source activate $deps_dir
 # Create the build dir and cd into it.
 mkdir build
 
-# Install desyre
+# Install dsyre headers and library
 cd build
 cmake \
     -DBoost_NO_BOOST_CMAKE=ON \
     -DCMAKE_INSTALL_PREFIX=$deps_dir \
     -DCMAKE_PREFIX_PATH=$deps_dir \
     -DCMAKE_BUILD_TYPE=Release \
-    -DDSYRE_BUILD_TESTS=yes \
+    -DDSYRE_BUILD_TESTS=no \
+    -DDSYRE_BUILD_MAIN=no \
+    -DDSYRE_BUILD_PYTHON=no \
+    ..
+make VERBOSE=1 install
+
+# Install py-dsyre
+cd build
+cmake \
+    -DBoost_NO_BOOST_CMAKE=ON \
+    -DCMAKE_INSTALL_PREFIX=$deps_dir \
+    -DCMAKE_PREFIX_PATH=$deps_dir \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DDSYRE_BUILD_TESTS=no \
     -DDSYRE_BUILD_MAIN=no \
     -DDSYRE_BUILD_PYTHON=yes \
     ..

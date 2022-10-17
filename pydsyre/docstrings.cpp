@@ -167,12 +167,14 @@ Examples:
 std::string expression_phenotype_doc()
 {
     return R"(phenotype(geno, vars, cons)
+phenotype(geno, xs, cons)
         
 Computes the numerical value of the phenotype expressed by geno.
 
 Args:
     geno: genotype.
-    vars: variables.
+    vars: variables (single instance).
+    xs: variables (multiple instances).
     cons: constants.
 
 Raises:
