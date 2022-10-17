@@ -31,7 +31,7 @@ cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DDSYRE_BUILD_TESTS=yes \
     -DDSYRE_BUILD_MAIN=no \
-    -DDSYRE_BUILD_PYTHON=yes
+    -DDSYRE_BUILD_PYTHON=yes \
     ..
 make VERBOSE=1 install
 

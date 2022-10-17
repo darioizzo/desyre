@@ -17,8 +17,7 @@ namespace py = pybind11;
 using namespace pydsyre;
 
 // We instantiate and init the global random number generator for pydsyre.
-std::random_device rd;
-std::mt19937 rng(rd());
+thread_local std::mt19937 rng(std::random_device{}());
 
 PYBIND11_MODULE(core, m)
 {
