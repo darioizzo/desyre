@@ -9,14 +9,16 @@
 #ifndef DSYRE_SYMBOLIC_REGRESSION_H
 #define DSYRE_SYMBOLIC_REGRESSION_H
 
+#include <functional>
 #include <random>
 #include <string>
 #include <vector>
 
+#include <pagmo/problem.hpp>
 #include <pagmo/types.hpp>
 
-#include <dsyre/expression.hpp>
 #include <dsyre/detail/visibility.hpp>
+#include <dsyre/expression.hpp>
 
 namespace dsyre
 {
@@ -113,6 +115,16 @@ private:
     mutable std::vector<double> m_mse;
     mutable std::vector<unsigned> m_complexity;
 };
+
+namespace details
+{
+// This function is a global symbol put in the namespace. Its purpose is
+// to be overridden in the python bindings so that it can extract from a py::object a
+// c++ dsyre::sr_problem. Its use is in the UDAs evolve to access (both in C++ and python)
+// the correct UDP.
+inline std::function<const dsyre::sr_problem *(const pagmo::problem &)> extract_sr_cpp_py
+    = [](const pagmo::problem &p) { return p.extract<dsyre::sr_problem>(); };
+} // namespace details
 
 } // namespace dsyre
 #endif

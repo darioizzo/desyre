@@ -26,7 +26,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: gh-pages
-          folder: docs/_build/html
+          folder: docs/build/html
   ubuntu-debug:
     runs-on: ubuntu-latest
     steps:

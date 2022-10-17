@@ -42,10 +42,9 @@ pagmo::population mes4dsyre::evolve(pagmo::population pop) const
     auto fevals0 = prob.get_fevals(); // fevals already made
     auto count = 1u;                  // regulates the screen output
 
-    // TODO: We should not use directly the pagmo::problem::extract as otherwise we could not override it in the
-    // python bindings. Using a global function, instead, may allow its implementation to be overridden in the
-    // bindings.
-    auto udp_ptr = prob.extract<sr_problem>();
+    // We do not use directly the pagmo::problem::extract as otherwise we could not override it in the python
+    // bindings. Using this global function, instead, allows its implementation to be overridden in the bindings.
+    auto udp_ptr = details::extract_sr_cpp_py(prob);
     // PREAMBLE-------------------------------------------------------------------------------------------------
     // Check whether the problem is suitable for mes4cgp
     // If the UDP in pop is not a symbolic_regression UDP, udp_ptr will be NULL
