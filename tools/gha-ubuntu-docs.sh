@@ -36,7 +36,6 @@ cmake \
 make VERBOSE=1 install
 
 # Install py-dsyre
-cd build
 cmake \
     -DBoost_NO_BOOST_CMAKE=ON \
     -DCMAKE_INSTALL_PREFIX=$deps_dir \
