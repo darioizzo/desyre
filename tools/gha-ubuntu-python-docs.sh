@@ -51,7 +51,7 @@ make VERBOSE=1 install
 python -c "import pydsyre as dsy; dsy.test.run_test_suite()"
 
 # Build docs
-cd docs
+cd ../docs
 make html
 
 set +e
