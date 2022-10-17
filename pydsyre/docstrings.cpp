@@ -384,4 +384,10 @@ Examples:
 )";
 }
 
+std::string sr_problem_doc()
+{
+    return R"(    
+)";
+}
+
 } // namespace pydsyre

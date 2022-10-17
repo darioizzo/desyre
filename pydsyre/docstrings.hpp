@@ -29,6 +29,9 @@ std::string expression_mutate_triplets_doc();
 std::string expression_get_kernels_idx_doc();
 std::string expression_check_genotype_doc();
 
+// sr_problem
+std::string sr_problem_doc();
+
 } // namespace pydsyre
 
 #endif
