@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <pagmo/problem.hpp>
+#include <pagmo/s11n.hpp>
 #include <pagmo/types.hpp>
 
 #include <dsyre/detail/visibility.hpp>
@@ -125,6 +126,8 @@ namespace details
 inline std::function<const dsyre::sr_problem *(const pagmo::problem &)> extract_sr_cpp_py
     = [](const pagmo::problem &p) { return p.extract<dsyre::sr_problem>(); };
 } // namespace details
-
 } // namespace dsyre
+
+// Why is this here?
+PAGMO_S11N_PROBLEM_EXPORT_KEY(dsyre::sr_problem)
 #endif

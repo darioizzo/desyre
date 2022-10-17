@@ -12,6 +12,7 @@
 #include <dsyre/expression.hpp>
 #include <dsyre/sr_problem.hpp>
 
+#include "common_utils.hpp"
 #include "docstrings.hpp"
 
 namespace py = pybind11;
@@ -160,7 +161,8 @@ PYBIND11_MODULE(core, m)
             py::arg("geno"), py::arg("N"), expression_mutate_triplets_doc().c_str())
         .def("get_kernels_idx", &dsyre::expression::get_kernels_idx, expression_get_kernels_idx_doc().c_str())
         .def("check_genotype", &dsyre::expression::check_genotype, py::arg("geno"),
-             expression_check_genotype_doc().c_str());
+             expression_check_genotype_doc().c_str())
+        .def(py::pickle(&udx_pickle_getstate<dsyre::expression>, &udx_pickle_setstate<dsyre::expression>));
 
     // Exposing the sr_problem class
     py::class_<dsyre::sr_problem>(m, "sr_problem", sr_problem_doc().c_str())
@@ -177,6 +179,7 @@ PYBIND11_MODULE(core, m)
         .def("get_nix", &dsyre::sr_problem::get_nix)
         .def("get_name", &dsyre::sr_problem::get_name)
         .def("pretty", &dsyre::sr_problem::pretty)
-        .def("prettier", &dsyre::sr_problem::prettier);
+        .def("prettier", &dsyre::sr_problem::prettier)
+        .def(py::pickle(&udx_pickle_getstate<dsyre::sr_problem>, &udx_pickle_setstate<dsyre::sr_problem>));
 
 } // namespace details
