@@ -50,9 +50,6 @@ make VERBOSE=1 install
 # Test python installation
 python -c "import pydsyre as dsy; dsy.test.run_test_suite()"
 
-# Switch to gh-pages branch
-git checkout gh-pages
-
 # Build docs
 cd docs
 make html
