@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: bash tools/gha-ubuntu-docs.sh
+        run: bash tools/gha-ubuntu-python-docs.sh
   ubuntu-debug:
     runs-on: ubuntu-latest
     steps:

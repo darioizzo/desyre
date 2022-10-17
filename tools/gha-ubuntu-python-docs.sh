@@ -57,10 +57,5 @@ git checkout gh-pages
 cd docs
 make html
 
-#Move static files 
-cp -r build/html/* ./
-
-git push
-
 set +e
 set +x
