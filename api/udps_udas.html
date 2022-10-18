@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Symbolic Regression as a pagmo User Defined Problem &#8212; py-dsyre 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The gym" href="gym.html" />
+    <link rel="prev" title="The expression" href="expression.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="symbolic-regression-as-a-pagmo-user-defined-problem">
+<h1>Symbolic Regression as a pagmo User Defined Problem<a class="headerlink" href="#symbolic-regression-as-a-pagmo-user-defined-problem" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pydsyre.sr_problem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pydsyre.</span></span><span class="sig-name descname"><span class="pre">sr_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncons</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_objective</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.sr_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>A symbolic regression problem. This can be used as a UDP in pagmo to search for a
+mathematical expression represented in the dsyre encoding and the value of its constants,
+so that the input data are reproduced successfully.</p>
+<p>The chromosome will start with the constant values and will be followed by the representation of the formula
+as triplets of integers.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>xs: input data. This determines the number of variables in the expression.
+ys: labels.
+ncons: number of constants in the expression.
+multi_objective: when True the problem considers also the formula complexity.</p>
+</dd>
+<dt>Raises:</dt><dd><p>ValueError: if xs and ys are malformed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="memetic-evolutionary-strategy">
+<h1>Memetic Evolutionary Strategy<a class="headerlink" href="#memetic-evolutionary-strategy" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pydsyre.mes4dsyre">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pydsyre.</span></span><span class="sig-name descname"><span class="pre">mes4dsyre</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ranom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.mes4dsyre" title="Permalink to this definition">¶</a></dt>
+<dd><p>The term Memetic is widely used, in the context of meta-heuristic search, to indicate a synergy between any
+population-based approach with local improvement procedures. The resulting algorithms are also referred to, in the
+literature, as Baldwinian evolutionary algorithms (EAs), Lamarckian EAs, cultural algorithms, or genetic local
+searches. The very same approach, is seen by many just as an hybridization of a global search technique with a
+local search technique. Regardless of the terminology and point of view, a memetic approach is applicable to symbolic
+regression tasks and able to improve considerably on the long standing issue of finding constants in
+Genetic Programming.</p>
+<p>In this class we offer an UDA (User Defined Algorithm for the pagmo optimization suite) hybridizing a classic
+Evolutionary Strategy with a second order Newton search step able to help finding the best values for the ephemeral constants.</p>
+<p>The resulting algorithm is outlined by the following pseudo-algorithm:</p>
+<ul class="simple">
+<li><p>Start from a population (pop) of dimension N</p></li>
+<li><p>while i &lt; gen</p></li>
+<li><p>&gt; &gt; Mutation: create a new population pop2 mutating N times the best individual</p></li>
+<li><p>&gt; &gt; Life long learning: apply a one step of a second order Newton method to each individual (only the continuous part is affected)</p></li>
+<li><p>&gt; &gt; Reinsertion: set pop to contain the best N individuals taken from pop and pop2</p></li>
+</ul>
+<dl class="simple">
+<dt>Args:</dt><dd><p>gen: number of generations.
+max_mut: maximum number of mutations at each new candidate.
+ftol: the algorithm will exit when the loss is below this tolerance.
+seed: seed used by the internal random number generator (default is random)</p>
+</dd>
+<dt>Raises:</dt><dd><p>ValueError: if  <em>max_mut</em> or <em>gen</em> are negative, or if <em>ftol</em> is negative.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>mes4dsyre is tailored to solve <code class="xref py py-class docutils literal notranslate"><span class="pre">dsyre.symbolic_regression</span></code> problems and will not work on different types.</p>
+</div>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">py-dsyre</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/introduction.html">A gentle introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#utilities">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#the-expression">The expression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#the-symbolic-regressions-udps-and-udas">The symbolic regressions UDPs and UDAs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#the-gym">The gym</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">API documentation</a><ul>
+      <li>Previous: <a href="expression.html" title="previous chapter">The expression</a></li>
+      <li>Next: <a href="gym.html" title="next chapter">The gym</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, 2021, 2022 Francesco Biscani, Dario Izzo.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/api/udps_udas.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
