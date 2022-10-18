@@ -34,10 +34,10 @@ representation has been put already in kernels.hpp).
 3 - add it to the map kernel_map */
 
 // Global array of function pointers for the unary kernels
-ukernel_f_ptr ukernel_list[] = {inv, cos, sin, exp};
-ukernel_f_ptr dukernel_list[] = {dinv, dcos, dsin, dexp};
-ukernel_f_ptr ddukernel_list[] = {ddinv, ddcos, ddsin, ddexp};
-pkernel_f_ptr pkernel_list[] = {pinv, pcos, psin, pexp};
+ukernel_f_ptr ukernel_list[] = {inv, cos, sin, exp, gauss};
+ukernel_f_ptr dukernel_list[] = {dinv, dcos, dsin, dexp, dgauss};
+ukernel_f_ptr ddukernel_list[] = {ddinv, ddcos, ddsin, ddexp, ddgauss};
+pkernel_f_ptr pkernel_list[] = {pinv, pcos, psin, pexp, pgauss};
 
 // Number of binary operations (+,-,*,/)
 unsigned n_binary = 4u;
@@ -60,7 +60,8 @@ std::unordered_map<std::string, unsigned> kernel_map{{"sum", 0},
                                                      {"inv", n_binary},
                                                      {"cos", n_binary + 1},
                                                      {"sin", n_binary + 2},
-                                                     {"exp", n_binary + 3}};
+                                                     {"exp", n_binary + 3},
+                                                     {"gauss", n_binary + 4}};
 
 std::unordered_map<unsigned, std::string> reverse_kernel_map = build_reverse_map(kernel_map);
 
