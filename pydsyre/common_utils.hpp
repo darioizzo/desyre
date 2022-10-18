@@ -43,7 +43,7 @@ inline void expose_algo_log(py::class_<UDA> &algo_class, const char *doc)
 
 // Serialization support
 template <typename UDX>
-inline py::tuple udx_pickle_getstate(const UDX &udx)
+inline py::tuple pickle_getstate(const UDX &udx)
 {
     // The idea here is that first we extract a char array
     // into which a has been serialized, then we turn
@@ -58,7 +58,7 @@ inline py::tuple udx_pickle_getstate(const UDX &udx)
 }
 
 template <typename UDX>
-inline UDX udx_pickle_setstate(py::tuple state)
+inline UDX pickle_setstate(py::tuple state)
 {
     // Similarly, first we extract a bytes object from the Python state,
     // and then we build a C++ string from it. The string is then used

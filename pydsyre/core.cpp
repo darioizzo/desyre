@@ -10,6 +10,8 @@
 #include <pybind11/stl.h>
 
 #include <dsyre/expression.hpp>
+#include <dsyre/gym/gym.hpp>
+#include <dsyre/mes4dsyre.hpp>
 #include <dsyre/sr_problem.hpp>
 
 #include "common_utils.hpp"
@@ -21,6 +23,21 @@ using namespace pydsyre;
 // We instantiate and init the global random number generator for pydsyre. The keyword thread_local should make sure
 // each thread will maintain a separate copy.
 thread_local std::mt19937 rng(std::random_device{}());
+
+using gym_ptr = void (*)(std::vector<std::vector<double>> &, std::vector<double> &);
+template <gym_ptr F>
+inline void expose_data_from_the_gym(py::module &m, const std::string &name, const std::string &docstring)
+{
+    m.def(
+        name.c_str(),
+        []() {
+            std::vector<std::vector<double>> xs;
+            std::vector<double> ys;
+            F(xs, ys);
+            return py::make_tuple(xs, ys);
+        },
+        docstring.c_str());
+}
 
 PYBIND11_MODULE(core, m)
 {
@@ -162,9 +179,9 @@ PYBIND11_MODULE(core, m)
         .def("get_kernels_idx", &dsyre::expression::get_kernels_idx, expression_get_kernels_idx_doc().c_str())
         .def("check_genotype", &dsyre::expression::check_genotype, py::arg("geno"),
              expression_check_genotype_doc().c_str())
-        .def(py::pickle(&udx_pickle_getstate<dsyre::expression>, &udx_pickle_setstate<dsyre::expression>));
+        .def(py::pickle(&pickle_getstate<dsyre::expression>, &pickle_setstate<dsyre::expression>));
 
-    // Exposing the sr_problem class
+    // Exposing the sr_problem class (UDP)
     py::class_<dsyre::sr_problem>(m, "sr_problem", sr_problem_doc().c_str())
         // Default constructor
         .def(py::init<>())
@@ -180,6 +197,54 @@ PYBIND11_MODULE(core, m)
         .def("get_name", &dsyre::sr_problem::get_name)
         .def("pretty", &dsyre::sr_problem::pretty)
         .def("prettier", &dsyre::sr_problem::prettier)
-        .def(py::pickle(&udx_pickle_getstate<dsyre::sr_problem>, &udx_pickle_setstate<dsyre::sr_problem>));
+        .def(py::pickle(&pickle_getstate<dsyre::sr_problem>, &pickle_setstate<dsyre::sr_problem>));
+
+    // Exposing the mes4dsyre algorithm class (UDA)
+    py::class_<dsyre::mes4dsyre>(m, "mes4dsyre", mes4dsyre_doc().c_str())
+        // Default constructor
+        .def(py::init<>())
+        .def(py::init<unsigned, unsigned, double, unsigned>(), py::arg("gen"), py::arg("max_mut"), py::arg("ftol"),
+             py::arg("seed"))
+        .def("__repr__", &dsyre::mes4dsyre::get_extra_info)
+        .def("evolve", &dsyre::mes4dsyre::evolve)
+        .def("set_seed", &dsyre::mes4dsyre::set_seed)
+        .def("get_seed", &dsyre::mes4dsyre::get_seed)
+        .def("set_verbosity", &dsyre::mes4dsyre::set_verbosity)
+        .def("get_verbosity", &dsyre::mes4dsyre::get_verbosity)
+        .def("get_name", &dsyre::mes4dsyre::get_name)
+        .def("get_log", &generic_log_getter<dsyre::mes4dsyre>, mes4dsyre_get_log_doc().c_str())
+        .def(py::pickle(&pickle_getstate<dsyre::mes4dsyre>, &pickle_setstate<dsyre::mes4dsyre>));
+
+    // Making data from the gym available in python
+    expose_data_from_the_gym<&dsyre::gym::generate_P0>(m, "generate_P0", generate_koza_quintic_doc());
+    // From Our paper
+    expose_data_from_the_gym<&dsyre::gym::generate_P1>(m, "generate_P1", generate_P1_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P2>(m, "generate_P2", generate_P2_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P3>(m, "generate_P3", generate_P3_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P4>(m, "generate_P4", generate_P4_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P5>(m, "generate_P5", generate_P5_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P6>(m, "generate_P6", generate_P6_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P7>(m, "generate_P7", generate_P7_doc());
+    // From PySR
+    expose_data_from_the_gym<&dsyre::gym::generate_P8>(m, "generate_P8", generate_P8_doc());
+    // From Vladi paper
+    expose_data_from_the_gym<&dsyre::gym::generate_P9>(m, "generate_P9", generate_kotanchek_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P10>(m, "generate_P10", generate_salutowicz_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P11>(m, "generate_P11", generate_salutowicz2d_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P12>(m, "generate_P12", generate_uball5d_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P13>(m, "generate_P13", generate_ratpol3d_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P14>(m, "generate_P14", generate_sinecosine_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P15>(m, "generate_P15", generate_ripple_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P16>(m, "generate_P16", generate_ratpol2d_doc());
+    // NIST data
+    expose_data_from_the_gym<&dsyre::gym::generate_P17>(m, "generate_P17", generate_chwirut1_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P18>(m, "generate_P18", generate_chwirut2_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P19>(m, "generate_P19", generate_daniel_wood_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P20>(m, "generate_P20", generate_gauss1_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P21>(m, "generate_P21", generate_kirby2_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P22>(m, "generate_P22", generate_lanczos2_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P23>(m, "generate_P23", generate_misra1b_doc());
+    // MISC data
+    expose_data_from_the_gym<&dsyre::gym::generate_P24>(m, "generate_P24", generate_luca1_doc());
 
 } // namespace details
