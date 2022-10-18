@@ -206,6 +206,7 @@ PYBIND11_MODULE(core, m)
         .def(py::init<>())
         .def(py::init<unsigned, unsigned, double, unsigned>(), py::arg("gen"), py::arg("max_mut"), py::arg("ftol"),
              py::arg("seed"))
+        .def(py::init<unsigned, unsigned, double>(), py::arg("gen"), py::arg("max_mut"), py::arg("ftol"))
         .def("__repr__", &dsyre::mes4dsyre::get_extra_info)
         .def("evolve", &dsyre::mes4dsyre::evolve)
         .def("set_seed", &dsyre::mes4dsyre::set_seed)

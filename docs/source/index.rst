@@ -14,7 +14,7 @@ Welcome to py-dsyre's documentation!
    :caption: Contents:
 
    notebooks/introduction.ipynb
-   theory/symbolic_regression
+   api/index
 
 Indices and tables
 ==================

@@ -33,6 +33,7 @@ release = '@dsyre_VERSION@'
 extensions = [
     'sphinx.ext.mathjax',
     'nbsphinx',
+    'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx'
 ]
 

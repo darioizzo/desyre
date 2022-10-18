@@ -65,12 +65,13 @@ std::string expression_doc()
         
 Main pydsyre expression class. It represents the encoding of generic symbolic expressions as defined by:
 
-u0 = x0
-u1 = x1
-u2 = c1
-u3 = f3(u_i, u_j) .. i,j < 3
-u4 = f4(u_i, u_j) .. i,j < 4
-...
+.. math::
+    u0 = x0
+    u1 = x1
+    u2 = c1
+    u3 = f3(u_i, u_j) .. i,j < 3
+    u4 = f4(u_i, u_j) .. i,j < 4
+    ...
 
 Args:
     nvars: number of variables in the expression
@@ -386,14 +387,62 @@ Examples:
 
 std::string sr_problem_doc()
 {
-    return R"(    
+    return R"(__init__(xs, ys, ncons, multi_objective)
+
+A symbolic regression problem. This can be used as a UDP in pagmo to search for a
+mathematical expression represented in the dsyre encoding and the value of its constants,
+so that the input data are reproduced successfully.
+
+The chromosome will start with the constant values and will be followed by the representation of the formula
+as triplets of integers.
+
+Args:
+    xs: input data. This determines the number of variables in the expression.
+    ys: labels.
+    ncons: number of constants in the expression.
+    multi_objective: when True the problem considers also the formula complexity.
+
+Raises:
+    ValueError: if xs and ys are malformed.
+
 )";
 }
 
 std::string mes4dsyre_doc()
 {
-    return R"(    
-)";
+    return R"(mes4dsyre(gen, max_mut, ftol, seed = ranom)
+
+The term Memetic is widely used, in the context of meta-heuristic search, to indicate a synergy between any
+population-based approach with local improvement procedures. The resulting algorithms are also referred to, in the
+literature, as Baldwinian evolutionary algorithms (EAs), Lamarckian EAs, cultural algorithms, or genetic local
+searches. The very same approach, is seen by many just as an hybridization of a global search technique with a
+local search technique. Regardless of the terminology and point of view, a memetic approach is applicable to symbolic
+regression tasks and able to improve considerably on the long standing issue of finding constants in
+Genetic Programming.
+
+In this class we offer an UDA (User Defined Algorithm for the pagmo optimization suite) hybridizing a classic
+Evolutionary Strategy with a second order Newton search step able to help finding the best values for the ephemeral constants.
+
+The resulting algorithm is outlined by the following pseudo-algorithm:
+
+* Start from a population (pop) of dimension N
+*  while i < gen
+*  > > Mutation: create a new population pop2 mutating N times the best individual
+*  > > Life long learning: apply a one step of a second order Newton method to each individual (only the continuous part is affected) 
+*  > > Reinsertion: set pop to contain the best N individuals taken from pop and pop2
+
+Args:
+    gen: number of generations.
+    max_mut: maximum number of mutations at each new candidate.
+    ftol: the algorithm will exit when the loss is below this tolerance.
+    seed: seed used by the internal random number generator (default is random)
+
+Raises:
+    ValueError: if  *max_mut* or *gen* are negative, or if *ftol* is negative.
+
+.. note::
+    mes4dsyre is tailored to solve :class:`dsyre.symbolic_regression` problems and will not work on different types.
+    )";
 }
 
 std::string mes4dsyre_get_log_doc()
