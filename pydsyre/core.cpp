@@ -44,6 +44,7 @@ PYBIND11_MODULE(core, m)
     py::options options;
     options.disable_function_signatures();
     m.doc() = module_doc();
+    py::module gym = m.def_submodule("gym", "An ensable of gym problems");
 
     // We expose the global random number generator seeding
     m.def(
@@ -216,35 +217,35 @@ PYBIND11_MODULE(core, m)
         .def(py::pickle(&pickle_getstate<dsyre::mes4dsyre>, &pickle_setstate<dsyre::mes4dsyre>));
 
     // Making data from the gym available in python
-    expose_data_from_the_gym<&dsyre::gym::generate_P0>(m, "generate_P0", generate_koza_quintic_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P0>(gym, "generate_P0", generate_koza_quintic_doc());
     // From Our paper
-    expose_data_from_the_gym<&dsyre::gym::generate_P1>(m, "generate_P1", generate_P1_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P2>(m, "generate_P2", generate_P2_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P3>(m, "generate_P3", generate_P3_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P4>(m, "generate_P4", generate_P4_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P5>(m, "generate_P5", generate_P5_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P6>(m, "generate_P6", generate_P6_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P7>(m, "generate_P7", generate_P7_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P1>(gym, "generate_P1", generate_P1_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P2>(gym, "generate_P2", generate_P2_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P3>(gym, "generate_P3", generate_P3_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P4>(gym, "generate_P4", generate_P4_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P5>(gym, "generate_P5", generate_P5_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P6>(gym, "generate_P6", generate_P6_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P7>(gym, "generate_P7", generate_P7_doc());
     // From PySR
-    expose_data_from_the_gym<&dsyre::gym::generate_P8>(m, "generate_P8", generate_P8_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P8>(gym, "generate_P8", generate_P8_doc());
     // From Vladi paper
-    expose_data_from_the_gym<&dsyre::gym::generate_P9>(m, "generate_P9", generate_kotanchek_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P10>(m, "generate_P10", generate_salutowicz_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P11>(m, "generate_P11", generate_salutowicz2d_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P12>(m, "generate_P12", generate_uball5d_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P13>(m, "generate_P13", generate_ratpol3d_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P14>(m, "generate_P14", generate_sinecosine_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P15>(m, "generate_P15", generate_ripple_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P16>(m, "generate_P16", generate_ratpol2d_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P9>(gym, "generate_P9", generate_kotanchek_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P10>(gym, "generate_P10", generate_salutowicz_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P11>(gym, "generate_P11", generate_salutowicz2d_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P12>(gym, "generate_P12", generate_uball5d_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P13>(gym, "generate_P13", generate_ratpol3d_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P14>(gym, "generate_P14", generate_sinecosine_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P15>(gym, "generate_P15", generate_ripple_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P16>(gym, "generate_P16", generate_ratpol2d_doc());
     // NIST data
-    expose_data_from_the_gym<&dsyre::gym::generate_P17>(m, "generate_P17", generate_chwirut1_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P18>(m, "generate_P18", generate_chwirut2_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P19>(m, "generate_P19", generate_daniel_wood_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P20>(m, "generate_P20", generate_gauss1_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P21>(m, "generate_P21", generate_kirby2_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P22>(m, "generate_P22", generate_lanczos2_doc());
-    expose_data_from_the_gym<&dsyre::gym::generate_P23>(m, "generate_P23", generate_misra1b_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P17>(gym, "generate_P17", generate_chwirut1_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P18>(gym, "generate_P18", generate_chwirut2_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P19>(gym, "generate_P19", generate_daniel_wood_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P20>(gym, "generate_P20", generate_gauss1_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P21>(gym, "generate_P21", generate_kirby2_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P22>(gym, "generate_P22", generate_lanczos2_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P23>(gym, "generate_P23", generate_misra1b_doc());
     // MISC data
-    expose_data_from_the_gym<&dsyre::gym::generate_P24>(m, "generate_P24", generate_luca1_doc());
+    expose_data_from_the_gym<&dsyre::gym::generate_P24>(gym, "generate_P24", generate_luca1_doc());
 
 } // namespace details
