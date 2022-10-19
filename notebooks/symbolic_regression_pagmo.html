@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>A novel genetic encoding &#8212; py-dsyre 0.0.1 documentation</title>
+    <title>Symbolic Regression: pagmo interface &#8212; py-dsyre 0.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -20,7 +20,8 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Symbolic Regression: pagmo interface" href="symbolic_regression_pagmo.html" />
+    <link rel="next" title="A novel genetic encoding" href="encoding.html" />
+    <link rel="prev" title="The gym" href="../api/gym.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -293,108 +294,113 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<section id="A-novel-genetic-encoding">
-<h1>A novel genetic encoding<a class="headerlink" href="#A-novel-genetic-encoding" title="Permalink to this heading">¶</a></h1>
-<section id="Preamble">
-<h2>Preamble<a class="headerlink" href="#Preamble" title="Permalink to this heading">¶</a></h2>
-<p>In this tutorial we will look into <em>py-dsyre</em> expression encoding. To explain it, it is perhaps best to start from a concrete example.</p>
-<p>Consider the following mathematical formula <span class="math notranslate nohighlight">\(f(x,c) = \frac{x+\sin(cx)}{cx}\)</span> containing one independent variable <span class="math notranslate nohighlight">\(x\)</span> and one constant <span class="math notranslate nohighlight">\(c\)</span>.</p>
-<p>A (possible) decomposition in simple, at most binary, operations is:</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{array}{l}
-    u_0 = x \\
-    u_1 = c \\
-    u_2 = u_0 \cdot u_1 \\
-    u_3 = \sin(u_2) \\
-    u_4 = u_3+u_0 \\
-    u_5 = u_4 / u_2
-\end{array}\end{split}\]</div>
-<p>This sequence of decompositions is what <em>py-dsyre</em> encodes in a fixed length <strong>genotype</strong> made of integer triplets, each representing one of the <span class="math notranslate nohighlight">\(u_i\)</span>.</p>
-<p>Assigning, in this case, to the single operations the ids: <span class="math notranslate nohighlight">\(+: 0, \cdot: 1, /: 2, \sin: 3\)</span> the above sequence of decompositions is uniquely determined by the triplets:</p>
-<div class="math notranslate nohighlight">
-\[\mathbf x = [\underbrace{1, 0, 1}_{u_2}, \underbrace{3, 2, 0}_{u_3}, \underbrace{0, 3, 0}_{u_4}, \underbrace{2, 4, 2}_{u_5}]\]</div>
-<p>Note that the independent variable and parameters define the first <span class="math notranslate nohighlight">\(u_0=x\)</span> and <span class="math notranslate nohighlight">\(u_1=c\)</span>.</p>
-<p>Any <strong>genotype</strong> is then easily expressed into the various <span class="math notranslate nohighlight">\(u_i\)</span>, which are ALL considered in <em>py-dsyre</em> as <strong>phenotype</strong>, that is, as possible models. With respect to Cartesian Genetic Programming, or other popular genetic programming approaches, <em>py-dsyre</em> does not define output nodes nor makes use of introns.</p>
-<p>Lets see how this looks, first we import the module:</p>
+<section id="Symbolic-Regression:-pagmo-interface">
+<h1>Symbolic Regression: pagmo interface<a class="headerlink" href="#Symbolic-Regression:-pagmo-interface" title="Permalink to this heading">¶</a></h1>
+<p>In this tutorial we show how to use <em>dsyre</em> to solve a symbolic regression problem using the pagmo interface, that is by considering the problem as an optimization problem, a UDP (User Defined Problem), and apply a suitable optimization algorithm to it, that is a UDA (User Defined Algorithm).</p>
+<p>This interface comes in handy when we look at symbolic regression from an operation research point of view as an optimization problem.</p>
+<p>Lets start with some imports:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import pydsyre as dsy
 import numpy as np
+import pygmo as pg
+
+from matplotlib import pyplot as plt
+
+%matplotlib inline
 </pre></div>
 </div>
 </div>
-<p>We start defining the main object able to manipulate genotypes and phenotypes of our symbolic regression system, letting it know about the number of input terminals (variables and constants) and the kernels (binary and unary operations) we intend to use:</p>
+<p>we will make use of the problem P1 from the paper:</p>
+<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” European Conference on Genetic Programming. Springer, 2017.</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = x^5 - \pi x^3 + x\]</div>
+<p>where <em>x</em> is sampled in ten equally spaced points in [1,3]. We make use of the readily available <em>gym</em> module in <em>dsyre</em>, even if in this case it would be only a few lines of code to actually explicitly compute the dataset.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ex = dsy.expression(nvars=1,
-                    ncons=1,
-                    kernels=[&quot;sum&quot;, &quot;mul&quot;, &quot;div&quot;, &quot;sin&quot;])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># We import the problem:
+xs, ys = dsy.gym.generate_P1()
+xs = np.array(xs)
+ys = np.array(ys)
+
+# Equivalently, in this case, we could just write:
+xs = np.linspace(1,3, 10)
+ys = xs**5 - np.pi * xs**3 + xs
+xs = xs.reshape(-1,1)
 </pre></div>
 </div>
 </div>
-<p>we then define a genotype assembling triplets as detailed above:</p>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>geno = [1,0,1,3,2,0,0,3,0,2,4,2]
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># We show the data
+plt.figure(figsize=(4,3))
+plt.plot(xs,ys, &#39;.&#39;)
+plt.xlabel(&quot;xs&quot;)
+plt.ylabel(&quot;ys&quot;)
+plt.title(&quot;Problem P1:  $y = x^5 - \pi x^3 + x$&quot;);
 </pre></div>
 </div>
 </div>
-<p>Finally, we peek at the symbolic representation of the phenotype and see that indeed it contains the correct expressions:</p>
-<div class="nbinput docutils container">
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_symbolic_regression_pagmo_4_0.png" src="../_images/notebooks_symbolic_regression_pagmo_4_0.png" />
+</div>
+</div>
+<p>We are now ready to define some hyperparameters for our learning setup:</p>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>print(ex.sphenotype(geno=geno, vars=[&quot;x&quot;], cons=[&quot;c&quot;]))
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>length = 20 # The number of triplets used
+max_mut = 15 # The maximum number of mutations
+ncons = 1 # The number of constants in the formula
+popsize = 4 # The population size
+gen = 1000 # Maximum number of generations
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[&#39;x&#39;, &#39;c&#39;, &#39;(x*c)&#39;, &#39;sin((x*c))&#39;, &#39;(sin((x*c))+x)&#39;, &#39;((sin((x*c))+x)/(x*c))&#39;]
-</pre></div></div>
-</div>
-</section>
-<section id="Genotype">
-<h2>Genotype<a class="headerlink" href="#Genotype" title="Permalink to this heading">¶</a></h2>
-<p>Now that we have understood how the basic idea works, we can quickly take a look at how to <strong>generate</strong> and <strong>manipulate</strong> genotypes. We start by creatin a random genotype of length 10. Since the expression has <em>nvars</em>=1 and <em>ncons</em>=1 the number of expressed models (dimensionality of the vector $[u_0, u_1, … ]) will be 12:</p>
-<div class="nbinput docutils container">
+<p>Then we instantiate the UDP and UDA</p>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># We create a random genotype
-geno = ex.random_genotype(length = 10)
-# We compute the symbolic form of the phenotype
-sphen = ex.sphenotype(geno=geno, vars=[&quot;x&quot;], cons=[&quot;c&quot;])
-print(f&quot;Number of models: {len(sphen)}\nPhenotype: {sphen}&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>## Instantiate the UDP
+udp = dsy.sr_problem(xs = xs,
+                     ys = ys,
+                     length = length,
+                     kernels = [&quot;sum&quot;, &quot;mul&quot;, &quot;diff&quot;, &quot;div&quot;],
+                     ncons = ncons,
+                     multi_objective = False);
+
+## Instantiate the UDA
+uda = dsy.mes4dsyre(gen = gen, max_mut = max_mut, ftol = 1e-10)
+
+## Pagmo problem
+prob = pg.problem(udp)
+## Pagmo algorithm
+algo = pg.algorithm(uda)
+algo.set_verbosity(1)
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Number of models: 12
-Phenotype: [&#39;x&#39;, &#39;c&#39;, &#39;(c/c)&#39;, &#39;(c+(c/c))&#39;, &#39;(x+(c+(c/c)))&#39;, &#39;sin(x)&#39;, &#39;sin(x)&#39;, &#39;(sin(x)+c)&#39;, &#39;((c/c)+(x+(c+(c/c))))&#39;, &#39;(((c/c)+(x+(c+(c/c))))/(x+(c+(c/c))))&#39;, &#39;(sin(x)*(sin(x)+c))&#39;, &#39;(((c/c)+(x+(c+(c/c))))/(c/c))&#39;]
-</pre></div></div>
-</div>
-<p>Let us now mutate at random three elements in the genotype and see what effect it has on the phenotype:</p>
+<p>and solve …</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>mutated_geno = ex.mutate(geno = geno, N = 3)
-sphen = ex.sphenotype(geno=mutated_geno, vars=[&quot;x&quot;], cons=[&quot;c&quot;])
-print(f&quot;Number of models: {len(sphen)}\nPhenotype: {sphen}&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>## Pagmo population
+pop = pg.population(prob, popsize)
+## Evolution!
+pop = algo.evolve(pop)
 </pre></div>
 </div>
 </div>
@@ -403,143 +409,109 @@ print(f&quot;Number of models: {len(sphen)}\nPhenotype: {sphen}&quot;)
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Number of models: 12
-Phenotype: [&#39;x&#39;, &#39;c&#39;, &#39;(c/c)&#39;, &#39;(c+(c/c))&#39;, &#39;(x+(c+(c/c)))&#39;, &#39;sin(x)&#39;, &#39;sin(x)&#39;, &#39;(sin(x)+c)&#39;, &#39;((c/c)+sin(x))&#39;, &#39;(((c/c)+sin(x))/(c+(c/c)))&#39;, &#39;(sin(x)*(sin(x)+c))&#39;, &#39;(((c/c)+sin(x))/(c/c))&#39;]
+I am here!
+Gen:    Fevals: Best:       Constants and Formula:
+0       0       5.15488e+02 [7.08383e+00] 4*x0**3
+1       4       5.15488e+02 [7.08383e+00] 4*x0**3
+2       8       4.73274e+02 [2.24233e+00] 2*x0**3*c0
+3       12      4.73274e+02 [2.24233e+00] 2*x0**3*c0
+4       16      4.73274e+02 [2.24233e+00] 2*x0**3*c0
+5       20      4.73274e+02 [2.24233e+00] 2*x0**3*c0
+6       24      1.14552e+01 [2.18146e-01] x0**6*c0
+7       28      1.14552e+01 [6.17095e-01] x0**5*c0
+8       32      1.14552e+01 [6.17095e-01] x0**5*c0
+9       36      1.14552e+01 [6.17095e-01] x0**5*c0
+10      40      1.14552e+01 [6.17095e-01] x0**5*c0
+11      44      1.14552e+01 [6.17095e-01] x0**5*c0
+12      48      1.14552e+01 [6.17095e-01] x0**5*c0
+13      52      1.14552e+01 [6.17095e-01] x0**5*c0
+14      56      1.14552e+01 [6.17095e-01] x0**5*c0
+15      60      1.14552e+01 [6.17095e-01] x0**5*c0
+16      64      1.14552e+01 [2.18146e-01] x0**6*c0
+17      68      6.24835e-01 [2.99651e+00] x0**3*(-c0 + x0**2)
+18      72      6.24835e-01 [2.99651e+00] x0**3*(-c0 + x0**2)
+19      76      6.24835e-01 [2.99651e+00] x0**3*(-c0 + x0**2)
+20      80      6.24835e-01 [2.99651e+00] x0**3*(-c0 + x0**2)
+21      84      6.24835e-01 [2.99651e+00] x0**3*(-c0 + x0**2)
+22      88      6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+23      92      6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+24      96      6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+25      100     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+26      104     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+27      108     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+28      112     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+29      116     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+30      120     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+31      124     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+32      128     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+33      132     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+34      136     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+35      140     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+36      144     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+37      148     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+38      152     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+39      156     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+40      160     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+41      164     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+42      168     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+43      172     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+44      176     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+45      180     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+46      184     6.24835e-01 [3.99651e+00] x0**3*(-c0 + x0**2) + x0**3
+47      188     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+48      192     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+49      196     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+Gen:    Fevals: Best:       Constants and Formula:
+50      200     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+51      204     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+52      208     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+53      212     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+54      216     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+55      220     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+56      224     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+57      228     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+58      232     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+59      236     4.83676e-02 [3.05463e+00] 1 + x0**3*(-c0 + x0**2)
+60      240     2.23494e-29 [3.14159e+00] x0 + x0**3*(-c0 + x0**2)
+Exit condition -- ftol &lt; 1e-10
 </pre></div></div>
 </div>
-</section>
-<section id="Phenotype">
-<h2>Phenotype<a class="headerlink" href="#Phenotype" title="Permalink to this heading">¶</a></h2>
-<p>All the models contained in the phenotype need to be evaluated and assessed on data. To show how this is done we now make use of an expression with 10 variables and 3 constants:</p>
-<div class="nbinput nblast docutils container">
+<p>We can now show the final evolved formula as decoded directly from the chromosome:</p>
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ex = dsy.expression(nvars=3,
-                    ncons=2,
-                    kernels=[&quot;sum&quot;, &quot;mul&quot;, &quot;div&quot;, &quot;sin&quot;])
-<br/></pre></div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>udp.pretty(pop.champion_x)
+</pre></div>
 </div>
 </div>
-<p>and we generate a random genotype, this time of greater length:</p>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#39;(((c0+((x0*x0)-c0))*(x0*((x0*x0)-c0)))+x0)&#39;
+</pre></div></div>
+</div>
+<p>… and the same formula as simplified by removing excessive parenthesis and repetitions:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>geno = ex.random_genotype(length = 100)
-# Out of curiosity we also print the last expression in the phenotype
-print(ex.sphenotype(geno)[-1])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>udp.prettier(pop.champion_x)
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(((((x2/x0)*x1)*x2)*(((x2/x0)*x1)*x2))+((sin(x0)*((x0/c0)/x0))*((((x2/x0)*x1)*x2)+c0)))
-</pre></div></div>
-</div>
-<p>we create a meaningless dataset:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Data are just 1024 randomly distributed points
-X = np.random.randn(1024, 3)
-</pre></div>
-</div>
-</div>
-<p>and compute the phenotype when the model parameters are (arbitrarily) [0.2, -0.4]:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>phen = ex.phenotype(geno = geno, xs = X, cons = [0.2, -0.4])
-print(&quot;First 20 values in the phenotype for the first instance: &quot;, phen[0][:20])
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-First 20 values in the phenotype for the first instance:  [-1.3137669274472548, -0.48195417432681165, 0.5837987234947484, 0.2, -0.4, -0.444370086731527, -0.9671493967307924, -6.568834637236273, 0.21416601824622677, 0.1250298480681002, 0.01563246290793222, 5.0, 0.21253257371430564, -0.9671493967307924, 0.19278166973072466, -0.26778815608058487, 0.11254569270198322, 0.3250298480681002, 0.9410322215777032, 0.21093616406148863]
-</pre></div></div>
-</div>
-<p>and we time it:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%timeit ex.phenotype(geno = geno, xs = X, cons = [0.2, -0.4])
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-32.5 µs ± 82.5 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
-</pre></div></div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import pykep as pk
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>position=[10000000, 0,0]
-velocity=[0, 8000, 0]
-epoch=pk.epoch(0)
-prova=pk.planet.keplerian(pk.epoch(0),position,velocity,pk.MU_EARTH,1.0,1.0,1.0,&quot;prova&quot;)
-prova.eph(pk.epoch(0))
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-((10000000.0, 0.0, 0.0), (0.0, 8000.0, 0.0))
+&#39;x0 + x0**3*(-c0 + x0**2)&#39;
 </pre></div></div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>prova.orbital_elements
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(25356119.67768863, 0.6056178892072668, 0.0, nan, nan, 0.0)
-</pre></div></div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
-</section>
 </section>
 
 
@@ -564,19 +536,20 @@ prova.eph(pk.epoch(0))
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">API documentation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Tutorials:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="symbolic_regression_pagmo.html">Symbolic Regression: pagmo interface</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Symbolic Regression: pagmo interface</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Background:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">A novel genetic encoding</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="encoding.html">A novel genetic encoding</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="symbolic_regression_pagmo.html" title="previous chapter">Symbolic Regression: pagmo interface</a></li>
+      <li>Previous: <a href="../api/gym.html" title="previous chapter">The gym</a></li>
+      <li>Next: <a href="encoding.html" title="next chapter">A novel genetic encoding</a></li>
   </ul></li>
 </ul>
 </div>
@@ -610,7 +583,7 @@ prova.eph(pk.epoch(0))
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/notebooks/encoding.ipynb.txt"
+      <a href="../_sources/notebooks/symbolic_regression_pagmo.ipynb.txt"
           rel="nofollow">Page source</a>
     </div>
 
