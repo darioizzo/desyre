@@ -182,7 +182,7 @@ Raises:
     ValueError: if geno is incompatible with the expression.
     ValueError: if the dimensions of vars and cons are not conistent.
 
-Returns:
+Returns::
     the numeric phenotype.
 
 Examples:

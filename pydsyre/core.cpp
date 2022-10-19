@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include <boost/optional.hpp>
+#include <pagmo/types.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -201,6 +202,23 @@ PYBIND11_MODULE(core, m)
         .def("get_name", &dsyre::sr_problem::get_name)
         .def("pretty", &dsyre::sr_problem::pretty)
         .def("prettier", &dsyre::sr_problem::prettier)
+        .def(
+            "pagmo2dsyre",
+            [](const dsyre::sr_problem &ex, const pagmo::vector_double &x) {
+                std::vector<unsigned> geno;
+                std::vector<double> cons;
+                ex.pagmo2dsyre(geno, cons, x);
+                return py::make_tuple(cons, geno);
+            },
+            py::arg("x"))
+        .def(
+            "dsyre2pagmo",
+            [](const dsyre::sr_problem &ex, const std::vector<unsigned> &geno, std::vector<double> cons) {
+                pagmo::vector_double x;
+                ex.dsyre2pagmo(x, geno, cons);
+                return x;
+            },
+            py::arg("geno"), py::arg("cons"))
         .def(py::pickle(&pickle_getstate<dsyre::sr_problem>, &pickle_setstate<dsyre::sr_problem>));
 
     // Exposing the mes4dsyre algorithm class (UDA)
