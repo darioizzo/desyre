@@ -123,8 +123,7 @@ namespace details
 // to be overridden in the python bindings so that it can extract from a py::object a
 // c++ dsyre::sr_problem. Its use is in the UDAs evolve to access (both in C++ and python)
 // the correct UDP.
-inline std::function<const dsyre::sr_problem *(const pagmo::problem &)> extract_sr_cpp_py
-    = [](const pagmo::problem &p) { return p.extract<dsyre::sr_problem>(); };
+DSYRE_DLL_PUBLIC extern std::function<const dsyre::sr_problem *(const pagmo::problem &)> extract_sr_cpp_py;
 } // namespace details
 } // namespace dsyre
 

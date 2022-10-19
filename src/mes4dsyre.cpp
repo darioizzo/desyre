@@ -204,4 +204,5 @@ void mes4dsyre::log_single_line(unsigned gen, unsigned long long fevals, double 
     }
     m_log.emplace_back(gen, fevals, best_f, cons, formula);
 }
+
 } // namespace dsyre

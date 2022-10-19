@@ -59,9 +59,12 @@ PYBIND11_MODULE(core, m)
     // This will be called by the UDAs (mes4dsyre) to check for problem compatibility.
     dsyre::details::extract_sr_cpp_py = [](const pagmo::problem &p) -> const dsyre::sr_problem * {
         // We extract a generic python object
+        std::cout << "I am here!" << std::endl;
         auto py_ptr = p.extract<py::object>();
+
         // .. if failed, we fail
         if (!py_ptr) {
+            std::cout << "py_ptr e nullo!" << std::endl;
             return nullptr;
         }
         // .. else we attempt to cast
