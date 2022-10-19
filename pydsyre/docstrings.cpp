@@ -462,25 +462,26 @@ Generates the data for the classic Koza quintic regression problem.
 x is sampled in ten equally spaced points in [-3,3].
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
 )";
 }
 
 std::string generate_P1_doc()
 {
-    return R"(
-Generates the problem P1 from the paper:
+    return R"(Generates the problem P1 from the paper:
+
 Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
 European Conference on Genetic Programming. Springer, 2017.
 
 The functional form of such a problem is:
+
 .. math::
-   y = x^5 - \pi x^3 + x
+     y = x^5 - \pi x^3 + x
 
 x is sampled in ten equally spaced points in [1,3].
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
 )";
 }
 
@@ -488,17 +489,19 @@ std::string generate_P2_doc()
 {
     return R"(
 Generates the problem P2 from the paper:
+
 Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
 European Conference on Genetic Programming. Springer, 2017.
 
 The functional form of such a problem is:
+
 .. math::
-   y = x^5 - \pi x^3 + \frac{\pi}{x}
+     y = x^5 - \pi x^3 + \frac{\pi}{x}
 
 x is sampled in ten equally spaced points in [0.1,5].
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
 )";
 }
 
@@ -506,85 +509,95 @@ std::string generate_P3_doc()
 {
     return R"(
 Generates the problem P3 from the paper:
+
 Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
 European Conference on Genetic Programming. Springer, 2017.
 
 The functional form of such a problem is:
+
 .. math::
-   y = \frac{e x^5 + x^3}{x+1}
+     y = \frac{e x^5 + x^3}{x+1}
 
 x is sampled in ten equally spaced points in [-0.9,1].
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
 )";
 }
 std::string generate_P4_doc()
 {
     return R"(
 Generates the problem P4 from the paper:
+
 Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
 European Conference on Genetic Programming. Springer, 2017.
 
 The functional form of such a problem is:
+
 .. math::
-   y = \sin(\pi x) + \frac 1x
+     y = \sin(\pi x) + \frac 1x
 
 x is sampled in ten equally spaced points in [-1,1].
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
 )";
 }
 std::string generate_P5_doc()
 {
     return R"(
 Generates the problem P5 from the paper:
+
 Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
 European Conference on Genetic Programming. Springer, 2017.
 
 The functional form of such a problem is:
+
 .. math::
-   y = e x^5 - \pi x^3 + x
+     y = e x^5 - \pi x^3 + x
 
 x is sampled in ten equally spaced points in [1,3].
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
 )";
 }
 std::string generate_P6_doc()
 {
     return R"(
 Generates the problem P6 from the paper:
+
 Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
 European Conference on Genetic Programming. Springer, 2017.
 
 The functional form of such a problem is:
+
 .. math::
-   y = \frac{e x^2 - 1}{\pi (x + 2)}
+     y = \frac{e x^2 - 1}{\pi (x + 2)}
 
 x is sampled in ten equally spaced points in [-2.1,1].
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
 )";
 }
 std::string generate_P7_doc()
 {
     return R"(
 Generates the problem P7 from the paper:
+
 Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
 European Conference on Genetic Programming. Springer, 2017.
 
 The functional form of such a problem is:
+
 .. math::
-   y = \cos(\pi x) + \sin(e x)
+     y = \cos(\pi x) + \sin(e x)
 
 x is sampled in ten equally spaced points in [-1,1].
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
     )";
 }
 
@@ -596,12 +609,12 @@ Generates the problem used as example in the code PySR
 The functional form of such a problem is:
 
 .. math::
-   y = 2.5382 * \cos(x[3]) + x[0] * x[0] - 0.5;
+     y = 2.5382 * \cos(x[3]) + x[0] * x[0] - 0.5;
 
 x is five dimensional and normally sampled.
 
 Returns:
-    A tuple containing problem data.
+    A tuple (xs,ys) containing problem data.
 )";
 }
 

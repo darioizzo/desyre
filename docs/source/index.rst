@@ -10,11 +10,16 @@ Welcome to py-dsyre's documentation!
 *py-dsyre* (read as pie-desire) is a python module implementing the Differentiable SYmbolic REgression approach.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
-   notebooks/introduction.ipynb
    api/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Background:
+
+   notebooks/encoding.ipynb
 
 Indices and tables
 ==================
