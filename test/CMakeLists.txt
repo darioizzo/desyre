@@ -28,4 +28,6 @@ endfunction()
 ADD_DSYRE_TESTCASE(expression)
 ADD_DSYRE_TESTCASE(update_constants)
 ADD_DSYRE_TESTCASE(sr_problem)
+ADD_DSYRE_TESTCASE(operators)
+
 
