@@ -74,6 +74,11 @@ public:
     /// Transforms the dsyre structures into a pagmo chromosome
     void dsyre2pagmo(pagmo::vector_double &x, const std::vector<unsigned> &geno, const std::vector<double> &cons) const;
 
+    /// Predict
+    double predict(const pagmo::vector_double &x, const std::vector<double> &vars) const;
+    void predict(std::vector<double> &ys, const pagmo::vector_double &x,
+                 const std::vector<std::vector<double>> &xs) const;
+
 private:
     // Sanity checks for the dataset
     void sanity_checks(const std::vector<std::vector<double>> &points, const std::vector<double> &labels) const;
