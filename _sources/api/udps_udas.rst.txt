@@ -1,11 +1,11 @@
-Symbolic Regression as a pagmo User Defined Problem
-===================================================
+Symbolic Regression Problem (UDP)
+=================================
 
 .. autoclass:: pydsyre.sr_problem
     :members:
 
-Memetic Evolutionary Strategy
-================================
+Memetic Evolutionary Strategy (UDA)
+===================================
 
 .. autoclass:: pydsyre.mes4dsyre
     :members:

@@ -16,9 +16,12 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Symbolic Regression as a pagmo User Defined Problem" href="udps_udas.html" />
+    <link rel="next" title="A novel genetic encoding" href="../notebooks/encoding.html" />
+    <link rel="prev" title="Symbolic Regression Problem (UDP)" href="udps_udas.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -37,6 +40,153 @@
             
   <section id="the-gym">
 <h1>The gym<a class="headerlink" href="#the-gym" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P0">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P0</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the data for the classic Koza quintic regression problem.</p>
+<div class="math notranslate nohighlight">
+\[y = x^5 - 2 x^3 + x\]</div>
+<p>x is sampled in ten equally spaced points in [-3,3].</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P1">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P1</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the problem P1 from the paper:</p>
+<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” 
+European Conference on Genetic Programming. Springer, 2017.</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = x^5 - \pi x^3 + x\]</div>
+<p>x is sampled in ten equally spaced points in [1,3].</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P2">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the problem P2 from the paper:</p>
+<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” 
+European Conference on Genetic Programming. Springer, 2017.</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = x^5 - \pi x^3 + \frac{\pi}{x}\]</div>
+<p>x is sampled in ten equally spaced points in [0.1,5].</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P3">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P3</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the problem P3 from the paper:</p>
+<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” 
+European Conference on Genetic Programming. Springer, 2017.</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = \frac{e x^5 + x^3}{x+1}\]</div>
+<p>x is sampled in ten equally spaced points in [-0.9,1].</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P4">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P4</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the problem P4 from the paper:</p>
+<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” 
+European Conference on Genetic Programming. Springer, 2017.</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = \sin(\pi x) + \frac 1x\]</div>
+<p>x is sampled in ten equally spaced points in [-1,1].</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P5">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P5</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the problem P5 from the paper:</p>
+<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” 
+European Conference on Genetic Programming. Springer, 2017.</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = e x^5 - \pi x^3 + x\]</div>
+<p>x is sampled in ten equally spaced points in [1,3].</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P6">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P6</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the problem P6 from the paper:</p>
+<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” 
+European Conference on Genetic Programming. Springer, 2017.</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = \frac{e x^2 - 1}{\pi (x + 2)}\]</div>
+<p>x is sampled in ten equally spaced points in [-2.1,1].</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P7">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P7</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P7" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the problem P7 from the paper:</p>
+<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” 
+European Conference on Genetic Programming. Springer, 2017.</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = \cos(\pi x) + \sin(e x)\]</div>
+<p>x is sampled in ten equally spaced points in [-1,1].</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<hr class="docutils" />
+<dl class="py function">
+<dt class="sig sig-object py" id="pydsyre.gym.generate_P8">
+<span class="sig-prename descclassname"><span class="pre">pydsyre.gym.</span></span><span class="sig-name descname"><span class="pre">generate_P8</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydsyre.gym.generate_P8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the problem used as example in the code PySR</p>
+<p>The functional form of such a problem is:</p>
+<div class="math notranslate nohighlight">
+\[y = 2.5382 * \cos(x[3]) + x[0] * x[0] - 0.5;\]</div>
+<p>x is five dimensional and normally sampled.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A tuple (xs,ys) containing problem data.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -58,14 +208,11 @@
 <h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/introduction.html">A gentle introduction</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="index.html#utilities">Utilities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#the-expression">The expression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#the-symbolic-regressions-udps-and-udas">The symbolic regressions UDPs and UDAs</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="index.html#the-gym">The gym</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Background:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/encoding.html">A novel genetic encoding</a></li>
 </ul>
 
 <div class="relations">
@@ -73,7 +220,8 @@
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">API documentation</a><ul>
-      <li>Previous: <a href="udps_udas.html" title="previous chapter">Symbolic Regression as a pagmo User Defined Problem</a></li>
+      <li>Previous: <a href="udps_udas.html" title="previous chapter">Symbolic Regression Problem (UDP)</a></li>
+      <li>Next: <a href="../notebooks/encoding.html" title="next chapter">A novel genetic encoding</a></li>
   </ul></li>
   </ul></li>
 </ul>
