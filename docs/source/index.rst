@@ -21,6 +21,7 @@ at the European Space Agency's Advanced Concepts Team.
    :caption: Tutorials:
 
    notebooks/symbolic_regression_pagmo.ipynb
+   notebooks/ert.ipynb
 
 .. toctree::
    :maxdepth: 1
