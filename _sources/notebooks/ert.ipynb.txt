@@ -1,0 +1,203 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# The ERT\n",
+    "\n",
+    "It is common, when benchmarking optimization techniques, to introduce the concept of expected run time (ERT). Here we take the same angle and consider **symbolic regression** as an optimisation problem where a model is seeked that minimizes its prediction errors. To benchmark different techniques aimed at solving the very same problem we thus consider the ERT as our main indicator. \n",
+    "\n",
+    "The expected run time, for a **symbolic regression** problem, can be defined as the expected value of $n$, the number of phenotype evaluations made before finding a model having a loss below a fixed threshold. \n",
+    "\n",
+    "To compute the ERT we run *n_trials* independent trials and record, in each one, the number of function evaluations (phenotype evaluations) needed to reach a target *f_tol*. \n",
+    "If *max_feval* are consumed without reaching *f_tol* we mark the trial as failed. \n",
+    "We need to introduce *max_feval* and, essentially, restart the trial, as otherwise we would risk to have runs converging in infinite time. \n",
+    "We can accomodate easily for the presence of restarts in the definition of the final ERT:\n",
+    "\n",
+    "$$\n",
+    "ERT = \\mathbb E(n) = \\frac {\\sum_{i=0}^{n_{trials}} n_i}{n_{success}}\n",
+    "$$\n",
+    "\n",
+    "We argue that the above indicator, albeit depening on *f_tol* and *max_feval* is the only one that allows for a fair comparison between symbolic regression approaches. Lets see how to compute it for a few problems in the *dsyre* gym.\n",
+    "\n",
+    "We start with the usual imports ..."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pydsyre as dsy\n",
+    "import numpy as np\n",
+    "import pygmo as pg\n",
+    "\n",
+    "from matplotlib import pyplot as plt\n",
+    "\n",
+    "%matplotlib inline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# We import the problem:\n",
+    "xs, ys = dsy.gym.generate_P1()\n",
+    "xs = np.array(xs)\n",
+    "ys = np.array(ys)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We define some hyperparameters:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "length = 20 # The number of triplets used\n",
+    "max_mut = 15 # The maximum number of mutations\n",
+    "ncons = 1 # The number of constants in the formula\n",
+    "popsize = 4 # The population size"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "... and the ERT computation settings:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "n_trials = 200 # Number of independent trials\n",
+    "max_feval = 1000 # restart parameter\n",
+    "ftol = 1e-8 # target threshold\n",
+    "gen = max_feval // popsize"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We instantiate the pagmo problem and algorithm:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "## Instantiate the UDP\n",
+    "udp = dsy.sr_problem(xs = xs, \n",
+    "                     ys = ys, \n",
+    "                     length = length,\n",
+    "                     kernels = [\"sum\", \"mul\", \"diff\", \"inv\"],\n",
+    "                     ncons = ncons, \n",
+    "                     multi_objective = False);\n",
+    "                     \n",
+    "## Instantiate the UDA\n",
+    "uda = dsy.mes4dsyre(gen = gen, max_mut = max_mut, ftol = ftol)\n",
+    "\n",
+    "## Pagmo problem\n",
+    "prob = pg.problem(udp)\n",
+    "## Pagmo algorithm\n",
+    "algo = pg.algorithm(uda)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And we perfrom the *n_trials* runs, computing at the end the ERT."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "...xx.x.x.x.xx...x.x.xx.xx..xxx.x....x.xx..x.xxx..xxxxxxx...x.xx.x..xx...xxx.xxx.xx.x.xxxx.x.xx.xx.x.x.xx.x.xxxxx..xxxx.xxx...x.xx.xx........x..xxxx..x.xxxxx..xx....x.xx.x....xx.xx.xx....xxxxxxx.x..xx\n",
+      "\n",
+      "ERT is: 1706.5333333333333\n",
+      "\n",
+      "Successful runs: 90\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "n_success = 0\n",
+    "ERT=0.\n",
+    "for j in range(n_trials):\n",
+    "    # Pagmo population\n",
+    "    pop = pg.population(prob, popsize)\n",
+    "    # Evolution!\n",
+    "    pop = algo.evolve(pop)\n",
+    "    ERT += pop.problem.get_fevals()\n",
+    "    if (pop.champion_f[0] < ftol):\n",
+    "        n_success+=1\n",
+    "        print(\".\", end=\"\", flush=True)\n",
+    "    else:\n",
+    "        print(\"x\", end=\"\", flush=True)\n",
+    "        \n",
+    "if (n_success > 0):\n",
+    "    print(f\"\\n\\nERT is: {ERT / n_success}\\n\")\n",
+    "    print(f\"Successful runs: {n_success}\\n\")\n",
+    "else:\n",
+    "    print(\"\\n\\nNo success, adjust ftol or max_feval?\\n\")\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3.10.6 ('dsyre')",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.6"
+  },
+  "orig_nbformat": 4,
+  "vscode": {
+   "interpreter": {
+    "hash": "723ca32fd6b27740bf566cd8ae34203e48ddb7e5921f5c19c5b1ea06d120d1f9"
+   }
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

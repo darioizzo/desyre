@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>pagmo interface &#8212; py-dsyre 0.0.1 documentation</title>
+    <title>The ERT &#8212; py-dsyre 0.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -20,8 +20,8 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="The ERT" href="ert.html" />
-    <link rel="prev" title="The gym" href="../api/gym.html" />
+    <link rel="next" title="A novel genetic encoding" href="encoding.html" />
+    <link rel="prev" title="pagmo interface" href="symbolic_regression_pagmo.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -294,11 +294,15 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<section id="pagmo-interface">
-<h1>pagmo interface<a class="headerlink" href="#pagmo-interface" title="Permalink to this heading">¶</a></h1>
-<p>In this tutorial we show how to use <em>dsyre</em> to solve a symbolic regression problem using the pagmo interface, that is by considering the problem as an optimization problem, a UDP (User Defined Problem), and apply a suitable optimization algorithm to it, that is a UDA (User Defined Algorithm).</p>
-<p>This interface comes in handy when we look at symbolic regression from an operation research point of view as an optimization problem.</p>
-<p>Lets start with some imports:</p>
+<section id="The-ERT">
+<h1>The ERT<a class="headerlink" href="#The-ERT" title="Permalink to this heading">¶</a></h1>
+<p>It is common, when benchmarking optimization techniques, to introduce the concept of expected run time (ERT). Here we take the same angle and consider <strong>symbolic regression</strong> as an optimisation problem where a model is seeked that minimizes its prediction errors. To benchmark different techniques aimed at solving the very same problem we thus consider the ERT as our main indicator.</p>
+<p>The expected run time, for a <strong>symbolic regression</strong> problem, can be defined as the expected value of <span class="math notranslate nohighlight">\(n\)</span>, the number of phenotype evaluations made before finding a model having a loss below a fixed threshold.</p>
+<p>To compute the ERT we run <em>n_trials</em> independent trials and record, in each one, the number of function evaluations (phenotype evaluations) needed to reach a target <em>f_tol</em>. If <em>max_feval</em> are consumed without reaching <em>f_tol</em> we mark the trial as failed. We need to introduce <em>max_feval</em> and, essentially, restart the trial, as otherwise we would risk to have runs converging in infinite time. We can accomodate easily for the presence of restarts in the definition of the final ERT:</p>
+<div class="math notranslate nohighlight">
+\[ERT = \mathbb E(n) = \frac {\sum_{i=0}^{n_{trials}} n_i}{n_{success}}\]</div>
+<p>We argue that the above indicator, albeit depening on <em>f_tol</em> and <em>max_feval</em> is the only one that allows for a fair comparison between symbolic regression approaches. Lets see how to compute it for a few problems in the <em>dsyre</em> gym.</p>
+<p>We start with the usual imports …</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -313,12 +317,6 @@ from matplotlib import pyplot as plt
 </pre></div>
 </div>
 </div>
-<p>we will make use of the problem P1 from the paper:</p>
-<p>Izzo, Dario, Francesco Biscani, and Alessio Mereta. “Differentiable genetic programming.” European Conference on Genetic Programming. Springer, 2017.</p>
-<p>The functional form of such a problem is:</p>
-<div class="math notranslate nohighlight">
-\[y = x^5 - \pi x^3 + x\]</div>
-<p>where <em>x</em> is sampled in ten equally spaced points in [1,3]. We make use of the readily available <em>gym</em> module in <em>dsyre</em>, even if in this case it would be only a few lines of code to actually explicitly compute the dataset.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -327,48 +325,34 @@ from matplotlib import pyplot as plt
 xs, ys = dsy.gym.generate_P1()
 xs = np.array(xs)
 ys = np.array(ys)
-
-# Equivalently, in this case, we could just write:
-xs = np.linspace(1,3, 10)
-ys = xs**5 - np.pi * xs**3 + xs
-xs = xs.reshape(-1,1)
 </pre></div>
 </div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># We show the data
-plt.figure(figsize=(4,3))
-plt.plot(xs,ys, &#39;.&#39;)
-plt.xlabel(&quot;xs&quot;)
-plt.ylabel(&quot;ys&quot;)
-plt.title(&quot;Problem P1:  $y = x^5 - \pi x^3 + x$&quot;);
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_symbolic_regression_pagmo_4_0.png" src="../_images/notebooks_symbolic_regression_pagmo_4_0.png" />
-</div>
-</div>
-<p>We are now ready to define some hyperparameters for our learning setup:</p>
+<p>We define some hyperparameters:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>length = 20 # The number of triplets used
 max_mut = 15 # The maximum number of mutations
 ncons = 1 # The number of constants in the formula
 popsize = 4 # The population size
-gen = 1000 # Maximum number of generations
 </pre></div>
 </div>
 </div>
-<p>Then we instantiate the UDP and UDA</p>
+<p>… and the ERT computation settings:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>n_trials = 200 # Number of independent trials
+max_feval = 1000 # restart parameter
+ftol = 1e-8 # target threshold
+gen = max_feval // popsize
+</pre></div>
+</div>
+</div>
+<p>We instantiate the pagmo problem and algorithm:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -377,30 +361,44 @@ gen = 1000 # Maximum number of generations
 udp = dsy.sr_problem(xs = xs,
                      ys = ys,
                      length = length,
-                     kernels = [&quot;sum&quot;, &quot;mul&quot;, &quot;diff&quot;, &quot;div&quot;],
+                     kernels = [&quot;sum&quot;, &quot;mul&quot;, &quot;diff&quot;, &quot;inv&quot;],
                      ncons = ncons,
                      multi_objective = False);
 
 ## Instantiate the UDA
-uda = dsy.mes4dsyre(gen = gen, max_mut = max_mut, ftol = 1e-10)
+uda = dsy.mes4dsyre(gen = gen, max_mut = max_mut, ftol = ftol)
 
 ## Pagmo problem
 prob = pg.problem(udp)
 ## Pagmo algorithm
 algo = pg.algorithm(uda)
-algo.set_verbosity(1)
 </pre></div>
 </div>
 </div>
-<p>and solve …</p>
+<p>And we perfrom the <em>n_trials</em> runs, computing at the end the ERT.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>## Pagmo population
-pop = pg.population(prob, popsize)
-## Evolution!
-pop = algo.evolve(pop)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>n_success = 0
+ERT=0.
+for j in range(n_trials):
+    # Pagmo population
+    pop = pg.population(prob, popsize)
+    # Evolution!
+    pop = algo.evolve(pop)
+    ERT += pop.problem.get_fevals()
+    if (pop.champion_f[0] &lt; ftol):
+        n_success+=1
+        print(&quot;.&quot;, end=&quot;&quot;, flush=True)
+    else:
+        print(&quot;x&quot;, end=&quot;&quot;, flush=True)
+
+if (n_success &gt; 0):
+    print(f&quot;\n\nERT is: {ERT / n_success}\n&quot;)
+    print(f&quot;Successful runs: {n_success}\n&quot;)
+else:
+    print(&quot;\n\nNo success, adjust ftol or max_feval?\n&quot;)
 </pre></div>
 </div>
 </div>
@@ -409,110 +407,13 @@ pop = algo.evolve(pop)
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-I am here!
-Gen:    Fevals: Best:       Constants and Formula:
-0       0       2.28187e+03 [-3.76599e+00] (2*c0 - x0)*x0*c0
-1       4       9.48839e+02 [1.09722e+01] x0**2*c0
-2       8       9.48839e+02 [-2.21907e+01] (x0 + x0*c0)/(c0 + x0) - (x0 + x0*c0)
-3       12      9.48839e+02 [-2.30985e+01] (x0 + x0*c0)/(c0 + x0) - (x0 + x0*c0)
-4       16      9.48839e+02 [9.97219e+00] x0*(x0 + x0*c0)
-5       20      9.24287e+02 [-1.23728e+01] x0**2*(-(c0 + x0**3) + x0**3) - (x0 + x0 ...
-6       24      8.61803e+02 [-1.23728e+01] x0**4
-7       28      6.75155e+02 [-1.23728e+01] x0**2 + x0**4
-8       32      1.32037e+01 [1.96430e-01] x0**3/c0
-9       36      1.32037e+01 [3.48466e+00] x0**2*(x0 + x0**2)
-10      40      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-11      44      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-12      48      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-13      52      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-14      56      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-15      60      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-16      64      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-17      68      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-18      72      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-19      76      1.32037e+01 [3.23727e+00] (x0 + x0**2)**2
-20      80      1.32037e+01 [1.08884e+01] c0 + x0*(-x0 + x0**2)**2
-21      84      1.32037e+01 [1.08884e+01] c0 + x0*(-x0 + x0**2)**2
-22      88      1.32037e+01 [1.08884e+01] c0 + x0*(-x0 + x0**2)**2
-23      92      1.32037e+01 [1.08884e+01] x0*(-x0 + x0**2)**2 - (x0 - (-x0 + x0**2 ...
-24      96      1.32037e+01 [1.08884e+01] x0*(-x0 + x0**2)**2 - (x0 - (-x0 + x0**2 ...
-25      100     1.02064e+01 [8.44799e-01] x0*(-x0 + x0**2)**2 - (x0**2*c0 - x0**2* ...
-26      104     6.34953e+00 [-4.73967e+00] x0**3*(-x0 + x0**2)
-27      108     6.34953e+00 [-4.73967e+00] x0**3*(-x0 + x0**2)
-28      112     1.35487e-28 [3.14159e+00] x0 + x0**3*(-c0 + x0**2)
-Exit condition -- ftol &lt; 1e-10
-</pre></div></div>
-</div>
-<p>We can now show the final evolved formula as decoded directly from the chromosome:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>udp.pretty(pop.champion_x)
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&#39;((((x0*x0)/x0)*((x0*x0)*((x0*x0)-c0)))+((x0*x0)/x0))&#39;
-</pre></div></div>
-</div>
-<p>… and the same formula as simplified by removing excessive parenthesis and repetitions:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>udp.prettier(pop.champion_x)
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&#39;x0 + x0**3*(-c0 + x0**2)&#39;
-</pre></div></div>
-</div>
-<p>Let us now use our newly found model to predict points! In this case we have a zero loss, hence our model coincides with the data ….</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># We predict
-ys_predicted = udp.predict(pop.champion_x, xs)
-fig, ax = plt.subplots(1,2,figsize=(7,2.5), sharey=True)
-ax[0].plot(xs,ys_predicted, &#39;r.&#39;)
-ax[1].plot(xs,ys, &#39;.&#39;)
+...xx.x.x.x.xx...x.x.xx.xx..xxx.x....x.xx..x.xxx..xxxxxxx...x.xx.x..xx...xxx.xxx.xx.x.xxxx.x.xx.xx.x.x.xx.x.xxxxx..xxxx.xxx...x.xx.xx........x..xxxx..x.xxxxx..xx....x.xx.x....xx.xx.xx....xxxxxxx.x..xx
 
-ax[0].set_xlabel(&quot;xs&quot;)
-ax[1].set_xlabel(&quot;xs&quot;)
+ERT is: 1706.5333333333333
 
-ax[0].set_ylabel(&quot;ys_predicted&quot;)
-ax[1].set_ylabel(&quot;ys&quot;)
-<br/><br/></pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Text(0, 0.5, &#39;ys&#39;)
+Successful runs: 90
+
 </pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_symbolic_regression_pagmo_16_1.png" src="../_images/notebooks_symbolic_regression_pagmo_16_1.png" />
-</div>
 </div>
 </section>
 
@@ -539,8 +440,8 @@ Text(0, 0.5, &#39;ys&#39;)
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Tutorials:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">pagmo interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ert.html">The ERT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolic_regression_pagmo.html">pagmo interface</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The ERT</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Background:</span></p>
 <ul>
@@ -551,8 +452,8 @@ Text(0, 0.5, &#39;ys&#39;)
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="../api/gym.html" title="previous chapter">The gym</a></li>
-      <li>Next: <a href="ert.html" title="next chapter">The ERT</a></li>
+      <li>Previous: <a href="symbolic_regression_pagmo.html" title="previous chapter">pagmo interface</a></li>
+      <li>Next: <a href="encoding.html" title="next chapter">A novel genetic encoding</a></li>
   </ul></li>
 </ul>
 </div>
@@ -586,7 +487,7 @@ Text(0, 0.5, &#39;ys&#39;)
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/notebooks/symbolic_regression_pagmo.ipynb.txt"
+      <a href="../_sources/notebooks/ert.ipynb.txt"
           rel="nofollow">Page source</a>
     </div>
 
