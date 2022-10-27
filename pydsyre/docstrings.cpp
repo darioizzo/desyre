@@ -65,12 +65,13 @@ std::string expression_doc()
         
 Main pydsyre expression class. It represents the encoding of generic symbolic expressions as defined by:
 
-u0 = x0
-u1 = x1
-u2 = c1
-u3 = f3(u_i, u_j) .. i,j < 3
-u4 = f4(u_i, u_j) .. i,j < 4
-...
+.. math::
+    u0 = x0
+    u1 = x1
+    u2 = c1
+    u3 = f3(u_i, u_j) .. i,j < 3
+    u4 = f4(u_i, u_j) .. i,j < 4
+    ...
 
 Args:
     nvars: number of variables in the expression
@@ -181,7 +182,7 @@ Raises:
     ValueError: if geno is incompatible with the expression.
     ValueError: if the dimensions of vars and cons are not conistent.
 
-Returns:
+Returns::
     the numeric phenotype.
 
 Examples:
@@ -386,14 +387,62 @@ Examples:
 
 std::string sr_problem_doc()
 {
-    return R"(    
+    return R"(__init__(xs, ys, ncons, multi_objective)
+
+A symbolic regression problem. This can be used as a UDP in pagmo to search for a
+mathematical expression represented in the dsyre encoding and the value of its constants,
+so that the input data are reproduced successfully.
+
+The chromosome will start with the constant values and will be followed by the representation of the formula
+as triplets of integers.
+
+Args:
+    xs: input data. This determines the number of variables in the expression.
+    ys: labels.
+    ncons: number of constants in the expression.
+    multi_objective: when True the problem considers also the formula complexity.
+
+Raises:
+    ValueError: if xs and ys are malformed.
+
 )";
 }
 
 std::string mes4dsyre_doc()
 {
-    return R"(    
-)";
+    return R"(mes4dsyre(gen, max_mut, ftol, seed = ranom)
+
+The term Memetic is widely used, in the context of meta-heuristic search, to indicate a synergy between any
+population-based approach with local improvement procedures. The resulting algorithms are also referred to, in the
+literature, as Baldwinian evolutionary algorithms (EAs), Lamarckian EAs, cultural algorithms, or genetic local
+searches. The very same approach, is seen by many just as an hybridization of a global search technique with a
+local search technique. Regardless of the terminology and point of view, a memetic approach is applicable to symbolic
+regression tasks and able to improve considerably on the long standing issue of finding constants in
+Genetic Programming.
+
+In this class we offer an UDA (User Defined Algorithm for the pagmo optimization suite) hybridizing a classic
+Evolutionary Strategy with a second order Newton search step able to help finding the best values for the ephemeral constants.
+
+The resulting algorithm is outlined by the following pseudo-algorithm:
+
+* Start from a population (pop) of dimension N
+*  while i < gen
+*  > > Mutation: create a new population pop2 mutating N times the best individual
+*  > > Life long learning: apply a one step of a second order Newton method to each individual (only the continuous part is affected) 
+*  > > Reinsertion: set pop to contain the best N individuals taken from pop and pop2
+
+Args:
+    gen: number of generations.
+    max_mut: maximum number of mutations at each new candidate.
+    ftol: the algorithm will exit when the loss is below this tolerance.
+    seed: seed used by the internal random number generator (default is random)
+
+Raises:
+    ValueError: if  *max_mut* or *gen* are negative, or if *ftol* is negative.
+
+.. note::
+    mes4dsyre is tailored to solve :class:`dsyre.symbolic_regression` problems and will not work on different types.
+    )";
 }
 
 std::string mes4dsyre_get_log_doc()
@@ -402,4 +451,443 @@ std::string mes4dsyre_get_log_doc()
 )";
 }
 
+std::string generate_koza_quintic_doc()
+{
+    return R"(
+Generates the data for the classic Koza quintic regression problem.
+
+.. math::
+   y = x^5 - 2 x^3 + x
+
+x is sampled in ten equally spaced points in [-3,3].
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+)";
+}
+
+std::string generate_P1_doc()
+{
+    return R"(Generates the problem P1 from the paper:
+
+Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
+European Conference on Genetic Programming. Springer, 2017.
+
+The functional form of such a problem is:
+
+.. math::
+     y = x^5 - \pi x^3 + x
+
+x is sampled in ten equally spaced points in [1,3].
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+)";
+}
+
+std::string generate_P2_doc()
+{
+    return R"(
+Generates the problem P2 from the paper:
+
+Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
+European Conference on Genetic Programming. Springer, 2017.
+
+The functional form of such a problem is:
+
+.. math::
+     y = x^5 - \pi x^3 + \frac{\pi}{x}
+
+x is sampled in ten equally spaced points in [0.1,5].
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+)";
+}
+
+std::string generate_P3_doc()
+{
+    return R"(
+Generates the problem P3 from the paper:
+
+Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
+European Conference on Genetic Programming. Springer, 2017.
+
+The functional form of such a problem is:
+
+.. math::
+     y = \frac{e x^5 + x^3}{x+1}
+
+x is sampled in ten equally spaced points in [-0.9,1].
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+)";
+}
+std::string generate_P4_doc()
+{
+    return R"(
+Generates the problem P4 from the paper:
+
+Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
+European Conference on Genetic Programming. Springer, 2017.
+
+The functional form of such a problem is:
+
+.. math::
+     y = \sin(\pi x) + \frac 1x
+
+x is sampled in ten equally spaced points in [-1,1].
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+)";
+}
+std::string generate_P5_doc()
+{
+    return R"(
+Generates the problem P5 from the paper:
+
+Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
+European Conference on Genetic Programming. Springer, 2017.
+
+The functional form of such a problem is:
+
+.. math::
+     y = e x^5 - \pi x^3 + x
+
+x is sampled in ten equally spaced points in [1,3].
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+)";
+}
+std::string generate_P6_doc()
+{
+    return R"(
+Generates the problem P6 from the paper:
+
+Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
+European Conference on Genetic Programming. Springer, 2017.
+
+The functional form of such a problem is:
+
+.. math::
+     y = \frac{e x^2 - 1}{\pi (x + 2)}
+
+x is sampled in ten equally spaced points in [-2.1,1].
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+)";
+}
+std::string generate_P7_doc()
+{
+    return R"(
+Generates the problem P7 from the paper:
+
+Izzo, Dario, Francesco Biscani, and Alessio Mereta. "Differentiable genetic programming." 
+European Conference on Genetic Programming. Springer, 2017.
+
+The functional form of such a problem is:
+
+.. math::
+     y = \cos(\pi x) + \sin(e x)
+
+x is sampled in ten equally spaced points in [-1,1].
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+    )";
+}
+
+std::string generate_P8_doc()
+{
+    return R"(
+Generates the problem used as example in the code PySR
+
+The functional form of such a problem is:
+
+.. math::
+     y = 2.5382 * \cos(x[3]) + x[0] * x[0] - 0.5;
+
+x is five dimensional and normally sampled.
+
+Returns:
+    A tuple (xs,ys) containing problem data.
+)";
+}
+
+std::string generate_kotanchek_doc()
+{
+    return R"(
+Generates the problem Kotanchek from the paper:
+Vladislavleva, Ekaterina J., Guido F. Smits, and Dick Den Hertog.
+"Order of nonlinearity as a complexity measure for models generated by symbolic regression via pareto genetic
+programming." IEEE Transactions on Evolutionary Computation 13.2 (2008): 333-349. 
+
+The functional form of such a problem is:
+.. math::
+   y = \frac{e^{-(x_1-1)^2}}{1.2+(x_2-2.5)^2}
+
+:math:`x_1` and :math:`x_2` are sampled in one hundred randomly selected points in [0.3,4]x[0.3,4].
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_salutowicz_doc()
+{
+    return R"(
+Generates the problem Salutowicz from the paper:
+Vladislavleva, Ekaterina J., Guido F. Smits, and Dick Den Hertog.
+"Order of nonlinearity as a complexity measure for models generated by symbolic regression via pareto genetic
+programming." IEEE Transactions on Evolutionary Computation 13.2 (2008): 333-349. 
+
+The functional form of such a problem is:
+.. math::
+   y = e^{-x} x^3 \cos x\sin x (\cos x \sin^2 x - 1)
+
+x is sampled in one hundred points uniformly sampled in [0.5,10].
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_salutowicz2d_doc()
+{
+    return R"(
+Generates the problem Salutowicz2D from the paper:
+Vladislavleva, Ekaterina J., Guido F. Smits, and Dick Den Hertog.
+"Order of nonlinearity as a complexity measure for models generated by symbolic regression via pareto genetic
+programming." IEEE Transactions on Evolutionary Computation 13.2 (2008): 333-349. 
+
+The functional form of such a problem is:
+.. math::
+   y = e^{-x} x^3 \cos x_1\sin x_1 (\cos x_1 \sin^2 x_1 - 1) * (x_2 - 5)
+
+:math:`x_1` and :math:`x_2` are sampled in 601 randomly selected points in [0.05,10]x[0.05,10].
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_uball5d_doc()
+{
+    return R"(
+Generates the problem UBall5D from the paper:
+Vladislavleva, Ekaterina J., Guido F. Smits, and Dick Den Hertog.
+"Order of nonlinearity as a complexity measure for models generated by symbolic regression via pareto genetic
+programming." IEEE Transactions on Evolutionary Computation 13.2 (2008): 333-349. 
+
+The functional form of such a problem is:
+.. math::
+   y = \frac{10}{5 + \sum_{i=1}^5 (x_i-3)^2}
+
+:math:`x_i` are sampled in 1024 randomly selected points in :math:`[0.05,6.05]^5`.
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_ratpol3d_doc()
+{
+    return R"(
+Generates the problem RatPol3D from the paper:
+Vladislavleva, Ekaterina J., Guido F. Smits, and Dick Den Hertog.
+"Order of nonlinearity as a complexity measure for models generated by symbolic regression via pareto genetic
+programming." IEEE Transactions on Evolutionary Computation 13.2 (2008): 333-349. 
+
+The functional form of such a problem is:
+.. math::
+   y = 30 \frac{(x_1 - 3)(x_3 - 1)}{x_2^2(x_1-10)}
+
+:math:`x_1`, :math:`x_2`, :math:`x_3` are sampled in 300 randomly selected points in [0.05,2] x [1,2].
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_sinecosine_doc()
+{
+    return R"(
+Generates the problem SineCosine from the paper:
+Vladislavleva, Ekaterina J., Guido F. Smits, and Dick Den Hertog.
+"Order of nonlinearity as a complexity measure for models generated by symbolic regression via pareto genetic
+programming." IEEE Transactions on Evolutionary Computation 13.2 (2008): 333-349. 
+
+The functional form of such a problem is:
+.. math::
+   y = 6 \sin(x_1)\cos(x_2)
+
+:math:`x_1`, :math:`x_2` are sampled in 30 randomly selected points in [0.1,5.9] x [0.1,5.9].
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_ripple_doc()
+{
+    return R"(
+Generates the problem Ripple from the paper:
+Vladislavleva, Ekaterina J., Guido F. Smits, and Dick Den Hertog.
+"Order of nonlinearity as a complexity measure for models generated by symbolic regression via pareto genetic
+programming." IEEE Transactions on Evolutionary Computation 13.2 (2008): 333-349. 
+
+The functional form of such a problem is:
+.. math::
+   y = (x_1-3)(x_2-3) + 2\sin((x_1-4)(x_2-4))
+
+:math:`x_1`, :math:`x_2` are sampled in 300 randomly selected points in [0.05,6.05] x [0.05,6.05].
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_ratpol2d_doc()
+{
+    return R"(
+Generates the problem RatPol2D from the paper:
+Vladislavleva, Ekaterina J., Guido F. Smits, and Dick Den Hertog.
+"Order of nonlinearity as a complexity measure for models generated by symbolic regression via pareto genetic
+programming." IEEE Transactions on Evolutionary Computation 13.2 (2008): 333-349. 
+
+The functional form of such a problem is:
+.. math::
+   y = \frac{(x_1-3)^4+(x_2-3)^3-(x_2-3)}{(x_2-2)^4+10}
+
+:math:`x_1`, :math:`x_2` are sampled in 50 randomly selected points in [0.05,6.05] x [0.05,6.05].
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_chwirut1_doc()
+{
+    return R"(
+These data are the result of a NIST study involving ultrasonic calibration. The response variable is ultrasonic response, 
+and the predictor variable is metal distance. (see https://www.itl.nist.gov/div898/strd/nls/data/chwirut1.shtml)
+
+A proposed good model for such a problem is:
+.. math::
+   y = \frac{e^{-\beta_1 x}}{\beta_2 + \beta_3 x} + \epsilon
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_luca1_doc()
+{
+    return R"(
+These data are the result of an industrial study. Since the original data were subject to intellectual property
+restrictions the data has been altered adding an unkown amount of noise and artifacts. The abscissa is some unknown
+material property while in the y axis we can read a temperature value in Celsius.
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_chwirut2_doc()
+{
+    return R"(
+These data are the result of a NIST study involving ultrasonic calibration. The response variable is ultrasonic response, 
+and the predictor variable is metal distance. (see https://www.itl.nist.gov/div898/strd/nls/data/chwirut2.shtml)
+
+A proposed good model for such a problem is:
+.. math::
+   y = \frac{e^{-\beta_1 x}}{\beta_2 + \beta_3 x} + \epsilon
+with respect to the problem chwirut1, less points are included here.
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_daniel_wood_doc()
+{
+    return R"(
+These data and model are described in Daniel and Wood (1980), and originally published in E.S.Keeping, 
+"Introduction to Statistical Inference," Van Nostrand Company, Princeton, NJ, 1962, p. 354. The response variable is energy
+radieted from a carbon filament lamp per cm**2 per second, and the predictor variable is the absolute temperature 
+of the filament in 1000 degrees Kelvin. (see https://www.itl.nist.gov/div898/strd/nls/data/daniel_wood.shtml)
+
+A proposed good model for such a problem is:
+.. math::
+   y = \beta_1 x^{\beta_2} + \epsilon
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_gauss1_doc()
+{
+    return R"(
+The data are two well-separated Gaussians on a decaying exponential baseline plus normally 
+distributed zero-mean noise with variance = 6.25. (see https://www.itl.nist.gov/div898/strd/nls/data/gauss1.shtml)
+
+A proposed good model for such a problem is:
+.. math::
+   y = \beta_1 e^{-\beta_2 x} + \beta_3 e^{-\frac{(x-\beta_4)^2}{\beta_5^2}} + \beta_6 e^{-\frac{(x-\beta_7)^2}{\beta_8^2}} + \epsilon
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_kirby2_doc()
+{
+    return R"(
+These data are the result of a NIST study involving scanning electron microscope line with standards. 151 
+observations are included. (see https://www.itl.nist.gov/div898/strd/nls/data/kirby2.shtml)
+
+A proposed good model for such a problem is:
+.. math::
+   y = \frac{\beta_1 + \beta_2 x + \beta_3 x^2}{1 + \beta_4 x + \beta_5 x^2} + \epsilon
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_lanczos2_doc()
+{
+    return R"(
+These data are taken from an example discussed in Lanczos (1956). The data were generated to 6-digits
+of accuracy using the formula below. (see https://www.itl.nist.gov/div898/strd/nls/data/lanczos2.shtml)
+
+A good model for such a problem is, trivially:
+.. math::
+   y = \beta_1 e^{-\beta_2 x} + \beta_3 e^{-\beta_4 x} + \beta_5 e^{-\beta_6 x} + \epsilon
+
+Returns:
+    A tuple containing problem data.
+)";
+}
+
+std::string generate_misra1b_doc()
+{
+    return R"(
+These data are the result of a NIST study involving dental research in monomolecular adsorption. 
+The response variable is volume, and the predictor variable is pressure. 14 observations are 
+available. (see https://www.itl.nist.gov/div898/strd/nls/data/misra1b.shtml)
+
+A good model for such a problem is:
+.. math::
+   y = \beta_1 \left( 1 - \frac 1{\left(1 + \beta_1 \frac x2\right)^2}\right) + \epsilon
+
+Returns:
+    A tuple containing problem data.
+)";
+}
 } // namespace pydsyre

@@ -15,15 +15,15 @@ namespace dsyre
 // Functions and derivatives
 double inv(double a)
 {
-    return 1./a;
+    return 1. / a;
 }
 double dinv(double a)
 {
-    return -1./a/a;
+    return -1. / a / a;
 }
 double ddinv(double a)
 {
-    return 2/a/a/a;
+    return 2 / a / a / a;
 }
 std::string pinv(std::string arg)
 {
@@ -79,5 +79,22 @@ double ddexp(double a)
 std::string pexp(std::string arg)
 {
     return "exp(" + arg + ")";
+}
+
+double gauss(double a)
+{
+    return std::exp(-a * a);
+}
+double dgauss(double a)
+{
+    return -2. * a * std::exp(-a * a);
+}
+double ddgauss(double a)
+{
+    return (4 * a * a - 2.) * std::exp(-a * a);
+}
+std::string pgauss(std::string arg)
+{
+    return "exp(-" + arg + "*" + arg + ")";
 }
 } // namespace dsyre

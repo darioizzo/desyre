@@ -40,7 +40,7 @@ public:
     void phenotype(std::vector<double> &retval, const std::vector<unsigned> &genotype, const std::vector<double> &vars,
                    const std::vector<double> &cons) const;
 
-    // Computes the us complexity
+    // Computes the phenotype complexity
     void complexity(std::vector<unsigned> &retval, const std::vector<unsigned> &geno) const;
 
     // Computes the us nesting

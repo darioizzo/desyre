@@ -74,6 +74,11 @@ public:
     /// Transforms the dsyre structures into a pagmo chromosome
     void dsyre2pagmo(pagmo::vector_double &x, const std::vector<unsigned> &geno, const std::vector<double> &cons) const;
 
+    /// Predict
+    double predict(const pagmo::vector_double &x, const std::vector<double> &vars) const;
+    void predict(std::vector<double> &ys, const pagmo::vector_double &x,
+                 const std::vector<std::vector<double>> &xs) const;
+
 private:
     // Sanity checks for the dataset
     void sanity_checks(const std::vector<std::vector<double>> &points, const std::vector<double> &labels) const;
@@ -123,8 +128,7 @@ namespace details
 // to be overridden in the python bindings so that it can extract from a py::object a
 // c++ dsyre::sr_problem. Its use is in the UDAs evolve to access (both in C++ and python)
 // the correct UDP.
-inline std::function<const dsyre::sr_problem *(const pagmo::problem &)> extract_sr_cpp_py
-    = [](const pagmo::problem &p) { return p.extract<dsyre::sr_problem>(); };
+DSYRE_DLL_PUBLIC extern std::function<const dsyre::sr_problem *(const pagmo::problem &)> extract_sr_cpp_py;
 } // namespace details
 } // namespace dsyre
 

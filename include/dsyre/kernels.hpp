@@ -35,6 +35,11 @@ double dexp(double a);
 double ddexp(double a);
 std::string pexp(std::string);
 
+double gauss(double a);
+double dgauss(double a);
+double ddgauss(double a);
+std::string pgauss(std::string);
+
 } // namespace dsyre
 
 #endif
