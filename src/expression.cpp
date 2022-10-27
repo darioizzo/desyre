@@ -207,6 +207,33 @@ void expression::complexity_impl(std::vector<unsigned> &retval, const std::vecto
     }
 }
 
+void expression::nesting(std::vector<unsigned> &retval, const std::vector<unsigned> &genotype) const
+{
+    check_genotype(genotype);
+    nesting_impl(retval, genotype);
+}
+
+void expression::nesting_impl(std::vector<unsigned> &retval, const std::vector<unsigned> &genotype) const
+{
+    auto penalty = 0u;
+    auto n_terminals = m_nvar + m_ncon;
+    // Size will be the vars+constant values (x) and then the number of triplets F u0 u1
+    auto n_triplets = genotype.size() / 3;
+    retval.resize(n_terminals + n_triplets);
+    // The nesting of the model made by only a variable or a constant is zero
+    std::fill(retval.begin(), retval.begin() + n_terminals, 0u);
+    // We loop and for each triplet compute the corresponding function and add to the expression complexity
+    for (decltype(n_triplets) i = 0u; i < n_triplets; ++i) {
+        auto fidx = genotype[3 * i];
+        if (m_kernels[fidx] > n_binary) {                    // unary
+            penalty = (m_kernels[fidx] == n_binary) ? 0 : 1; // for inv we do not penalize
+            retval[i + n_terminals] = penalty + retval[genotype[3 * i + 1]];
+        } else { // binary
+            retval[i + n_terminals] = 0u + std::max(retval[genotype[3 * i + 1]], retval[genotype[3 * i + 2]]);
+        }
+    }
+}
+
 void expression::sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
                                  const std::vector<std::string> &vars, const std::vector<std::string> &cons) const
 {

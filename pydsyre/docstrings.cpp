@@ -390,4 +390,16 @@ std::string sr_problem_doc()
 )";
 }
 
+std::string mes4dsyre_doc()
+{
+    return R"(    
+)";
+}
+
+std::string mes4dsyre_get_log_doc()
+{
+    return R"(    
+)";
+}
+
 } // namespace pydsyre

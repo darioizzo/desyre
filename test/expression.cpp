@@ -225,6 +225,51 @@ TEST_CASE("complexity")
     }
 }
 
+TEST_CASE("nesting")
+{
+    // Test throws
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble[x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 5, 0, 0, 0, 3, 3, 4, 0}, nesting;
+        REQUIRE_THROWS_AS(ex.nesting(nesting, geno), std::invalid_argument);
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // Manually assemble [x, c, cx, sin(cx), x + sin(cx), (x + sin(cx)) / x]
+        std::vector<unsigned> geno = {2, 0, 1, 4, 2, 0, 0, 0, 3, 3, 4, 0, 4, 5, 0}, nesting;
+        std::vector<unsigned> target_nesting = {0u, 0u, 0u, 1u, 1u, 1u, 2u};
+        ex.nesting(nesting, geno);
+        REQUIRE(nesting == target_nesting);
+    }
+    {
+        auto n_con = 1u;
+        auto n_var = 1u;
+        std::vector<std::string> kernels = {"sum", "diff", "mul", "div", "sin"};
+        expression ex(n_var, n_con, kernels);
+        // A random genotype (but fixed)
+        // ["x0", "c0", "(c0+x0)", "(x0-(c0+x0))", "(x0/(x0-(c0+x0)))", "sin((x0-(c0+x0)))",
+        // "((x0/(x0-(c0+x0))) + sin((x0-(c0+x0))))",
+        //  "((c0+x0)*(x0-(c0+x0)))", "(((c0+x0)*(x0-(c0+x0)))+(c0+x0))", "((c0+x0)+((c0+x0)*(x0-(c0+x0))))",
+        //  "sin(((c0+x0)*(x0-(c0+x0))))", "sin(sin(((c0+x0)*(x0-(c0+x0)))))"]
+        std::vector<unsigned> geno
+            = {0, 1, 0, 1, 0, 2, 3, 0, 3, 4, 3, 1, 0, 4, 5, 2, 2, 3, 0, 7, 2, 0, 2, 7, 4, 7, 3, 4, 10, 3},
+            nesting;
+        std::vector<unsigned> target_nesting = {0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 2};
+        ex.nesting(nesting, geno);
+        REQUIRE(nesting == target_nesting);
+        std::vector<std::string> phen;
+        ex.sphenotype(phen, geno);
+        fmt::print("{}", phen);
+    }
+}
+
 TEST_CASE("sphenotype")
 {
     {

@@ -32,6 +32,9 @@ std::string expression_check_genotype_doc();
 // sr_problem
 std::string sr_problem_doc();
 
+// mes4dsyre
+std::string mes4dsyre_doc();
+std::string mes4dsyre_get_log_doc();
 } // namespace pydsyre
 
 #endif

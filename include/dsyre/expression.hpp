@@ -43,6 +43,9 @@ public:
     // Computes the us complexity
     void complexity(std::vector<unsigned> &retval, const std::vector<unsigned> &geno) const;
 
+    // Computes the us nesting
+    void nesting(std::vector<unsigned> &retval, const std::vector<unsigned> &geno) const;
+
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes)
     void sphenotype(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
                     const std::vector<std::string> &vars = {}, const std::vector<std::string> &cons = {}) const;
@@ -82,8 +85,10 @@ private:
     // Computes the phenotype (i.e. the numerical values of all the graph nodes) - no checks
     void phenotype_impl(std::vector<double> &retval, const std::vector<unsigned> &genotype,
                         const std::vector<double> &vars, const std::vector<double> &cons) const;
-    // Computes the phenotype (i.e. the numerical values of all the graph nodes) - no checks
+    // Computes the phenotype complexity - no checks
     void complexity_impl(std::vector<unsigned> &complexity, const std::vector<unsigned> &geno) const;
+    // Computes the phenotype nesting - no checks
+    void nesting_impl(std::vector<unsigned> &nesting, const std::vector<unsigned> &geno) const;
     // Computes the symbolic phenotype (i.e. the symbolic expression for all the nodes) - no checks
     void sphenotype_impl(std::vector<std::string> &retval, const std::vector<unsigned> &genotype,
                          const std::vector<std::string> &vars, const std::vector<std::string> &cons) const;

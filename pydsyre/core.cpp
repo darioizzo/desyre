@@ -10,6 +10,7 @@
 #include <pybind11/stl.h>
 
 #include <dsyre/expression.hpp>
+#include <dsyre/mes4dsyre.hpp>
 #include <dsyre/sr_problem.hpp>
 
 #include "common_utils.hpp"
@@ -162,9 +163,9 @@ PYBIND11_MODULE(core, m)
         .def("get_kernels_idx", &dsyre::expression::get_kernels_idx, expression_get_kernels_idx_doc().c_str())
         .def("check_genotype", &dsyre::expression::check_genotype, py::arg("geno"),
              expression_check_genotype_doc().c_str())
-        .def(py::pickle(&udx_pickle_getstate<dsyre::expression>, &udx_pickle_setstate<dsyre::expression>));
+        .def(py::pickle(&pickle_getstate<dsyre::expression>, &pickle_setstate<dsyre::expression>));
 
-    // Exposing the sr_problem class
+    // Exposing the sr_problem class (a UDP)
     py::class_<dsyre::sr_problem>(m, "sr_problem", sr_problem_doc().c_str())
         // Default constructor
         .def(py::init<>())
@@ -180,6 +181,22 @@ PYBIND11_MODULE(core, m)
         .def("get_name", &dsyre::sr_problem::get_name)
         .def("pretty", &dsyre::sr_problem::pretty)
         .def("prettier", &dsyre::sr_problem::prettier)
-        .def(py::pickle(&udx_pickle_getstate<dsyre::sr_problem>, &udx_pickle_setstate<dsyre::sr_problem>));
+        .def(py::pickle(&pickle_getstate<dsyre::sr_problem>, &pickle_setstate<dsyre::sr_problem>));
+
+    // Exposing the mes4dsyre algorithm (a UDA)
+    py::class_<dsyre::mes4dsyre>(m, "mes4dsyre", mes4dsyre_doc().c_str())
+        // Default constructor
+        .def(py::init<>())
+        .def(py::init<unsigned, unsigned, double, unsigned>(), py::arg("gen"), py::arg("max_mut"), py::arg("ftol"),
+             py::arg("seed"))
+        .def("__repr__", &dsyre::mes4dsyre::get_extra_info)
+        .def("evolve", &dsyre::mes4dsyre::evolve)
+        .def("set_seed", &dsyre::mes4dsyre::set_seed)
+        .def("get_seed", &dsyre::mes4dsyre::get_seed)
+        .def("set_verbosity", &dsyre::mes4dsyre::set_verbosity)
+        .def("get_verbosity", &dsyre::mes4dsyre::get_verbosity)
+        .def("get_name", &dsyre::mes4dsyre::get_name)
+        .def("get_log", &generic_log_getter<dsyre::mes4dsyre>, mes4dsyre_get_log_doc().c_str())
+        .def(py::pickle(&pickle_getstate<dsyre::mes4dsyre>, &pickle_setstate<dsyre::mes4dsyre>));
 
 } // namespace details
